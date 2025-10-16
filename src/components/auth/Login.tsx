@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import truckBlue from '@/assets/truck-blue-sunset.png';
-import logoIcon from '@/assets/logo-chekauto-yellow.png';
+import logoIcon from '@/assets/logo-chekauto-icon.png';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();

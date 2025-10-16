@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard } from 'lucide-react';
-import logoBlack from '@/assets/logo-chekauto-black.png';
+import logoYellow from '@/assets/logo-chekauto-yellow.png';
+import truckProduct from '@/assets/truck-yellow-close.png';
 
 export default function PaymentData() {
   const navigate = useNavigate();
@@ -33,79 +34,92 @@ export default function PaymentData() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6">
-        <img src={logoBlack} alt="CHEKAUTO" className="h-8" />
+      <header className="bg-black py-6 px-6 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
+          <nav className="hidden md:flex items-center gap-12 text-white text-sm font-semibold">
+            <a href="/" className="hover:text-brand-yellow transition-colors">A CHEKAUTO</a>
+            <a href="/#consultation" className="hover:text-brand-yellow transition-colors">CONSULTA</a>
+            <a href="/#implementations" className="hover:text-brand-yellow transition-colors">IMPLEMENTOS</a>
+            <a href="/#benefits" className="hover:text-brand-yellow transition-colors">DIFERENCIAIS</a>
+            <div className="w-10 h-10 bg-brand-yellow rounded-full"></div>
+          </nav>
+        </div>
       </header>
 
       {/* Stepper */}
-      <div className="py-12 bg-gray-50">
+      <div className="py-8 bg-black">
         <Stepper steps={steps} />
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Resumo da Compra */}
-          <div>
-            <h2 className="text-2xl font-bold text-black mb-6">Resumo da compra</h2>
+          <div className="bg-white rounded-lg p-8">
+            <h2 className="text-xl font-bold text-black mb-4">Resumo da compra</h2>
+            <p className="text-sm text-gray-600 mb-6">Resumo do item selecionado</p>
             
-            <div className="border border-gray-200 rounded-lg p-6 mb-6">
-              <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center mb-4">
-                <p className="text-gray-400">Imagem 3D do produto</p>
+            <div className="mb-6">
+              <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center mb-4 overflow-hidden">
+                <img src={truckProduct} alt="Produto" className="w-full h-full object-cover" />
               </div>
               
-              <h3 className="text-xl font-bold text-black mb-2">CARROCERIA SOBRE CHASSI TANQUE</h3>
+              <h3 className="text-lg font-bold text-black mb-2">CARROCERIA SOBRE CHASSI TANQUE</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Implemento especializado para transporte de líquidos com segurança e eficiência.
+                Uma carroceria sobre chassi tanque é um implemento rodoviário para caminhões, composto por um reservatório, geralmente cilíndrico, montado sobre a estrutura do chassi do veículo, e que tem como principal função o transporte de líquidos.
               </p>
               
               <div className="bg-gray-50 rounded p-4 mb-4">
-                <p className="text-sm text-gray-600">Características principais do produto</p>
+                <p className="text-xs text-gray-600">Placeholder para características do produto</p>
               </div>
               
               <div className="border-t border-gray-200 pt-4 space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">R$ 1.950,00</span>
+                  <span className="font-semibold">R$1950,00</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Desconto</span>
-                  <span className="font-semibold text-green-600">- R$ 150,00</span>
+                  <span className="font-semibold">R$150,00</span>
                 </div>
-                <div className="flex justify-between text-lg pt-2 border-t">
+                <div className="border-t border-gray-200 pt-2 mt-2"></div>
+                <div className="flex justify-between text-base">
                   <span className="font-bold">Total</span>
-                  <span className="font-bold text-[#FAA954]">R$ 1.750,00</span>
+                  <span className="font-bold text-brand-yellow">R$1750,00</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Dados de Pagamento */}
-          <div>
-            <h2 className="text-2xl font-bold text-black mb-6">Dados do Pagamento</h2>
+          <div className="bg-white rounded-lg p-8">
+            <h2 className="text-xl font-bold text-black mb-4">Dados do Pagamento</h2>
+            <p className="text-sm text-gray-600 mb-6">Preencha as informações para finalizar a compra</p>
             
             {/* Método de Pagamento */}
-            <div className="flex gap-4 mb-8">
+            <div className="flex gap-3 mb-6">
               <button
                 type="button"
                 onClick={() => setPaymentMethod('cartao')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all text-sm ${
                   paymentMethod === 'cartao'
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
+                <CreditCard className="inline-block w-4 h-4 mr-2" />
                 Cartão de Crédito
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod('pix')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all text-sm ${
                   paymentMethod === 'pix'
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 Pagamento via PIX
@@ -114,65 +128,53 @@ export default function PaymentData() {
 
             <form onSubmit={handleSubmit}>
               {paymentMethod === 'cartao' ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="numeroCartao">Número do Cartão *</Label>
-                    <div className="relative">
-                      <Input
-                        id="numeroCartao"
-                        value={cardData.numero}
-                        onChange={(e) => setCardData(prev => ({ ...prev, numero: e.target.value }))}
-                        placeholder="0000 0000 0000 0000"
-                        className="mt-1 pl-10"
-                        required
-                      />
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="titular">Nome do Titular *</Label>
                     <Input
-                      id="titular"
-                      value={cardData.titular}
-                      onChange={(e) => setCardData(prev => ({ ...prev, titular: e.target.value }))}
-                      placeholder="Nome como está no cartão"
-                      className="mt-1"
+                      id="numeroCartao"
+                      value={cardData.numero}
+                      onChange={(e) => setCardData(prev => ({ ...prev, numero: e.target.value }))}
+                      placeholder="Número do Cartão"
+                      className="bg-gray-100 border-0"
                       required
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cvv">CVV *</Label>
-                      <Input
-                        id="cvv"
-                        value={cardData.cvv}
-                        onChange={(e) => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
-                        placeholder="123"
-                        maxLength={3}
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="validade">Validade *</Label>
-                      <Input
-                        id="validade"
-                        value={cardData.validade}
-                        onChange={(e) => setCardData(prev => ({ ...prev, validade: e.target.value }))}
-                        placeholder="MM/AA"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
+                  <div>
+                    <Input
+                      id="titular"
+                      value={cardData.titular}
+                      onChange={(e) => setCardData(prev => ({ ...prev, titular: e.target.value }))}
+                      placeholder="Nome do Titular"
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      id="cvv"
+                      value={cardData.cvv}
+                      onChange={(e) => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
+                      placeholder="CVV"
+                      maxLength={3}
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                    <Input
+                      id="validade"
+                      value={cardData.validade}
+                      onChange={(e) => setCardData(prev => ({ ...prev, validade: e.target.value }))}
+                      placeholder="Validade"
+                      className="bg-gray-100 border-0"
+                      required
+                    />
                   </div>
 
                   <div>
-                    <Label htmlFor="parcelas">Número de Parcelas *</Label>
                     <Select value={cardData.parcelas} onValueChange={(value) => setCardData(prev => ({ ...prev, parcelas: value }))}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
+                      <SelectTrigger className="bg-gray-100 border-0">
+                        <SelectValue placeholder="Número de Parcelas" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">1x de R$ 1.750,00 sem juros</SelectItem>
@@ -185,23 +187,20 @@ export default function PaymentData() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <div className="bg-gray-200 w-48 h-48 mx-auto mb-4 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-500">QR Code PIX</p>
+                <div className="space-y-4">
+                  <div className="border border-gray-200 rounded-lg p-6 text-center">
+                    <div className="bg-gray-200 w-40 h-40 mx-auto mb-3 rounded-lg flex items-center justify-center">
+                      <p className="text-gray-500 text-sm">QR Code PIX</p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">Escaneie o QR Code ou copie o código abaixo</p>
-                    <div className="bg-gray-50 p-3 rounded text-xs font-mono break-all">
+                    <p className="text-xs text-gray-600 mb-2">Escaneie o QR Code ou copie o código abaixo</p>
+                    <div className="bg-gray-50 p-2 rounded text-xs font-mono break-all">
                       00020126580014br.gov.bcb.pix...
                     </div>
-                    <Button type="button" variant="outline" className="mt-4">
-                      Copiar código PIX
-                    </Button>
                   </div>
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-black text-white hover:bg-black/90 h-12 text-base font-semibold rounded-full mt-8">
+              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-semibold rounded-full mt-6">
                 Finalizar Compra
               </Button>
             </form>

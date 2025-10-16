@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import logoBlack from '@/assets/logo-chekauto-black.png';
+import logoYellow from '@/assets/logo-chekauto-yellow.png';
+import truckYellow from '@/assets/truck-yellow-close.png';
 
 export default function VehicleData() {
   const navigate = useNavigate();
@@ -41,137 +42,129 @@ export default function VehicleData() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6">
-        <img src={logoBlack} alt="CHEKAUTO" className="h-8" />
+      <header className="bg-black py-6 px-6 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
+          <nav className="hidden md:flex items-center gap-12 text-white text-sm font-semibold">
+            <a href="/" className="hover:text-brand-yellow transition-colors">A CHEKAUTO</a>
+            <a href="/#consultation" className="hover:text-brand-yellow transition-colors">CONSULTA</a>
+            <a href="/#implementations" className="hover:text-brand-yellow transition-colors">IMPLEMENTOS</a>
+            <a href="/#benefits" className="hover:text-brand-yellow transition-colors">DIFERENCIAIS</a>
+            <div className="w-10 h-10 bg-brand-yellow rounded-full"></div>
+          </nav>
+        </div>
       </header>
 
       {/* Stepper */}
-      <div className="py-12 bg-gray-50">
-        <Stepper steps={steps} />
+      <div className="py-8 bg-black">
+        <Stepper steps={steps} className="text-white" />
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
+        <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Form */}
-          <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Dados do Veículo</h1>
-            <p className="text-gray-600 mb-8">Preencha as informações do seu veículo</p>
+          <div className="bg-white rounded-lg p-8">
+            <h1 className="text-2xl font-bold text-black mb-1">Dados do Veículo</h1>
+            <p className="text-gray-600 mb-6 text-sm">Preencha todas as informações corretamente</p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="chassi">Número do Chassi *</Label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Input
                   id="chassi"
                   value={formData.chassi}
                   onChange={(e) => setFormData(prev => ({ ...prev, chassi: e.target.value }))}
-                  placeholder="Digite o número do chassi"
-                  className="mt-1"
+                  placeholder="Número do Chassi:"
+                  className="bg-gray-100 border-0"
                   required
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="renavam">Renavam *</Label>
                 <Input
                   id="renavam"
                   value={formData.renavam}
                   onChange={(e) => setFormData(prev => ({ ...prev, renavam: e.target.value }))}
-                  placeholder="Digite o RENAVAM"
-                  className="mt-1"
+                  placeholder="Renavam:"
+                  className="bg-gray-100 border-0"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="ano">Ano do Veículo *</Label>
-                  <Input
-                    id="ano"
-                    type="number"
-                    value={formData.ano}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ano: e.target.value }))}
-                    placeholder="2024"
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="placa">Placa *</Label>
-                  <Input
-                    id="placa"
-                    value={formData.placa}
-                    onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value }))}
-                    placeholder="ABC-1D23"
-                    className="mt-1"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="estado">Estado *</Label>
-                  <Select value={formData.estado} onValueChange={(value) => setFormData(prev => ({ ...prev, estado: value }))}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SP">São Paulo</SelectItem>
-                      <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                      <SelectItem value="MG">Minas Gerais</SelectItem>
-                      <SelectItem value="RS">Rio Grande do Sul</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="cidade">Cidade *</Label>
-                  <Input
-                    id="cidade"
-                    value={formData.cidade}
-                    onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
-                    placeholder="Digite a cidade"
-                    className="mt-1"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="informacaoAdicional">Informação Adicional</Label>
-                <Textarea
-                  id="informacaoAdicional"
-                  value={formData.informacaoAdicional}
-                  onChange={(e) => setFormData(prev => ({ ...prev, informacaoAdicional: e.target.value }))}
-                  placeholder="Adicione informações relevantes sobre o veículo"
-                  className="mt-1 min-h-[100px]"
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="ano"
+                  value={formData.ano}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ano: e.target.value }))}
+                  placeholder="Ano do Veículo:"
+                  className="bg-gray-100 border-0"
+                  required
+                />
+                <Input
+                  id="placa"
+                  value={formData.placa}
+                  onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value }))}
+                  placeholder="Placa do Veículo:"
+                  className="bg-gray-100 border-0"
+                  required
                 />
               </div>
 
-              <div>
-                <Label htmlFor="notaFiscal">Upload da Nota Fiscal</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="estado"
+                  value={formData.estado}
+                  onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                  placeholder="Estado:"
+                  className="bg-gray-100 border-0"
+                  required
+                />
+                <Input
+                  id="cidade"
+                  value={formData.cidade}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+                  placeholder="Cidade:"
+                  className="bg-gray-100 border-0"
+                  required
+                />
+              </div>
+
+              <Textarea
+                id="informacaoAdicional"
+                value={formData.informacaoAdicional}
+                onChange={(e) => setFormData(prev => ({ ...prev, informacaoAdicional: e.target.value }))}
+                placeholder="Informação adicional:"
+                className="bg-gray-100 border-0 min-h-[80px]"
+              />
+
+              <div className="bg-gray-100 rounded-lg p-6 text-center">
+                <p className="text-sm text-gray-600 mb-2">Faça o Upload da Nota Fiscal do seu Veículo:</p>
+                <p className="text-xs text-gray-500 mb-3">Imagem em PNG, JPG ou PDF. Máximo de 2MB</p>
                 <input
                   id="notaFiscal"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileChange}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-chekauto-yellow file:text-black hover:file:bg-chekauto-yellow/90"
+                  className="hidden"
                 />
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG ou PDF (máx. 2MB)</p>
+                <label htmlFor="notaFiscal" className="cursor-pointer inline-block">
+                  <div className="w-20 h-20 bg-white rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <span className="text-3xl text-gray-400">+</span>
+                  </div>
+                </label>
               </div>
 
-              <Button type="submit" className="w-full bg-black text-white hover:bg-black/90 h-12 text-base font-semibold rounded-full">
+              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-semibold rounded-full">
                 Próximo
               </Button>
             </form>
           </div>
 
           {/* Image */}
-          <div className="hidden md:block">
-            <div className="bg-gray-100 rounded-lg h-[600px] flex items-center justify-center">
-              <p className="text-gray-400">Imagem do caminhão amarelo</p>
+          <div className="hidden md:block relative rounded-lg overflow-hidden h-[700px]">
+            <img src={truckYellow} alt="Caminhão Amarelo" className="w-full h-full object-cover" />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow to-transparent p-8">
+              <p className="text-white text-xl font-semibold mb-2">Segurança e confiança em cada detalhe do seu caminhão.</p>
+              <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
             </div>
           </div>
         </div>
