@@ -8,51 +8,54 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ChekAuto Brand Colors */
+    --chekauto-yellow: 45 89% 53%; /* #F0BA1D */
+    --chekauto-black: 0 0% 0%; /* #000000 */
+    --chekauto-white: 0 0% 100%; /* #FFFFFF */
+    --chekauto-gray-light: 0 0% 93%; /* #EEEEEE */
+    --chekauto-gray-text: 0 0% 65%; /* #A6A6A6 */
+    --chekauto-orange: 28 95% 69%; /* #FAA954 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Base Colors using Brand Palette */
+    --background: 0 0% 100%; /* White */
+    --foreground: 0 0% 0%; /* Black */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 0%; /* Black */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 0%; /* Black */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 0%; /* Black - main brand color */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --secondary: 45 89% 53%; /* Yellow - accent brand color */
+    --secondary-foreground: 0 0% 0%; /* Black */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 0 0% 93%; /* Light Gray */
+    --muted-foreground: 0 0% 65%; /* Gray Text */
+
+    --accent: 45 89% 53%; /* Yellow */
+    --accent-foreground: 0 0% 0%; /* Black */
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 80%; /* Light border */
+    --input: 0 0% 93%; /* Light Gray for inputs */
+    --ring: 45 89% 53%; /* Yellow focus ring */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar - Dark Theme */
+    --sidebar-background: 0 0% 0%; /* Black */
+    --sidebar-foreground: 0 0% 100%; /* White */
+    --sidebar-primary: 45 89% 53%; /* Yellow */
+    --sidebar-primary-foreground: 0 0% 0%; /* Black */
+    --sidebar-accent: 0 0% 10%; /* Dark Gray */
+    --sidebar-accent-foreground: 0 0% 100%; /* White */
+    --sidebar-border: 0 0% 20%; /* Border in dark theme */
+    --sidebar-ring: 45 89% 53%; /* Yellow */
   }
 
   .dark {
@@ -100,6 +103,23 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+
+  /* Custom Typography Classes */
+  h1 {
+    @apply text-[32px] font-semibold;
+  }
+
+  h2 {
+    @apply text-[24px] font-semibold;
+  }
+
+  h3 {
+    @apply text-[20px] font-semibold;
+  }
+
+  h4 {
+    @apply text-[18px] font-medium;
   }
 }
