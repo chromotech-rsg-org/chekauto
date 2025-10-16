@@ -99,7 +99,7 @@ export default function ProductDetail() {
               <p className="text-sm text-gray-500">ou consulte valor para compra</p>
             </div>
 
-            <Button onClick={() => navigate('/solicitacao/veiculo')} className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-14 text-lg font-bold rounded-full mb-6">
+            <Button onClick={() => navigate('/solicitacao/veiculo')} className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-14 text-lg font-bold rounded-full mb-6 bg-amber-500 hover:bg-amber-400">
               CONTRATAR SOLUÇÃO
             </Button>
 
