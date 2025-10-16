@@ -1,5 +1,5 @@
 import React from 'react';
-import truckYellowClose from '@/assets/truck-yellow-close.png';
+import truckYellowClose from '@/assets/truck-yellow-hero.png';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 
 export const CallToAction: React.FC = () => {

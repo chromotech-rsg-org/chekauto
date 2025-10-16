@@ -210,16 +210,14 @@ export const ProductCatalog: React.FC = () => {
               <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
                 {section.products.map((product, productIndex) => (
                   <div key={productIndex} className="w-[33%] max-md:w-full max-md:ml-0 flex flex-col">
-                    <div className="border flex flex-col items-stretch justify-center px-[70px] py-5 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid max-md:px-5 text-sm text-black font-medium text-center leading-loose">
-                      <div>
-                        {section.title.split('|')[0]} |{" "}
-                        <button 
-                          onClick={() => navigate(`/produto/${product.id}`)}
-                          className="underline text-[rgba(250,169,84,1)] hover:text-brand-yellow transition-colors"
-                        >
-                          {section.title.split('|')[1]}
-                        </button>
-                      </div>
+                  <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
+                      <span>{section.title.split('|')[0].trim()}</span>
+                      <button 
+                        onClick={() => navigate(`/produto/${product.id}`)}
+                        className="text-brand-yellow hover:text-brand-yellow-dark transition-colors"
+                      >
+                        {section.title.split('|')[1].trim()}
+                      </button>
                     </div>
                     <ProductCard
                       id={product.id}
@@ -235,16 +233,14 @@ export const ProductCatalog: React.FC = () => {
         ))}
 
         <div className="flex flex-col items-center mt-[49px] max-md:mt-10">
-          <div className="border flex flex-col items-stretch text-sm text-black font-medium text-center leading-loose justify-center px-[70px] py-5 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid max-md:px-5 w-[350px] max-w-full">
-            <div>
-              Categoria Carroceria |{" "}
-              <button 
-                onClick={() => navigate('/produto/outros')}
-                className="underline text-[rgba(250,169,84,1)] hover:text-brand-yellow transition-colors"
-              >
-                Saiba mais
-              </button>
-            </div>
+          <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium w-[350px] max-w-full">
+            <span>Categoria Carroceria</span>
+            <button 
+              onClick={() => navigate('/produto/outros')}
+              className="text-brand-yellow hover:text-brand-yellow-dark transition-colors"
+            >
+              Saiba mais
+            </button>
           </div>
           <div className="border flex w-[350px] max-w-full flex-col items-center px-[31px] py-[26px] rounded-[0px_0px_8px_8px] border-[rgba(204,204,204,1)] border-solid max-md:px-5">
             <h3 className="text-[rgba(22,28,45,1)] text-xl font-semibold leading-none text-center">

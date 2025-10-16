@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
+import truckBlue from '@/assets/truck-blue-sunset.png';
 
 export default function ProductDetail() {
   const navigate = useNavigate();
@@ -39,6 +40,11 @@ export default function ProductDetail() {
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-black text-white py-20 px-6">
+        <img
+          src={truckBlue}
+          alt="Hero background"
+          className="absolute h-full w-full object-cover inset-0"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/60" />
         <div className="relative max-w-7xl mx-auto">
           <nav className="flex items-center gap-8 mb-12">
@@ -134,12 +140,13 @@ export default function ProductDetail() {
             </TabsList>
             
             <TabsContent value="caracteristicas" className="mt-8">
-              <div className="bg-[#353535] rounded-lg p-8">
-                <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-[#2c2c2c] rounded-lg p-12">
+                <h3 className="text-brand-yellow text-xl font-bold mb-8">CARACTERÍSTICAS PRINCIPAIS</h3>
+                <div className="grid md:grid-cols-3 gap-x-12 gap-y-8">
                   {caracteristicas.map((item, index) => (
-                    <div key={index} className="text-white">
-                      <p className="text-chekauto-yellow font-semibold mb-1">{item.titulo}</p>
-                      <p className="text-lg">{item.valor}</p>
+                    <div key={index}>
+                      <p className="text-white font-semibold text-sm mb-2">{item.titulo}:</p>
+                      <p className="text-white/80 text-base">{item.valor}</p>
                     </div>
                   ))}
                 </div>

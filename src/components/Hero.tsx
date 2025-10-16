@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ConsultationModal } from './ConsultationModal';
 import { useNavigate } from 'react-router-dom';
-import heroBackground from '@/assets/hero-background.png';
+import heroBackground from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 
 export const Hero: React.FC = () => {

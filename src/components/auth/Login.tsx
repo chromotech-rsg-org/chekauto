@@ -1,79 +1,119 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import logoBlack from '@/assets/logo-chekauto-black.png';
+import truckBlue from '@/assets/truck-blue-sunset.png';
+import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 
 export const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
-    // TODO: Implement authentication
+    // Login de teste: admin@chekauto.com / admin123
+    if (email === 'admin@chekauto.com' && password === 'admin123') {
+      navigate('/');
+    } else {
+      alert('Credenciais inválidas. Use: admin@chekauto.com / admin123');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <img src={logoBlack} alt="CHEKAUTO" className="h-12 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-black mb-2">Bem-vindo de volta</h1>
-          <p className="text-gray-600">Entre na sua conta para continuar</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="email" className="text-black font-medium">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className="mt-1"
-              required
-            />
+    <div className="min-h-screen flex">
+      {/* Left side - Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative">
+        <img
+          src={truckBlue}
+          alt="ChekAuto"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+          <div className="text-center px-8">
+            <img src={logoYellow} alt="ChekAuto" className="h-20 mx-auto mb-8" />
+            <h1 className="text-4xl font-bold text-white mb-4">
+              Bem-vindo ao ChekAuto
+            </h1>
+            <p className="text-xl text-white/90">
+              Consultoria especializada em Implementos
+            </p>
           </div>
+        </div>
+      </div>
 
+      {/* Right side - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-md w-full space-y-8">
           <div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-black font-medium">Senha</Label>
-              <Link to="/recuperar-senha" className="text-sm text-chekauto-yellow hover:underline">
-                Esqueceu a senha?
-              </Link>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Faça login
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Ou{' '}
+              <button
+                onClick={() => navigate('/cadastro')}
+                className="font-medium text-brand-yellow hover:text-brand-yellow-dark"
+              >
+                crie uma nova conta
+              </button>
+            </p>
+          </div>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1"
+                  placeholder="seu@email.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="mt-1"
-              required
-            />
-          </div>
 
-          <Button type="submit" className="w-full bg-black text-white hover:bg-black/90 h-12 text-base font-semibold rounded-full">
-            Entrar
-          </Button>
-        </form>
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                <a href="#" className="font-medium text-brand-yellow hover:text-brand-yellow-dark">
+                  Esqueceu sua senha?
+                </a>
+              </div>
+            </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Não tem uma conta?{' '}
-            <Link to="/cadastro" className="text-chekauto-yellow font-semibold hover:underline">
-              Cadastre-se
-            </Link>
-          </p>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link to="/" className="text-sm text-gray-500 hover:text-chekauto-yellow">
-            ← Voltar ao início
-          </Link>
+            <div>
+              <Button type="submit" className="w-full bg-brand-yellow hover:bg-brand-yellow-dark text-black font-semibold">
+                Entrar
+              </Button>
+            </div>
+            
+            <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+              <p className="text-xs text-gray-600 text-center">
+                <strong>Login de teste:</strong><br />
+                Email: admin@chekauto.com<br />
+                Senha: admin123
+              </p>
+            </div>
+          </form>
         </div>
       </div>
     </div>
