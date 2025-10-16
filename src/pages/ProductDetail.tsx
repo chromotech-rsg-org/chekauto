@@ -132,7 +132,7 @@ export default function ProductDetail() {
             
             <TabsContent value="caracteristicas" className="mt-8">
               <div className="bg-[#2c2c2c] rounded-lg p-12">
-                <h3 className="text-brand-yellow text-xl font-bold mb-8">CARACTERÍSTICAS PRINCIPAIS</h3>
+                <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">CARACTERÍSTICAS PRINCIPAIS</h3>
                 <div className="grid md:grid-cols-3 gap-x-12 gap-y-8">
                   {caracteristicas.map((item, index) => <div key={index}>
                       <p className="text-white font-semibold text-sm mb-2">{item.titulo}:</p>
