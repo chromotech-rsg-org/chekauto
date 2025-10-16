@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import truckBlue from '@/assets/truck-blue-sunset.png';
-import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
+import logoIcon from '@/assets/logo-chekauto-yellow.png';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +15,8 @@ export const Login: React.FC = () => {
     e.preventDefault();
     // Login de teste: admin@chekauto.com / admin123
     if (email === 'admin@chekauto.com' && password === 'admin123') {
-      navigate('/');
+      // Redirecionar para a página interna do admin
+      navigate('/solicitacao/veiculo');
     } else {
       alert('Credenciais inválidas. Use: admin@chekauto.com / admin123');
     }
@@ -32,7 +33,7 @@ export const Login: React.FC = () => {
         />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
           <div className="text-center px-8">
-            <img src={logoYellow} alt="ChekAuto" className="h-20 mx-auto mb-8" />
+            <img src={logoIcon} alt="ChekAuto" className="h-20 mx-auto mb-8" />
             <h1 className="text-4xl font-bold text-white mb-4">
               Bem-vindo ao ChekAuto
             </h1>
@@ -46,24 +47,19 @@ export const Login: React.FC = () => {
       {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              Faça login
+          <div className="flex flex-col items-center">
+            <img src={logoIcon} alt="ChekAuto" className="h-16 mb-8" />
+            <h2 className="text-3xl font-bold text-gray-900 text-center">
+              Bem-vindo de volta
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Ou{' '}
-              <button
-                onClick={() => navigate('/cadastro')}
-                className="font-medium text-brand-yellow hover:text-brand-yellow-dark"
-              >
-                crie uma nova conta
-              </button>
+            <p className="mt-2 text-sm text-gray-600 text-center">
+              Entre na sua conta para continuar
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-700">E-mail</Label>
                 <Input
                   id="email"
                   name="email"
@@ -77,7 +73,12 @@ export const Login: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="password">Senha</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="password" className="text-gray-700">Senha</Label>
+                  <a href="#" className="text-sm font-medium text-brand-yellow hover:text-brand-yellow-dark">
+                    Esqueceu a senha?
+                  </a>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -92,19 +93,22 @@ export const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a href="#" className="font-medium text-brand-yellow hover:text-brand-yellow-dark">
-                  Esqueceu sua senha?
-                </a>
-              </div>
-            </div>
-
             <div>
-              <Button type="submit" className="w-full bg-brand-yellow hover:bg-brand-yellow-dark text-black font-semibold">
+              <Button type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-full">
                 Entrar
               </Button>
             </div>
+            
+            <p className="text-center text-sm text-gray-600">
+              Não tem uma conta?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/cadastro')}
+                className="font-medium text-brand-yellow hover:text-brand-yellow-dark"
+              >
+                Cadastre-se
+              </button>
+            </p>
             
             <div className="mt-4 p-4 bg-gray-100 rounded-lg">
               <p className="text-xs text-gray-600 text-center">

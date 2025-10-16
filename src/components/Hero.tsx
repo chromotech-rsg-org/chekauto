@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ConsultationModal } from './ConsultationModal';
 import { useNavigate } from 'react-router-dom';
 import heroBackground from '@/assets/truck-blue-sunset.png';
-import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
+import logoYellow from '@/assets/logo-chekauto-yellow.png';
 
 export const Hero: React.FC = () => {
   const [isNewVehicle, setIsNewVehicle] = useState(false);
@@ -23,13 +23,13 @@ export const Hero: React.FC = () => {
         alt="Hero background"
         className="absolute h-full w-full object-cover inset-0"
       />
-      <div className="relative bg-black/60 flex w-full flex-col items-center pt-[73px] pb-[120px] px-20 max-md:max-w-full max-md:pb-[100px] max-md:px-5">
+      <div className="relative bg-black/80 flex w-full flex-col items-center pt-[73px] pb-[120px] px-20 max-md:max-w-full max-md:pb-[100px] max-md:px-5">
         <div className="flex mb-[-53px] w-full max-w-[1273px] flex-col items-center max-md:max-w-full max-md:mb-2.5">
           <nav className="self-stretch flex w-full items-center gap-5 text-[15px] text-white font-semibold flex-wrap justify-between max-md:max-w-full">
             <img
               src={logoYellow}
               alt="CHEKAUTO Logo"
-              className="h-[40px] object-contain"
+              className="h-[50px] object-contain"
             />
             <div className="flex items-center gap-[40px_100px] flex-wrap max-md:max-w-full">
               <a href="#about" className="hover:text-brand-yellow transition-colors">A CHEKAUTO</a>
@@ -56,13 +56,13 @@ export const Hero: React.FC = () => {
           </p>
           
           <div className="mt-12 w-full max-w-[700px]">
-            <div className="flex flex-wrap items-center gap-4 mb-4 justify-center">
+            <div className="flex flex-wrap items-center gap-3 mb-4 justify-center">
               <label className="flex items-center gap-2 text-white cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isNewVehicle}
                   onChange={(e) => setIsNewVehicle(e.target.checked)}
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-brand-yellow"
                 />
                 <span className="text-sm">Automóvel novo</span>
               </label>
@@ -72,7 +72,7 @@ export const Hero: React.FC = () => {
                   type="checkbox"
                   checked={isUsedVehicle}
                   onChange={(e) => setIsUsedVehicle(e.target.checked)}
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-brand-yellow"
                 />
                 <span className="text-sm">Automóvel usado</span>
               </label>
@@ -80,7 +80,7 @@ export const Hero: React.FC = () => {
               <select
                 value={originState}
                 onChange={(e) => setOriginState(e.target.value)}
-                className="bg-white text-black px-4 py-2 rounded text-sm min-w-[150px]"
+                className="bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px]"
               >
                 <option value="">Estado de Origem</option>
                 <option value="SP">São Paulo</option>
@@ -90,19 +90,19 @@ export const Hero: React.FC = () => {
               </select>
             </div>
             
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-3 items-center">
               <input
                 type="text"
-                placeholder="Digite o Número do seu Chassi"
+                placeholder="Digite o número do seu Chassi"
                 value={chassisNumber}
                 onChange={(e) => setChassisNumber(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-full text-black"
+                className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500"
               />
               <button
                 onClick={handleConsult}
-                className="bg-brand-yellow text-black font-semibold px-8 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors whitespace-nowrap"
+                className="bg-brand-yellow text-black font-bold px-10 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors whitespace-nowrap uppercase"
               >
-                CONSULTAR
+                Consultar
               </button>
             </div>
           </div>

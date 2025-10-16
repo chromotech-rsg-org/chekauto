@@ -15,23 +15,23 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-brand-yellow p-8 max-w-md border-none rounded-lg">
+      <DialogContent className="bg-brand-yellow p-8 max-w-sm border-none rounded-2xl">
         <div className="space-y-4">
-          <h2 className="text-black text-xl font-semibold text-center">
+          <h2 className="text-black text-lg font-bold text-center">
             RENAVE: {renave}
           </h2>
           
           <Input
             placeholder="Seu Nome"
-            className="bg-white border-none h-12 text-black placeholder:text-gray-500"
+            className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
           />
           
           <Input
             placeholder="WhatsApp"
-            className="bg-white border-none h-12 text-black placeholder:text-gray-500"
+            className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
           />
           
-          <button className="w-full bg-black text-white font-semibold py-3 rounded-md hover:bg-gray-900 transition-colors">
+          <button className="w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-colors">
             Consultar Agora
           </button>
         </div>
