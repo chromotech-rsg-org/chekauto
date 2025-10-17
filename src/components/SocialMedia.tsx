@@ -19,13 +19,13 @@ export const SocialMedia: React.FC = () => {
           <span className="font-bold"> Novidades</span>
         </p>
       </div>
-      <div className="flex items-stretch flex-wrap">
+      <div className="flex items-stretch">
         {socialImages.map((image, index) => (
           <img
             key={index}
             src={image}
             alt={`Social media post ${index + 1}`}
-            className="aspect-[1] object-contain w-[341px] shrink-0 max-w-full hover:scale-105 transition-transform duration-300 cursor-pointer"
+            className="aspect-[1] object-cover w-1/5 shrink-0 hover:scale-105 transition-transform duration-300 cursor-pointer"
           />
         ))}
       </div>
