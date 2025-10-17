@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
-import truckVehicleData from '@/assets/truck-vehicle-data.png';
+import truckYellow from '@/assets/truck-yellow-close.png';
 export default function VehicleData() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -50,7 +50,7 @@ export default function VehicleData() {
       }));
     }
   };
-  return <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-black">
       {/* Header */}
       <header className="bg-black py-6 px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -66,8 +66,8 @@ export default function VehicleData() {
       </header>
 
       {/* Stepper */}
-      <div className="py-8 bg-white">
-        <Stepper steps={steps} />
+      <div className="py-8 bg-black">
+        <Stepper steps={steps} className="text-white" />
       </div>
 
       {/* Content */}
@@ -119,8 +119,8 @@ export default function VehicleData() {
 
               <div className="bg-gray-100 rounded-lg p-6 text-center">
                 <p className="text-sm text-gray-600 mb-2">Faça o Upload da Nota Fiscal do seu Veículo:</p>
-                <p className="text-xs text-gray-500 mb-3">Imagem em PNG, JPG ou PDF. Máximo de 2MB</p>
-                <input id="notaFiscal" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
+                
+                
                 <label htmlFor="notaFiscal" className="cursor-pointer inline-block">
                   <div className="w-20 h-20 bg-white rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
                     <span className="text-3xl text-gray-400">+</span>
@@ -136,8 +136,8 @@ export default function VehicleData() {
 
           {/* Image */}
           <div className="hidden md:block relative rounded-lg overflow-hidden h-[700px]">
-            <img src={truckVehicleData} alt="Caminhão Amarelo" className="w-full h-full object-cover" />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow/90 to-transparent p-8">
+            <img src={truckYellow} alt="Caminhão Amarelo" className="w-full h-full object-cover" />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow to-transparent p-8">
               <p className="text-white text-xl font-semibold mb-2">Segurança e confiança em cada detalhe do seu caminhão.</p>
               <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
             </div>
