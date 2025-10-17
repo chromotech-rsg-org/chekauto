@@ -11,7 +11,7 @@ import {
   Menu,
   X
 } from "lucide-react";
-import logoIcon from "@/assets/logo-chekauto-icon.png";
+import logoYellow from "@/assets/logo-chekauto-yellow.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -68,7 +68,7 @@ export const AdminSidebar = () => {
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-800">
-          <img src={logoIcon} alt="ChekAuto" className="h-12 mx-auto" />
+          <img src={logoYellow} alt="ChekAuto" className="h-12 mx-auto" />
         </div>
 
         {/* Navigation */}
