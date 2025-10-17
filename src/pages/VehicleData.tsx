@@ -138,7 +138,7 @@ export default function VehicleData() {
           <div className="hidden md:block relative rounded-lg overflow-hidden h-[700px]">
             <img src={truckVehicleData} alt="Caminhão Amarelo" className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow/90 to-transparent p-8">
-              <p className="text-white text-xl font-semibold mb-2">Segurança e confiança em cada detalhe do seu caminhão.</p>
+              
               <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
             </div>
           </div>
