@@ -28,14 +28,14 @@ export const Hero: React.FC = () => {
             </div>
           </nav>
           
-          <h1 className="text-brand-yellow text-4xl font-semibold leading-tight text-center mt-[100px] max-md:max-w-full max-md:mt-10">
+          <h1 className="text-brand-yellow text-3xl font-semibold leading-tight text-center mt-[100px] max-md:max-w-full max-md:mt-10">
             Resolva seu RENAVE/BIN com tranquilidade.
           </h1>
-          <p className="text-white text-4xl font-normal leading-tight text-center max-md:max-w-full">
+          <p className="text-white text-2xl font-normal leading-tight text-center max-md:max-w-full">
             Consultoria especializada em Implementos.
           </p>
           
-          <p className="text-white text-xl font-normal leading-[25px] text-center mt-4 max-md:max-w-full">
+          <p className="text-white text-xl font-normal leading-[25px] text-center mt-2 max-md:max-w-full">
             Nós vamos assegurar que seu{" "}
             <span className="font-semibold">caminhão</span> esteja totalmente{" "}
             <span className="underline text-brand-yellow">
@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
             </span>
           </p>
           
-          <div className="mt-12 w-full max-w-[700px]">
+          <div className="mt-6 w-full max-w-[700px]">
             <div className="flex flex-wrap items-center gap-3 mb-4 justify-center">
               <label className="flex items-center gap-2 text-white cursor-pointer">
                 <input type="checkbox" checked={isNewVehicle} onChange={e => setIsNewVehicle(e.target.checked)} className="w-4 h-4 accent-brand-yellow" />

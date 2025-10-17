@@ -3,7 +3,7 @@ import React from 'react';
 export const AboutSection: React.FC = () => {
   return (
     <section id="about" className="bg-white flex w-full flex-col items-center px-20 max-md:max-w-full max-md:px-5">
-      <div className="w-full max-w-[1486px] mt-[351px] max-md:max-w-full max-md:mt-10">
+      <div className="w-full max-w-[1486px] mt-24 max-md:max-w-full max-md:mt-10">
         <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           <div className="w-[34%] max-md:w-full max-md:ml-0">
             <div className="flex flex-col items-stretch font-semibold max-md:max-w-full max-md:mt-10">
