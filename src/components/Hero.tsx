@@ -38,7 +38,7 @@ export const Hero: React.FC = () => {
           <p className="text-white text-xl font-normal leading-[25px] text-center mt-4 max-md:max-w-full">
             Nós vamos assegurar que seu{" "}
             <span className="font-semibold">caminhão</span> esteja totalmente{" "}
-            <span className="underline">
+            <span className="underline text-brand-yellow">
               regular, validado e pronto para seguir em frente.
             </span>
           </p>
