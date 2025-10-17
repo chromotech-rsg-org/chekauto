@@ -47,7 +47,7 @@ export const BenefitsSection: React.FC = () => {
       <img
         src="https://api.builder.io/api/v1/image/assets/TEMP/a3c216e4be3e0094a2d4121f1f0bb947a8a77d16?placeholderIfAbsent=true"
         alt="Decorative element"
-        className="aspect-[1.01] object-contain w-[74px] mb-[-34px] mt-[171px] max-md:mt-10 max-md:mb-2.5"
+        className="aspect-[1.01] object-contain w-[74px] mb-[-34px] mt-[171px] max-md:mt-10 max-md:mb-2.5 relative z-50"
       />
     </section>
   );
