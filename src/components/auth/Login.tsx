@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
+import logoYellowBlack from '@/assets/logo-chekauto-yellow-black.png';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export const Login: React.FC = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-md w-full space-y-8">
           <div className="flex flex-col items-center">
-            <img src={logoYellow} alt="ChekAuto" className="h-16 mb-8" />
+            <img src={logoYellowBlack} alt="ChekAuto" className="h-16 mb-8" />
             <h2 className="text-3xl font-bold text-gray-900 text-center">
               Bem-vindo de volta
             </h2>
