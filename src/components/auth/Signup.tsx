@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import loginBackground from '@/assets/login-background.png';
+import loginBackground from '@/assets/signup-background.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import logoIcon from '@/assets/logo-chekauto-icon.png';
 
