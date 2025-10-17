@@ -17,8 +17,8 @@ export const Login: React.FC = () => {
     e.preventDefault();
     // Login de teste: admin@chekauto.com / admin123
     if (email === 'admin@chekauto.com' && password === 'admin123') {
-      // Redirecionar para a página interna do admin
-      navigate('/solicitacao/veiculo');
+      // Redirecionar para o dashboard administrativo
+      navigate('/admin/dashboard');
     } else {
       alert('Credenciais inválidas. Use: admin@chekauto.com / admin123');
     }

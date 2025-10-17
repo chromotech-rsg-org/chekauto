@@ -13,6 +13,13 @@ import ClientData from "./pages/ClientData";
 import PaymentData from "./pages/PaymentData";
 import Confirmation from "./pages/Confirmation";
 import ProductDetail from "./pages/ProductDetail";
+import Dashboard from "./pages/admin/Dashboard";
+import Perfis from "./pages/admin/Perfis";
+import Usuarios from "./pages/admin/Usuarios";
+import Produtos from "./pages/admin/Produtos";
+import Clientes from "./pages/admin/Clientes";
+import Solicitacoes from "./pages/admin/Solicitacoes";
+import SplitPagamento from "./pages/admin/SplitPagamento";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +45,15 @@ const App = () => (
           <Route path="/solicitacao/cliente" element={<ClientData />} />
           <Route path="/solicitacao/pagamento" element={<PaymentData />} />
           <Route path="/solicitacao/confirmacao" element={<Confirmation />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/perfis" element={<Perfis />} />
+          <Route path="/admin/usuarios" element={<Usuarios />} />
+          <Route path="/admin/produtos" element={<Produtos />} />
+          <Route path="/admin/clientes" element={<Clientes />} />
+          <Route path="/admin/solicitacoes" element={<Solicitacoes />} />
+          <Route path="/admin/split-pagamento" element={<SplitPagamento />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
