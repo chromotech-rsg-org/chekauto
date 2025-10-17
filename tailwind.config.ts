@@ -60,6 +60,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        brand: {
+          yellow: "hsl(var(--chekauto-yellow))",
+          black: "hsl(var(--chekauto-black))",
+          white: "hsl(var(--chekauto-white))",
+          "gray-light": "hsl(var(--chekauto-gray-light))",
+          "gray-text": "hsl(var(--chekauto-gray-text))",
+          orange: "hsl(var(--chekauto-orange))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
