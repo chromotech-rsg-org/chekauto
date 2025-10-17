@@ -15,7 +15,8 @@ export const Hero: React.FC = () => {
   };
   return <section className="flex flex-col relative min-h-[600px] w-full pb-[11px] max-md:max-w-full">
       <img src={heroBackground} alt="Hero background" className="absolute h-full w-full object-cover inset-0" />
-      <div className="relative bg-black/80 flex w-full flex-col items-center pt-[73px] pb-[120px] px-20 max-md:max-w-full max-md:pb-[100px] max-md:px-5">
+      <div className="absolute inset-0 bg-black/80" />
+      <div className="relative flex w-full flex-col items-center pt-[73px] pb-[120px] px-20 max-md:max-w-full max-md:pb-[100px] max-md:px-5">
         <div className="flex mb-[-53px] w-full max-w-[1273px] flex-col items-center max-md:max-w-full max-md:mb-2.5">
           <nav className="self-stretch flex w-full items-center gap-5 text-[15px] text-white font-semibold flex-wrap justify-between max-md:max-w-full">
             <img src={logoYellow} alt="CHEKAUTO Logo" className="h-[50px] object-contain" />
