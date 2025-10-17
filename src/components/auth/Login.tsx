@@ -119,6 +119,16 @@ export const Login: React.FC = () => {
                 Senha: admin123
               </p>
             </div>
+            
+            <p className="text-center text-sm text-gray-600 mt-4">
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="font-medium text-gray-700 hover:text-black"
+              >
+                ← Voltar ao início
+              </button>
+            </p>
           </form>
         </div>
       </div>
