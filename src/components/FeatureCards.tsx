@@ -25,7 +25,7 @@ export const FeatureCards: React.FC = () => {
         <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           {features.map((feature, index) => (
             <article key={index} className="w-[33%] max-md:w-full max-md:ml-0">
-              <div className="bg-[rgba(240,186,29,1)] flex grow items-stretch gap-[18px] w-full px-[54px] py-[35px] rounded-[25px] max-md:mt-10 max-md:px-5">
+              <div className="bg-[rgba(240,186,29,1)] flex grow items-stretch gap-[18px] w-full px-[54px] py-[35px] rounded-[25px] max-md:mt-10 max-md:px-5 min-h-[140px]">
                 <div className="bg-white flex flex-col items-center justify-center w-[49px] h-[49px] px-2.5 rounded-[50%]">
                   <img
                     src={feature.icon}

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
+import clientDataPerson from '@/assets/client-data-person.png';
 
 export default function ClientData() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function ClientData() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black py-6 px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -57,7 +58,7 @@ export default function ClientData() {
       </header>
 
       {/* Stepper */}
-      <div className="py-8 bg-black">
+      <div className="py-8 bg-white">
         <Stepper steps={steps} />
       </div>
 
@@ -164,8 +165,8 @@ export default function ClientData() {
 
           {/* Image */}
           <div className="hidden md:block relative rounded-lg overflow-hidden h-[700px]">
-            <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800" alt="Cliente satisfeito" className="w-full h-full object-cover" />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow to-transparent p-8">
+            <img src={clientDataPerson} alt="Cliente satisfeito" className="w-full h-full object-cover" />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow/90 to-transparent p-8">
               <p className="text-white text-xl font-semibold mb-2">Do chassi à rodovia, a validação que garante seu caminho</p>
               <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
             </div>

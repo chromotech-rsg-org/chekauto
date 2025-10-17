@@ -141,7 +141,7 @@ export const ProductCatalog: React.FC = () => {
         {productSections.map((section, sectionIndex) => <div key={sectionIndex} className="mt-[73px] max-md:mt-10">
             <div className="max-md:max-w-full">
               <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
-                {section.products.map((product, productIndex) => <div key={productIndex} className="w-[33%] max-md:w-full max-md:ml-0 flex flex-col">
+                {section.products.map((product, productIndex) => <div key={productIndex} className="w-[33%] max-md:w-full max-md:ml-0 flex flex-col h-full">
                   <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
                       <span>{section.title.split('|')[0].trim()}</span>
                       <button onClick={() => navigate(`/produto/${product.id}`)} className="text-brand-yellow hover:text-brand-yellow-dark transition-colors text-amber-500">

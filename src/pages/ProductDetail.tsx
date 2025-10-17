@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 export default function ProductDetail() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
   const {
     id

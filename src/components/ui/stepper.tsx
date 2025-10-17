@@ -23,10 +23,10 @@ export const Stepper: React.FC<StepperProps> = ({ steps, className }) => {
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center transition-all",
                 step.completed
-                  ? "bg-white text-brand-yellow"
+                  ? "bg-brand-yellow text-black"
                   : step.active
                   ? "bg-brand-yellow text-black"
-                  : "bg-gray-700 text-gray-400"
+                  : "bg-gray-300 text-gray-600"
               )}
             >
               {step.completed ? (
@@ -39,7 +39,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps, className }) => {
             </div>
             <span className={cn(
               "text-xs mt-2 text-center font-medium",
-              step.active || step.completed ? "text-white" : "text-gray-500"
+              step.active || step.completed ? "text-black" : "text-gray-500"
             )}>
               {step.label}
             </span>
@@ -47,7 +47,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps, className }) => {
           {index < steps.length - 1 && (
             <div className={cn(
               "h-0.5 flex-1 mx-2 mt-[-20px]",
-              step.completed ? "bg-white" : "bg-gray-700"
+              step.completed ? "bg-brand-yellow" : "bg-gray-300"
             )} />
           )}
         </React.Fragment>

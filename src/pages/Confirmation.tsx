@@ -16,7 +16,7 @@ export default function Confirmation() {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black py-6 px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -32,7 +32,7 @@ export default function Confirmation() {
       </header>
 
       {/* Stepper */}
-      <div className="py-8 bg-black">
+      <div className="py-8 bg-white">
         <Stepper steps={steps} />
       </div>
 

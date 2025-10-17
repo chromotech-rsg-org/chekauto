@@ -31,7 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       navigate(`/produto/${id}`);
     }
   };
-  return <article className="border flex w-full flex-col items-center px-[31px] py-[29px] rounded-[0px_0px_8px_8px] border-[rgba(204,204,204,1)] border-solid max-md:mt-10 max-md:px-5">
+  return <article className="border flex w-full flex-col items-center px-[31px] py-[29px] rounded-[0px_0px_8px_8px] border-[rgba(204,204,204,1)] border-solid max-md:mt-10 max-md:px-5 min-h-[450px]">
       <h3 className="text-[rgba(22,28,45,1)] text-xl font-semibold leading-[25px] text-center min-h-[50px] flex items-center">
         {title}
       </h3>
