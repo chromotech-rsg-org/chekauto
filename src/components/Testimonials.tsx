@@ -24,7 +24,7 @@ export const Testimonials: React.FC = () => {
 
   return (
     <section className="bg-white flex w-full flex-col items-center px-20 max-md:max-w-full max-md:px-5">
-      <div className="bg-[rgba(240,186,29,1)] flex min-h-[77px] w-full max-md:max-w-full" />
+      <div className="bg-[rgba(240,186,29,1)] flex min-h-[77px] w-screen max-w-none -mx-20 max-md:-mx-5" />
       <h2 className="text-black text-[15px] font-semibold leading-10 tracking-[9px] text-center self-center mt-[130px] max-md:mt-10">
         DEPOIMENTOS
       </h2>
