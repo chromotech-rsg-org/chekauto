@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-neutral-800 flex w-full flex-col items-center justify-center px-[70px] py-[129px] max-md:max-w-full max-md:px-5 max-md:py-[100px]">
+    <footer className="bg-neutral-800 flex w-full flex-col items-center justify-center px-[70px] pt-[129px] max-md:max-w-full max-md:px-5 max-md:pt-[100px]">
       <div className="mb-[-26px] w-full max-w-[1222px] max-md:max-w-full max-md:mb-2.5">
         <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           <div className="w-[44%] max-md:w-full max-md:ml-0">
