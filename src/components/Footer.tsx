@@ -61,8 +61,8 @@ export const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-[rgba(24,24,24,1)] flex w-full flex-col text-[15px] text-white font-normal justify-center px-[70px] py-[22px] mt-[129px] max-md:max-w-full max-md:px-5 max-md:mt-10">
-        <p className="max-md:max-w-full">
+      <div className="bg-[rgba(24,24,24,1)] flex w-screen flex-col text-[15px] text-white font-normal justify-center px-5 py-[22px] mt-[129px] -mx-[70px] max-md:-mx-5 max-md:mt-10">
+        <p className="max-w-[1222px] mx-auto w-full">
           Todos os Direitos de Desenvolvimento por{" "}
           <span className="font-medium">RSG GROUP</span>
         </p>
