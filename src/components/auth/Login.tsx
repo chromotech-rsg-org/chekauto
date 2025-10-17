@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import truckBlue from '@/assets/truck-blue-sunset.png';
-import logoIcon from '@/assets/logo-chekauto-icon.png';
+import logoYellow from '@/assets/logo-chekauto-yellow.png';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
         />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
           <div className="text-center px-8">
-            <img src={logoIcon} alt="ChekAuto" className="h-20 mx-auto mb-8" />
+            <img src={logoYellow} alt="ChekAuto" className="h-20 mx-auto mb-8" />
             <h1 className="text-4xl font-bold text-white mb-4">
               Bem-vindo ao ChekAuto
             </h1>
@@ -48,7 +48,7 @@ export const Login: React.FC = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-md w-full space-y-8">
           <div className="flex flex-col items-center">
-            <img src={logoIcon} alt="ChekAuto" className="h-16 mb-8" />
+            <img src={logoYellow} alt="ChekAuto" className="h-16 mb-8" />
             <h2 className="text-3xl font-bold text-gray-900 text-center">
               Bem-vindo de volta
             </h2>
