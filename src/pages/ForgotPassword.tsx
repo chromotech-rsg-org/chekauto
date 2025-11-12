@@ -3,25 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
-import logoYellowBlack from '@/assets/logo-chekauto-yellow-black.png';
 import logoIcon from '@/assets/logo-chekauto-icon.png';
 
-export const Login: React.FC = () => {
+export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Login de teste: admin@chekauto.com / admin123
-    if (email === 'admin@chekauto.com' && password === 'admin123') {
-      // Redirecionar para o dashboard administrativo
-      navigate('/admin/dashboard');
-    } else {
-      alert('Credenciais inválidas. Use: admin@chekauto.com / admin123');
+    
+    if (!email) {
+      toast.error('Por favor, insira seu email');
+      return;
     }
+
+    setIsLoading(true);
+
+    // Simula envio de email
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success('Email de recuperação enviado! Verifique sua caixa de entrada.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    }, 1500);
   };
 
   return (
@@ -37,27 +46,28 @@ export const Login: React.FC = () => {
           <div className="text-center px-8">
             <img src={logoYellow} alt="ChekAuto" className="h-20 mx-auto mb-8" />
             <h1 className="text-4xl font-bold text-white mb-4">
-              Bem-vindo ao ChekAuto
+              Recuperação de Senha
             </h1>
             <p className="text-xl text-white/90">
-              Consultoria especializada em Implementos
+              Enviaremos um link de recuperação para seu email
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right side - Login Form */}
+      {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-md w-full space-y-8">
           <div className="flex flex-col items-center">
             <img src={logoIcon} alt="ChekAuto" className="h-16 mb-8" />
             <h2 className="text-3xl font-bold text-gray-900 text-center">
-              Bem-vindo de volta
+              Esqueceu sua senha?
             </h2>
             <p className="mt-2 text-sm text-gray-600 text-center">
-              Entre na sua conta para continuar
+              Digite seu email para receber as instruções de recuperação
             </p>
           </div>
+
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
@@ -74,55 +84,28 @@ export const Login: React.FC = () => {
                   placeholder="seu@email.com"
                 />
               </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <Label htmlFor="password" className="text-gray-700">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/esqueci-senha')}
-                    className="text-sm font-medium text-brand-yellow hover:text-brand-yellow-dark"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1"
-                  placeholder="••••••••"
-                />
-              </div>
             </div>
 
             <div>
-              <Button type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-full">
-                Entrar
+              <Button 
+                type="submit" 
+                className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
               </Button>
             </div>
             
             <p className="text-center text-sm text-gray-600">
-              Não tem uma conta?{' '}
+              Lembrou sua senha?{' '}
               <button
                 type="button"
-                onClick={() => navigate('/cadastro')}
+                onClick={() => navigate('/login')}
                 className="font-medium text-brand-yellow hover:text-brand-yellow-dark"
               >
-                Cadastre-se
+                Fazer Login
               </button>
             </p>
-            
-            <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-              <p className="text-xs text-gray-600 text-center">
-                <strong>Login de teste:</strong><br />
-                Email: admin@chekauto.com<br />
-                Senha: admin123
-              </p>
-            </div>
             
             <p className="text-center text-sm text-gray-600 mt-4">
               <button
@@ -138,4 +121,4 @@ export const Login: React.FC = () => {
       </div>
     </div>
   );
-};
+}

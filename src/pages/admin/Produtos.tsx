@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { mockProdutos } from "@/lib/mockData";
+import { mockProdutos, mockCategorias } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -11,17 +11,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/admin/FileUpload";
 
-const categorias = [
-  "Carroceria Sobre Chassis Tanque",
-  "Implemento Rodoviário",
-  "Reboque/Semirreboque",
-  "Outros"
-];
-
 export default function Produtos() {
   const [produtos] = useState(mockProdutos);
+  const [categorias, setCategorias] = useState(mockCategorias);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    // Carrega categorias dinamicamente
+    setCategorias(mockCategorias);
+  }, []);
 
   const filteredProdutos = produtos.filter(
     (produto) =>
@@ -81,8 +80,8 @@ export default function Produtos() {
                       </SelectTrigger>
                       <SelectContent>
                         {categorias.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
+                          <SelectItem key={cat.id.toString()} value={cat.nome}>
+                            {cat.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -140,8 +139,8 @@ export default function Produtos() {
             <SelectContent>
               <SelectItem value="todos">Todos</SelectItem>
               {categorias.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
+                <SelectItem key={cat.id.toString()} value={cat.nome}>
+                  {cat.nome}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -10,13 +10,73 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const permissoesDisponiveis = [
-  { id: "dashboard", label: "Dashboard", acoes: ["Visualizar"] },
-  { id: "usuarios", label: "Usuários", acoes: ["Visualizar", "Criar", "Editar", "Excluir"] },
-  { id: "perfis", label: "Perfis", acoes: ["Visualizar", "Criar", "Editar", "Excluir"] },
-  { id: "produtos", label: "Produtos", acoes: ["Visualizar", "Criar", "Editar", "Excluir"] },
-  { id: "clientes", label: "Clientes", acoes: ["Visualizar", "Criar", "Editar", "Excluir"] },
-  { id: "solicitacoes", label: "Solicitações", acoes: ["Visualizar", "Editar Status"] },
-  { id: "split", label: "Split de Pagamento", acoes: ["Visualizar", "Configurar"] }
+  { 
+    id: "dashboard", 
+    label: "Dashboard", 
+    acoes: [
+      { id: "view", label: "Visualizar" },
+      { id: "viewStatsCard_solicitacoes", label: "Ver Card: Solicitações" },
+      { id: "viewStatsCard_clientes", label: "Ver Card: Clientes" },
+      { id: "viewStatsCard_produtos", label: "Ver Card: Produtos" },
+      { id: "viewStatsCard_receita", label: "Ver Card: Receita" },
+      { id: "viewChart_solicitacoesMes", label: "Ver Gráfico: Solicitações/Mês" },
+      { id: "viewChart_solicitacoesStatus", label: "Ver Gráfico: Status" },
+      { id: "viewChart_pagamentoStatus", label: "Ver Gráfico: Pagamentos" },
+      { id: "viewTable_ultimasSolicitacoes", label: "Ver Tabela: Últ. Solicitações" },
+      { id: "viewTable_clientesRecentes", label: "Ver Tabela: Clientes Recentes" }
+    ] 
+  },
+  { id: "usuarios", label: "Usuários", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "perfis", label: "Perfis", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "produtos", label: "Produtos", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "categorias", label: "Categorias", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "clientes", label: "Clientes", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "solicitacoes", label: "Solicitações", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "edit", label: "Editar Status" }
+  ]},
+  { id: "split", label: "Split de Pagamento", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "configure", label: "Configurar" }
+  ]},
+  { id: "parceiros", label: "Parceiros", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" }
+  ]},
+  { id: "tabelaCatMmv", label: "Tabela CAT MMV", acoes: [
+    { id: "view", label: "Visualizar" },
+    { id: "create", label: "Criar" },
+    { id: "edit", label: "Editar" },
+    { id: "delete", label: "Excluir" },
+    { id: "import", label: "Importar Excel" }
+  ]}
 ];
 
 export default function Perfis() {
@@ -51,24 +111,26 @@ export default function Perfis() {
 
                 <div className="space-y-4">
                   <Label>Permissões</Label>
-                  {permissoesDisponiveis.map((modulo) => (
-                    <div key={modulo.id} className="border rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold">{modulo.label}</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        {modulo.acoes.map((acao) => (
-                          <div key={`${modulo.id}-${acao}`} className="flex items-center space-x-2">
-                            <Checkbox id={`${modulo.id}-${acao}`} />
-                            <label
-                              htmlFor={`${modulo.id}-${acao}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {acao}
-                            </label>
-                          </div>
-                        ))}
+                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
+                    {permissoesDisponiveis.map((modulo) => (
+                      <div key={modulo.id} className="border rounded-lg p-4 space-y-3">
+                        <h4 className="font-semibold">{modulo.label}</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {modulo.acoes.map((acao) => (
+                            <div key={`${modulo.id}-${acao.id}`} className="flex items-center space-x-2">
+                              <Checkbox id={`${modulo.id}-${acao.id}`} />
+                              <label
+                                htmlFor={`${modulo.id}-${acao.id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {acao.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
               <DialogFooter>

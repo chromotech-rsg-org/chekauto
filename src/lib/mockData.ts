@@ -1,32 +1,105 @@
 // Mock data for administrative system (no backend)
 
 export const mockStats = {
-  totalSolicitacoes: 127,
-  clientesAtivos: 43,
-  produtos: 18,
-  receita: 2847500.00
+  totalSolicitacoes: 247,
+  clientesAtivos: 89,
+  produtos: 43,
+  receita: 3420000.00
 };
+
+// Mock Categorias
+export const mockCategorias = [
+  { id: 1, nome: "Carroceria Sobre Chassis Tanque", descricao: "Tanques de diversos tamanhos e materiais", produtosCount: 12 },
+  { id: 2, nome: "Implemento Rodoviário", descricao: "Implementos para transporte rodoviário", produtosCount: 8 },
+  { id: 3, nome: "Reboque/Semirreboque", descricao: "Reboques e semirreboques para carga", produtosCount: 15 },
+  { id: 4, nome: "Baús e Furgões", descricao: "Baús frigoríficos e furgões diversos", produtosCount: 6 },
+  { id: 5, nome: "Plataformas", descricao: "Plataformas para transporte de cargas especiais", produtosCount: 2 },
+];
 
 export const mockPerfis = [
   { 
     id: 1, 
     nome: "Administrador", 
-    permissoes: ["Dashboard", "Usuários (todos)", "Perfis (todos)", "Produtos (todos)", "Clientes (todos)", "Solicitações (todos)", "Split (todos)"] 
+    permissoes: ["Dashboard", "Usuários", "Perfis", "Produtos", "Categorias", "Clientes", "Solicitações", "Split", "Parceiros", "Tabela CAT MMV"],
+    permissoesDetalhadas: {
+      dashboard: {
+        view: true,
+        viewStatsCard_solicitacoes: true,
+        viewStatsCard_clientes: true,
+        viewStatsCard_produtos: true,
+        viewStatsCard_receita: true,
+        viewChart_solicitacoesMes: true,
+        viewChart_solicitacoesStatus: true,
+        viewChart_pagamentoStatus: true,
+        viewTable_ultimasSolicitacoes: true,
+        viewTable_clientesRecentes: true,
+      },
+      usuarios: { view: true, create: true, edit: true, delete: true },
+      perfis: { view: true, create: true, edit: true, delete: true },
+      produtos: { view: true, create: true, edit: true, delete: true },
+      categorias: { view: true, create: true, edit: true, delete: true },
+      clientes: { view: true, create: true, edit: true, delete: true },
+      solicitacoes: { view: true, edit: true },
+      split: { view: true, configure: true },
+      parceiros: { view: true, create: true, edit: true, delete: true },
+      tabelaCatMmv: { view: true, create: true, edit: true, delete: true, import: true },
+    }
   },
   { 
     id: 2, 
     nome: "Operador", 
-    permissoes: ["Dashboard", "Solicitações (visualizar, editar)", "Clientes (visualizar)"] 
+    permissoes: ["Dashboard", "Solicitações"],
+    permissoesDetalhadas: {
+      dashboard: {
+        view: true,
+        viewStatsCard_solicitacoes: true,
+        viewStatsCard_clientes: false,
+        viewStatsCard_produtos: false,
+        viewStatsCard_receita: false,
+        viewChart_solicitacoesMes: true,
+        viewChart_solicitacoesStatus: true,
+        viewChart_pagamentoStatus: false,
+        viewTable_ultimasSolicitacoes: true,
+        viewTable_clientesRecentes: false,
+      },
+      usuarios: { view: false, create: false, edit: false, delete: false },
+      perfis: { view: false, create: false, edit: false, delete: false },
+      produtos: { view: false, create: false, edit: false, delete: false },
+      categorias: { view: false, create: false, edit: false, delete: false },
+      clientes: { view: false, create: false, edit: false, delete: false },
+      solicitacoes: { view: true, edit: true },
+      split: { view: false, configure: false },
+      parceiros: { view: false, create: false, edit: false, delete: false },
+      tabelaCatMmv: { view: false, create: false, edit: false, delete: false, import: false },
+    }
   },
   { 
     id: 3, 
-    nome: "Visualizador", 
-    permissoes: ["Dashboard (apenas visualizar)"] 
-  },
-  { 
-    id: 4, 
     nome: "Gerente Comercial", 
-    permissoes: ["Dashboard", "Clientes (todos)", "Produtos (visualizar)", "Solicitações (visualizar)"] 
+    permissoes: ["Dashboard", "Clientes", "Solicitações", "Produtos"],
+    permissoesDetalhadas: {
+      dashboard: {
+        view: true,
+        viewStatsCard_solicitacoes: true,
+        viewStatsCard_clientes: true,
+        viewStatsCard_produtos: true,
+        viewStatsCard_receita: true,
+        viewChart_solicitacoesMes: true,
+        viewChart_solicitacoesStatus: true,
+        viewChart_pagamentoStatus: true,
+        viewTable_ultimasSolicitacoes: true,
+        viewTable_clientesRecentes: true,
+      },
+      usuarios: { view: false, create: false, edit: false, delete: false },
+      perfis: { view: false, create: false, edit: false, delete: false },
+      produtos: { view: true, create: true, edit: true, delete: false },
+      categorias: { view: true, create: false, edit: false, delete: false },
+      clientes: { view: true, create: true, edit: true, delete: false },
+      solicitacoes: { view: true, edit: true },
+      split: { view: false, configure: false },
+      parceiros: { view: false, create: false, edit: false, delete: false },
+      tabelaCatMmv: { view: false, create: false, edit: false, delete: false, import: false },
+    }
   }
 ];
 

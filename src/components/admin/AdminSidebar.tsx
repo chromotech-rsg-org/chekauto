@@ -9,7 +9,8 @@ import {
   DollarSign, 
   LogOut,
   Menu,
-  X
+  X,
+  FolderTree
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const menuItems = [
   { title: "Usuários", icon: Users, path: "/admin/usuarios" },
   { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis" },
   { title: "Produtos", icon: Package, path: "/admin/produtos" },
+  { title: "Categorias", icon: FolderTree, path: "/admin/categorias" },
   { title: "Clientes", icon: UserCircle, path: "/admin/clientes" },
   { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes" },
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" }
