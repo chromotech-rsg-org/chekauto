@@ -60,7 +60,7 @@ export default function Dashboard() {
         </div>
 
         {/* Charts */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <PermissionGuard module="dashboard" action="viewChart_solicitacoesMes">
             <Card>
               <CardHeader>
@@ -99,6 +99,36 @@ export default function Dashboard() {
                       dataKey="total"
                     >
                       {mockChartData.solicitacoesPorStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </PermissionGuard>
+
+          <PermissionGuard module="dashboard" action="viewChart_pagamentoStatus">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status de Pagamento</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={mockChartData.pagamentosPorStatus}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ status, total }) => `${status}: ${total}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="total"
+                    >
+                      {mockChartData.pagamentosPorStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>

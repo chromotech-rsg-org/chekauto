@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
 import { mockSolicitacoes } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Search, Eye, Mail } from "lucide-react";
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 
 const statusOptions = ["Pendente", "Em Análise", "Aprovado", "Concluído", "Cancelado"];
+const paymentStatusOptions = ["Pendente", "Pago", "Parcialmente Pago", "Cancelado", "Reembolsado"];
 
 export default function Solicitacoes() {
   const [solicitacoes] = useState(mockSolicitacoes);
@@ -21,12 +23,20 @@ export default function Solicitacoes() {
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [selectedSolicitacao, setSelectedSolicitacao] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState("todos");
 
   const filteredSolicitacoes = solicitacoes.filter(
-    (sol) =>
-      sol.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sol.id.toString().includes(searchTerm) ||
-      sol.chassis.toLowerCase().includes(searchTerm.toLowerCase())
+    (sol) => {
+      const matchesSearch = 
+        sol.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sol.id.toString().includes(searchTerm) ||
+        sol.chassis.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesPaymentStatus = 
+        filterPaymentStatus === "todos" || sol.statusPagamento === filterPaymentStatus;
+      
+      return matchesSearch && matchesPaymentStatus;
+    }
   );
 
   const handleViewDetails = (solicitacao: any) => {
@@ -70,6 +80,19 @@ export default function Solicitacoes() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={filterPaymentStatus} onValueChange={setFilterPaymentStatus}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Status Pagamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos Pagamentos</SelectItem>
+              {paymentStatusOptions.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="bg-white rounded-lg border">
@@ -82,6 +105,7 @@ export default function Solicitacoes() {
                 <TableHead>Produto</TableHead>
                 <TableHead>Chassis</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Status Pagamento</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -95,6 +119,9 @@ export default function Solicitacoes() {
                   <TableCell className="font-mono text-sm">{solicitacao.chassis}</TableCell>
                   <TableCell>
                     <StatusBadge status={solicitacao.status} />
+                  </TableCell>
+                  <TableCell>
+                    <PaymentStatusBadge status={solicitacao.statusPagamento} />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -185,6 +212,12 @@ export default function Solicitacoes() {
                         <p className="font-medium text-lg">
                           R$ {selectedSolicitacao?.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-muted-foreground">Status do Pagamento</Label>
+                        <div className="mt-2">
+                          <PaymentStatusBadge status={selectedSolicitacao?.statusPagamento || "Pendente"} />
+                        </div>
                       </div>
                     </div>
                   </CardContent>

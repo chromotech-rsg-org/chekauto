@@ -379,6 +379,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Tanque",
     status: "Pendente",
+    statusPagamento: "Pendente",
     metodoPagamento: "Boleto",
     valor: 45000.00,
     observacoes: ""
@@ -396,6 +397,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Baú Frigorífico",
     status: "Em Análise",
+    statusPagamento: "Parcialmente Pago",
     metodoPagamento: "Cartão de Crédito",
     valor: 52000.00,
     observacoes: "Cliente solicitou instalação express"
@@ -413,6 +415,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Graneleira",
     status: "Aprovado",
+    statusPagamento: "Pago",
     metodoPagamento: "Pix",
     valor: 38000.00,
     observacoes: ""
@@ -430,6 +433,7 @@ export const mockSolicitacoes = [
     categoria: "Semirreboque",
     tipoCarroceria: "Plataforma",
     status: "Concluído",
+    statusPagamento: "Pago",
     metodoPagamento: "Transferência",
     valor: 65000.00,
     observacoes: "Entregue em 10/10/2025"
@@ -447,6 +451,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Tanque",
     status: "Pendente",
+    statusPagamento: "Pendente",
     metodoPagamento: "Boleto",
     valor: 78000.00,
     observacoes: "Aguardando documentação adicional"
@@ -464,6 +469,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Tanque Químico",
     status: "Em Análise",
+    statusPagamento: "Parcialmente Pago",
     metodoPagamento: "Pix",
     valor: 58000.00,
     observacoes: ""
@@ -481,6 +487,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Baú Frigorífico",
     status: "Concluído",
+    statusPagamento: "Pago",
     metodoPagamento: "Cartão de Crédito",
     valor: 52000.00,
     observacoes: "Cliente satisfeito, solicitou novo orçamento"
@@ -498,6 +505,7 @@ export const mockSolicitacoes = [
     categoria: "Semirreboque",
     tipoCarroceria: "Plataforma",
     status: "Aprovado",
+    statusPagamento: "Pago",
     metodoPagamento: "Transferência",
     valor: 65000.00,
     observacoes: "Instalação prevista para próxima semana"
@@ -515,6 +523,7 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Graneleira",
     status: "Cancelado",
+    statusPagamento: "Cancelado",
     metodoPagamento: "Boleto",
     valor: 38000.00,
     observacoes: "Cliente desistiu da compra"
@@ -532,9 +541,112 @@ export const mockSolicitacoes = [
     categoria: "Caminhão",
     tipoCarroceria: "Tanque",
     status: "Concluído",
+    statusPagamento: "Pago",
     metodoPagamento: "Pix",
     valor: 45000.00,
     observacoes: "Instalação concluída com sucesso"
+  }
+];
+
+export const mockParceiros = [
+  {
+    id: 1,
+    nome: "Auto Tech Soluções LTDA",
+    cpfCnpj: "12.345.678/0001-90",
+    cep: "01310-100",
+    rua: "Av. Paulista",
+    numero: "1000",
+    complemento: "Sala 1501",
+    bairro: "Bela Vista",
+    cidade: "São Paulo",
+    uf: "SP",
+    percentual: 15,
+    walletId: "wallet_abc123def456",
+    status: "Ativo",
+    dataCadastro: "2024-01-15",
+    observacoes: "Parceiro principal região sudeste"
+  },
+  {
+    id: 2,
+    nome: "João Carlos Silva",
+    cpfCnpj: "123.456.789-00",
+    cep: "20040-020",
+    rua: "Av. Rio Branco",
+    numero: "500",
+    complemento: "",
+    bairro: "Centro",
+    cidade: "Rio de Janeiro",
+    uf: "RJ",
+    percentual: 10,
+    walletId: "wallet_xyz789ghi012",
+    status: "Ativo",
+    dataCadastro: "2024-02-10",
+    observacoes: "Especialista em laudos técnicos"
+  },
+  {
+    id: 3,
+    nome: "Vistoria Express ME",
+    cpfCnpj: "98.765.432/0001-11",
+    cep: "30130-100",
+    rua: "Av. Afonso Pena",
+    numero: "1500",
+    complemento: "Loja 3",
+    bairro: "Centro",
+    cidade: "Belo Horizonte",
+    uf: "MG",
+    percentual: 12,
+    walletId: "wallet_mno345pqr678",
+    status: "Inativo",
+    dataCadastro: "2023-11-20",
+    observacoes: "Parceiro temporariamente suspenso"
+  }
+];
+
+export const mockCatMmv = [
+  {
+    id: 1,
+    mmvOriginal: "CAMINHÃO TRATOR",
+    codigoMmvOriginal: "042008",
+    mmvTransformada: "CAMINHÃO SEMI-LEVE",
+    codigoMmvTransformada: "042003",
+    wmi: "9BM",
+    categoria: "Caminhão trator para caminhão"
+  },
+  {
+    id: 2,
+    mmvOriginal: "CAMINHÃO",
+    codigoMmvOriginal: "042000",
+    mmvTransformada: "CAMINHÃO ELÉTRICO",
+    codigoMmvTransformada: "042099",
+    wmi: "9BW",
+    categoria: "Troca de tração para elétrico"
+  },
+  {
+    id: 3,
+    mmvOriginal: "CAMINHONETE",
+    codigoMmvOriginal: "043000",
+    mmvTransformada: "CAMINHONETE CABINE DUPLA",
+    codigoMmvTransformada: "043002",
+    wmi: "9FB",
+    categoria: "Cabine estendida"
+  },
+  {
+    id: 4,
+    mmvOriginal: "AUTOMÓVEL",
+    codigoMmvOriginal: "041000",
+    mmvTransformada: "UTILITÁRIO COMERCIAL",
+    codigoMmvTransformada: "044005",
+    wmi: "9BG",
+    categoria: "Comércio"
+  },
+  {
+    id: 5,
+    mmvOriginal: "VAN",
+    codigoMmvOriginal: "045000",
+    mmvTransformada: "VAN ELÉTRICA",
+    codigoMmvTransformada: "045099",
+    wmi: "9BV",
+    categoria: "Troca de tração para elétrico"
   }
 ];
 
@@ -601,5 +713,11 @@ export const mockChartData = {
     { status: "Em Análise", total: 2, fill: "#3B82F6" },
     { status: "Aprovado", total: 2, fill: "#10B981" },
     { status: "Concluído", total: 3, fill: "#6B7280" }
+  ],
+  pagamentosPorStatus: [
+    { status: "Pago", total: 5, fill: "#10B981" },
+    { status: "Pendente", total: 2, fill: "#F0BA1D" },
+    { status: "Parcialmente Pago", total: 2, fill: "#3B82F6" },
+    { status: "Cancelado", total: 1, fill: "#EF4444" }
   ]
 };

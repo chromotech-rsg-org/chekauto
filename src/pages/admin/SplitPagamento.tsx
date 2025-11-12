@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { mockSplits } from "@/lib/mockData";
+import { mockSplits, mockParceiros } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,14 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SplitPagamento() {
   const [splits] = useState(mockSplits);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [parceiros, setParceiros] = useState([{ nome: "", valor: 0 }]);
+  const [parceiros, setParceiros] = useState([{ parceiroId: "", valor: 0 }]);
+  const parceirosAtivos = mockParceiros.filter(p => p.status === "Ativo");
 
   const addParceiro = () => {
-    setParceiros([...parceiros, { nome: "", valor: 0 }]);
+    setParceiros([...parceiros, { parceiroId: "", valor: 0 }]);
   };
 
   const removeParceiro = (index: number) => {
@@ -80,16 +82,25 @@ export default function SplitPagamento() {
 
                       {parceiros.map((parceiro, index) => (
                         <div key={index} className="flex gap-2">
-                          <Input
-                            placeholder="Nome do parceiro"
-                            value={parceiro.nome}
-                            onChange={(e) => {
+                          <Select
+                            value={parceiro.parceiroId}
+                            onValueChange={(value) => {
                               const newParceiros = [...parceiros];
-                              newParceiros[index].nome = e.target.value;
+                              newParceiros[index].parceiroId = value;
                               setParceiros(newParceiros);
                             }}
-                            className="flex-1"
-                          />
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Selecione um parceiro" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {parceirosAtivos.map((p) => (
+                                <SelectItem key={p.id} value={p.id.toString()}>
+                                  {p.nome} - {p.percentual}%
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Input
                             type="number"
                             placeholder="%"

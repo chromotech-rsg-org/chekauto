@@ -10,7 +10,9 @@ import {
   LogOut,
   Menu,
   X,
-  FolderTree
+  FolderTree,
+  Handshake,
+  Table2
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,9 @@ const menuItems = [
   { title: "Categorias", icon: FolderTree, path: "/admin/categorias" },
   { title: "Clientes", icon: UserCircle, path: "/admin/clientes" },
   { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes" },
-  { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" }
+  { title: "Parceiros", icon: Handshake, path: "/admin/parceiros" },
+  { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
+  { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" }
 ];
 
 export const AdminSidebar = () => {
