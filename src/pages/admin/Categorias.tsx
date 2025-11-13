@@ -75,6 +75,7 @@ export default function Categorias() {
         id: categorias.length + 1,
         ...formData,
         produtosCount: 0,
+        dataCriacao: new Date().toISOString().split('T')[0],
       };
       setCategorias([...categorias, newCategoria]);
       toast.success("Categoria criada com sucesso!");
