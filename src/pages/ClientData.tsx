@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import clientDataPerson from '@/assets/client-data-person.png';
+import { buscarCep } from '@/lib/cep';
+import InputMask from 'react-input-mask';
 export default function ClientData() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -42,9 +44,15 @@ export default function ClientData() {
     navigate('/solicitacao/pagamento');
   };
   const handleCepBlur = async () => {
-    if (formData.cep.length === 8) {
-      // TODO: Buscar CEP via API ViaCEP
-      console.log('Buscando CEP:', formData.cep);
+    if (!formData.cep) return;
+    
+    const data = await buscarCep(formData.cep);
+    if (data) {
+      setFormData(prev => ({
+        ...prev,
+        rua: data.logradouro,
+        bairro: data.bairro
+      }));
     }
   };
   return <div className="min-h-screen bg-white">
@@ -82,14 +90,44 @@ export default function ClientData() {
             }))} placeholder="Nome Completo:" className="bg-gray-100 border-0" required />
 
               <div className="grid grid-cols-2 gap-3">
-                <Input id="cpfCnpj" value={formData.cpfCnpj} onChange={e => setFormData(prev => ({
-                ...prev,
-                cpfCnpj: e.target.value
-              }))} placeholder="CPF/CNPJ:" className="bg-gray-100 border-0" required />
-                <Input id="cep" value={formData.cep} onChange={e => setFormData(prev => ({
-                ...prev,
-                cep: e.target.value
-              }))} onBlur={handleCepBlur} placeholder="CEP:" className="bg-gray-100 border-0" required />
+                <InputMask
+                  mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
+                  value={formData.cpfCnpj}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    cpfCnpj: e.target.value
+                  }))}
+                >
+                  {(inputProps: any) => (
+                    <Input 
+                      {...inputProps}
+                      id="cpfCnpj"
+                      placeholder="CPF/CNPJ:" 
+                      className="bg-gray-100 border-0" 
+                      required 
+                    />
+                  )}
+                </InputMask>
+                
+                <InputMask
+                  mask="99999-999"
+                  value={formData.cep}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    cep: e.target.value
+                  }))}
+                  onBlur={handleCepBlur}
+                >
+                  {(inputProps: any) => (
+                    <Input 
+                      {...inputProps}
+                      id="cep"
+                      placeholder="CEP:" 
+                      className="bg-gray-100 border-0" 
+                      required 
+                    />
+                  )}
+                </InputMask>
               </div>
 
               <Input id="rua" value={formData.rua} onChange={e => setFormData(prev => ({

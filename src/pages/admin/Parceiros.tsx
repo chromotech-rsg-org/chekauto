@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import InputMask from "react-input-mask";
 import { toast } from "sonner";
+import { buscarCep } from "@/lib/cep";
 
 export default function Parceiros() {
   const [parceiros, setParceiros] = useState(mockParceiros);
@@ -87,6 +88,21 @@ export default function Parceiros() {
     if (confirm("Deseja realmente excluir este parceiro?")) {
       setParceiros(parceiros.filter(p => p.id !== id));
       toast.success("Parceiro excluído com sucesso!");
+    }
+  };
+
+  const handleCepBlur = async () => {
+    if (!formData.cep) return;
+    
+    const data = await buscarCep(formData.cep);
+    if (data) {
+      setFormData({
+        ...formData,
+        rua: data.logradouro,
+        bairro: data.bairro,
+        cidade: data.localidade,
+        uf: data.uf
+      });
     }
   };
 
@@ -205,6 +221,7 @@ export default function Parceiros() {
                     mask="99999-999"
                     value={formData.cep}
                     onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                    onBlur={handleCepBlur}
                   >
                     {(inputProps: any) => <Input {...inputProps} placeholder="00000-000" />}
                   </InputMask>

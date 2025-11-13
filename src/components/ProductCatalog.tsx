@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { ProductCard } from './ProductCard';
 import { useNavigate } from 'react-router-dom';
 import logoBlack from '@/assets/logo-chekauto-black.png';
+import { Input } from './ui/input';
+import { Search } from 'lucide-react';
+
 export const ProductCatalog: React.FC = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('Guindastes / Plataformas');
+  const [searchTerm, setSearchTerm] = useState('');
   const categories = ['Carrocerias', 'Tanques', 'Guindastes / Plataformas', 'Basculantes e Especiais', 'Mecanismos Operacionais'];
   const productSections = [{
     title: "Categoria Carroceria | Saiba mais",
@@ -128,6 +132,14 @@ export const ProductCatalog: React.FC = () => {
       image: "https://api.builder.io/api/v1/image/assets/TEMP/c1d1fc69dfdd4b1a140f4f960f47213c0ac36ac0?placeholderIfAbsent=true"
     }]
   }];
+
+  const filteredSections = productSections.map(section => ({
+    ...section,
+    products: section.products.filter(product =>
+      product.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(section => section.products.length > 0);
+
   return <section id="implementations" className="bg-[rgba(233,233,233,1)] flex w-full flex-col items-center pb-[95px] px-20 max-md:max-w-full max-md:px-5">
       <div className="bg-white z-10 flex mt-[-200px] w-full max-w-[1274px] flex-col items-stretch pt-[94px] pb-[166px] px-[71px] rounded-[20px_20px_0px_0px] max-md:max-w-full max-md:pb-[100px] max-md:px-5">
         <nav className="flex items-center gap-[40px_65px] text-sm text-black font-medium text-center leading-none max-md:max-w-full">
@@ -138,7 +150,23 @@ export const ProductCatalog: React.FC = () => {
             </button>)}
         </nav>
 
-        {productSections.map((section, sectionIndex) => <div key={sectionIndex} className="mt-[73px] max-md:mt-10">
+        <div className="mt-8 relative max-w-md mx-auto w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar produtos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 bg-white border-gray-300"
+          />
+        </div>
+
+        {filteredSections.length === 0 && (
+          <div className="text-center py-12 mt-8">
+            <p className="text-gray-500 text-lg">Nenhum produto encontrado</p>
+          </div>
+        )}
+
+        {filteredSections.map((section, sectionIndex) => <div key={sectionIndex} className="mt-[73px] max-md:mt-10">
             <div className="max-md:max-w-full">
               <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
                 {section.products.map((product, productIndex) => <div key={productIndex} className="w-[33%] max-md:w-full max-md:ml-0 flex flex-col h-full">

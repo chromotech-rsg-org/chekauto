@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/admin/FileUpload";
+import { buscarCep } from "@/lib/cep";
+import InputMask from "react-input-mask";
 
 const statusOptions = ["Pendente", "Processado", "Concluído"];
 
@@ -17,6 +19,14 @@ export default function Clientes() {
   const [clientes] = useState(mockClientes);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [formData, setFormData] = useState({
+    cpfCnpj: "",
+    cep: "",
+    rua: "",
+    numero: "",
+    bairro: "",
+    complemento: ""
+  });
 
   const filteredClientes = clientes.filter(
     (cliente) =>
@@ -24,6 +34,19 @@ export default function Clientes() {
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.cpfCnpj.includes(searchTerm)
   );
+
+  const handleCepBlur = async () => {
+    if (!formData.cep) return;
+    
+    const data = await buscarCep(formData.cep);
+    if (data) {
+      setFormData({
+        ...formData,
+        rua: data.logradouro,
+        bairro: data.bairro
+      });
+    }
+  };
 
   return (
     <AdminLayout>
@@ -54,7 +77,15 @@ export default function Clientes() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="cpfCnpj">CPF/CNPJ *</Label>
-                    <Input id="cpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+                    <InputMask
+                      mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
+                      value={formData.cpfCnpj}
+                      onChange={(e) => setFormData({...formData, cpfCnpj: e.target.value})}
+                    >
+                      {(inputProps: any) => (
+                        <Input {...inputProps} id="cpfCnpj" placeholder="000.000.000-00" />
+                      )}
+                    </InputMask>
                   </div>
                   
                   <div className="space-y-2">
@@ -77,27 +108,56 @@ export default function Clientes() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="cep">CEP</Label>
-                        <Input id="cep" placeholder="00000-000" />
+                        <InputMask
+                          mask="99999-999"
+                          value={formData.cep}
+                          onChange={(e) => setFormData({...formData, cep: e.target.value})}
+                          onBlur={handleCepBlur}
+                        >
+                          {(inputProps: any) => (
+                            <Input {...inputProps} id="cep" placeholder="00000-000" />
+                          )}
+                        </InputMask>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="rua">Rua</Label>
-                        <Input id="rua" placeholder="Nome da rua" />
+                        <Input 
+                          id="rua" 
+                          value={formData.rua}
+                          onChange={(e) => setFormData({...formData, rua: e.target.value})}
+                          placeholder="Nome da rua" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="numero">Número</Label>
-                        <Input id="numero" placeholder="123" />
+                        <Input 
+                          id="numero" 
+                          value={formData.numero}
+                          onChange={(e) => setFormData({...formData, numero: e.target.value})}
+                          placeholder="123" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="bairro">Bairro</Label>
-                        <Input id="bairro" placeholder="Nome do bairro" />
+                        <Input 
+                          id="bairro" 
+                          value={formData.bairro}
+                          onChange={(e) => setFormData({...formData, bairro: e.target.value})}
+                          placeholder="Nome do bairro" 
+                        />
                       </div>
                       
                       <div className="col-span-2 space-y-2">
                         <Label htmlFor="complemento">Complemento</Label>
-                        <Input id="complemento" placeholder="Apto, sala, galpão..." />
+                        <Input 
+                          id="complemento" 
+                          value={formData.complemento}
+                          onChange={(e) => setFormData({...formData, complemento: e.target.value})}
+                          placeholder="Apto, sala, galpão..." 
+                        />
                       </div>
                     </div>
                   </div>

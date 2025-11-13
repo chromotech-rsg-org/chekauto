@@ -9,17 +9,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/admin/FileUpload";
+import { buscarCep } from "@/lib/cep";
+import InputMask from "react-input-mask";
 
 export default function Usuarios() {
   const [usuarios] = useState(mockUsuarios);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [formData, setFormData] = useState({
+    cep: "",
+    rua: "",
+    numero: "",
+    bairro: "",
+    complemento: "",
+    cidade: "",
+    estado: ""
+  });
 
   const filteredUsuarios = usuarios.filter(
     (usuario) =>
       usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       usuario.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCepBlur = async () => {
+    if (!formData.cep) return;
+    
+    const data = await buscarCep(formData.cep);
+    if (data) {
+      setFormData({
+        ...formData,
+        rua: data.logradouro,
+        bairro: data.bairro,
+        cidade: data.localidade,
+        estado: data.uf
+      });
+    }
+  };
 
   return (
     <AdminLayout>
@@ -64,47 +90,78 @@ export default function Usuarios() {
                     <h4 className="font-semibold mb-3">Endereço</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
+                        <Label htmlFor="cep">CEP</Label>
+                        <InputMask
+                          mask="99999-999"
+                          value={formData.cep}
+                          onChange={(e) => setFormData({...formData, cep: e.target.value})}
+                          onBlur={handleCepBlur}
+                        >
+                          {(inputProps: any) => (
+                            <Input {...inputProps} id="cep" placeholder="00000-000" />
+                          )}
+                        </InputMask>
+                      </div>
+                      
+                      <div className="space-y-2">
                         <Label htmlFor="rua">Rua</Label>
-                        <Input id="rua" placeholder="Nome da rua" />
+                        <Input 
+                          id="rua" 
+                          value={formData.rua}
+                          onChange={(e) => setFormData({...formData, rua: e.target.value})}
+                          placeholder="Nome da rua" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="numero">Número</Label>
-                        <Input id="numero" placeholder="123" />
+                        <Input 
+                          id="numero" 
+                          value={formData.numero}
+                          onChange={(e) => setFormData({...formData, numero: e.target.value})}
+                          placeholder="123" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="bairro">Bairro</Label>
-                        <Input id="bairro" placeholder="Nome do bairro" />
+                        <Input 
+                          id="bairro" 
+                          value={formData.bairro}
+                          onChange={(e) => setFormData({...formData, bairro: e.target.value})}
+                          placeholder="Nome do bairro" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="complemento">Complemento</Label>
-                        <Input id="complemento" placeholder="Apto, sala..." />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cep">CEP</Label>
-                        <Input id="cep" placeholder="00000-000" />
+                        <Input 
+                          id="complemento" 
+                          value={formData.complemento}
+                          onChange={(e) => setFormData({...formData, complemento: e.target.value})}
+                          placeholder="Apto, sala..." 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="cidade">Cidade</Label>
-                        <Input id="cidade" placeholder="Nome da cidade" />
+                        <Input 
+                          id="cidade" 
+                          value={formData.cidade}
+                          onChange={(e) => setFormData({...formData, cidade: e.target.value})}
+                          placeholder="Nome da cidade" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="estado">Estado</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="SP">São Paulo</SelectItem>
-                            <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                            <SelectItem value="MG">Minas Gerais</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="estado"
+                          value={formData.estado}
+                          onChange={(e) => setFormData({...formData, estado: e.target.value.toUpperCase()})}
+                          placeholder="SP"
+                          maxLength={2}
+                        />
                       </div>
                     </div>
                   </div>
