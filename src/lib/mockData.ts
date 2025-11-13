@@ -9,11 +9,11 @@ export const mockStats = {
 
 // Mock Categorias
 export const mockCategorias = [
-  { id: 1, nome: "Carroceria Sobre Chassis Tanque", descricao: "Tanques de diversos tamanhos e materiais", produtosCount: 12 },
-  { id: 2, nome: "Implemento Rodoviário", descricao: "Implementos para transporte rodoviário", produtosCount: 8 },
-  { id: 3, nome: "Reboque/Semirreboque", descricao: "Reboques e semirreboques para carga", produtosCount: 15 },
-  { id: 4, nome: "Baús e Furgões", descricao: "Baús frigoríficos e furgões diversos", produtosCount: 6 },
-  { id: 5, nome: "Plataformas", descricao: "Plataformas para transporte de cargas especiais", produtosCount: 2 },
+  { id: 1, nome: "Carroceria Sobre Chassis Tanque", descricao: "Tanques de diversos tamanhos e materiais", produtosCount: 12, dataCriacao: "2025-01-10" },
+  { id: 2, nome: "Implemento Rodoviário", descricao: "Implementos para transporte rodoviário", produtosCount: 8, dataCriacao: "2025-02-15" },
+  { id: 3, nome: "Reboque/Semirreboque", descricao: "Reboques e semirreboques para carga", produtosCount: 15, dataCriacao: "2025-03-20" },
+  { id: 4, nome: "Baús e Furgões", descricao: "Baús frigoríficos e furgões diversos", produtosCount: 6, dataCriacao: "2025-04-05" },
+  { id: 5, nome: "Plataformas", descricao: "Plataformas para transporte de cargas especiais", produtosCount: 2, dataCriacao: "2025-05-12" },
 ];
 
 export const mockPerfis = [
@@ -265,7 +265,8 @@ export const mockClientes = [
     cidade: "São Paulo",
     estado: "SP",
     associacao: "CENTRAL VAN SP",
-    status: "Processado"
+    status: "Processado",
+    dataCadastro: "2025-01-15"
   },
   {
     id: 2,
@@ -281,7 +282,8 @@ export const mockClientes = [
     cidade: "Guarulhos",
     estado: "SP",
     associacao: "SETCESP",
-    status: "Concluído"
+    status: "Concluído",
+    dataCadastro: "2025-02-20"
   },
   {
     id: 3,
@@ -297,7 +299,8 @@ export const mockClientes = [
     cidade: "São José dos Campos",
     estado: "SP",
     associacao: "NTC - Nacional",
-    status: "Pendente"
+    status: "Pendente",
+    dataCadastro: "2025-03-10"
   },
   {
     id: 4,
@@ -313,7 +316,8 @@ export const mockClientes = [
     cidade: "Campinas",
     estado: "SP",
     associacao: "Autônomo",
-    status: "Processado"
+    status: "Processado",
+    dataCadastro: "2025-04-05"
   },
   {
     id: 5,
@@ -329,7 +333,8 @@ export const mockClientes = [
     cidade: "Rio de Janeiro",
     estado: "RJ",
     associacao: "CENTRAL VAN RJ",
-    status: "Concluído"
+    status: "Concluído",
+    dataCadastro: "2025-05-12"
   },
   {
     id: 6,
@@ -345,7 +350,8 @@ export const mockClientes = [
     cidade: "Porto Alegre",
     estado: "RS",
     associacao: "SETCERGS",
-    status: "Pendente"
+    status: "Pendente",
+    dataCadastro: "2025-06-18"
   },
   {
     id: 7,
@@ -361,7 +367,8 @@ export const mockClientes = [
     cidade: "Santos",
     estado: "SP",
     associacao: "Autônomo",
-    status: "Concluído"
+    status: "Concluído",
+    dataCadastro: "2025-07-22"
   }
 ];
 

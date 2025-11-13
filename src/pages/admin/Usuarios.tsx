@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 import { mockUsuarios, mockPerfis } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
@@ -12,10 +14,21 @@ import { FileUpload } from "@/components/admin/FileUpload";
 import { buscarCep } from "@/lib/cep";
 import InputMask from "react-input-mask";
 
+const exportFields = [
+  { key: "id", label: "ID" },
+  { key: "nome", label: "Nome" },
+  { key: "email", label: "Email" },
+  { key: "celular", label: "Celular" },
+  { key: "perfil", label: "Perfil" },
+  { key: "dataCadastro", label: "Data Cadastro" }
+];
+
 export default function Usuarios() {
   const [usuarios] = useState(mockUsuarios);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
     cep: "",
     rua: "",
@@ -27,9 +40,15 @@ export default function Usuarios() {
   });
 
   const filteredUsuarios = usuarios.filter(
-    (usuario) =>
-      usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (usuario) => {
+      const matchesSearch = usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesDate = (!startDate || usuario.dataCadastro >= startDate) && 
+        (!endDate || usuario.dataCadastro <= endDate);
+      
+      return matchesSearch && matchesDate;
+    }
   );
 
   const handleCepBlur = async () => {

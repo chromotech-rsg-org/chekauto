@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 import { mockParceiros } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
@@ -14,11 +16,23 @@ import InputMask from "react-input-mask";
 import { toast } from "sonner";
 import { buscarCep } from "@/lib/cep";
 
+const exportFields = [
+  { key: "id", label: "ID" },
+  { key: "nome", label: "Nome" },
+  { key: "cpfCnpj", label: "CPF/CNPJ" },
+  { key: "percentual", label: "Percentual" },
+  { key: "walletId", label: "Wallet ID" },
+  { key: "status", label: "Status" },
+  { key: "dataCadastro", label: "Data Cadastro" }
+];
+
 export default function Parceiros() {
   const [parceiros, setParceiros] = useState(mockParceiros);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParceiro, setEditingParceiro] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -37,9 +51,15 @@ export default function Parceiros() {
   });
 
   const filteredParceiros = parceiros.filter(
-    (p) =>
-      p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.cpfCnpj.includes(searchTerm)
+    (p) => {
+      const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.cpfCnpj.includes(searchTerm);
+      
+      const matchesDate = (!startDate || p.dataCadastro >= startDate) && 
+        (!endDate || p.dataCadastro <= endDate);
+      
+      return matchesSearch && matchesDate;
+    }
   );
 
   const handleOpenModal = (parceiro?: any) => {
