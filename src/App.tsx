@@ -24,6 +24,7 @@ import SplitPagamento from "./pages/admin/SplitPagamento";
 import Parceiros from "./pages/admin/Parceiros";
 import TabelaCatMmv from "./pages/admin/TabelaCatMmv";
 import HistoricoSplits from "./pages/admin/HistoricoSplits";
+import TestesApiInfoSimples from "./pages/admin/TestesApiInfoSimples";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/admin/parceiros" element={<Parceiros />} />
           <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
           <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
+          <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
