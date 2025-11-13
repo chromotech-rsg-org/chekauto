@@ -654,47 +654,33 @@ export const mockSplits = [
   {
     id: 1,
     detalhes: "Split padrão para implementos rodoviários - carrocerias e tanques",
-    percentuais: {
-      chekauto: 70,
-      cliente: 20,
-      parceiros: [{ nome: "Despachante Express", valor: 10 }]
-    },
+    parceiroId: "1",
+    percentualParceiro: 10,
+    percentualChekauto: 90,
     dataCriacao: "2025-09-01"
   },
   {
     id: 2,
     detalhes: "Split especial para reboques e semirreboques - inclui comissão de vendedor",
-    percentuais: {
-      chekauto: 60,
-      cliente: 25,
-      parceiros: [
-        { nome: "Vendedor Regional", valor: 10 },
-        { nome: "Despachante Santos", valor: 5 }
-      ]
-    },
+    parceiroId: "2",
+    percentualParceiro: 15,
+    percentualChekauto: 85,
     dataCriacao: "2025-09-15"
   },
   {
     id: 3,
     detalhes: "Split para produtos químicos - inclui certificação e despachante especializado",
-    percentuais: {
-      chekauto: 65,
-      cliente: 15,
-      parceiros: [
-        { nome: "Certificadora INMETRO", valor: 12 },
-        { nome: "Despachante Químicos", valor: 8 }
-      ]
-    },
+    parceiroId: "1",
+    percentualParceiro: 10,
+    percentualChekauto: 90,
     dataCriacao: "2025-10-01"
   },
   {
     id: 4,
     detalhes: "Split básico MEI - simplificado para microempreendedores individuais",
-    percentuais: {
-      chekauto: 75,
-      cliente: 20,
-      parceiros: [{ nome: "Despachante Local", valor: 5 }]
-    },
+    parceiroId: "3",
+    percentualParceiro: 20,
+    percentualChekauto: 80,
     dataCriacao: "2025-10-05"
   }
 ];
