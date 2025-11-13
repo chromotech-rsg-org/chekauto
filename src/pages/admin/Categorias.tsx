@@ -160,7 +160,7 @@ export default function Categorias() {
           </Dialog>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -170,6 +170,18 @@ export default function Categorias() {
               className="pl-9"
             />
           </div>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+          <ExportButton 
+            data={filteredCategorias}
+            fields={exportFields}
+            filename="categorias"
+          />
         </div>
 
         <div className="bg-white rounded-lg border">

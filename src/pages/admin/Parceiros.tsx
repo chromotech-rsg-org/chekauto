@@ -141,13 +141,27 @@ export default function Parceiros() {
           </Button>
         </div>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou CPF/CNPJ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou CPF/CNPJ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+          <ExportButton 
+            data={filteredParceiros}
+            fields={exportFields}
+            filename="parceiros"
           />
         </div>
 
@@ -236,6 +250,29 @@ export default function Parceiros() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="percentual">Percentual Split (%)</Label>
+                  <Input
+                    id="percentual"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.percentual}
+                    onChange={(e) => setFormData({ ...formData, percentual: Number(e.target.value) })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="walletId">Wallet ID Asaas</Label>
+                  <Input
+                    id="walletId"
+                    value={formData.walletId}
+                    onChange={(e) => setFormData({ ...formData, walletId: e.target.value })}
+                    placeholder="wallet_abc123..."
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="cep">CEP</Label>
                   <InputMask
                     mask="99999-999"
@@ -305,29 +342,6 @@ export default function Parceiros() {
                     onChange={(e) => setFormData({ ...formData, uf: e.target.value.toUpperCase() })}
                     placeholder="SP"
                     maxLength={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="percentual">Percentual Split (%)</Label>
-                  <Input
-                    id="percentual"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.percentual}
-                    onChange={(e) => setFormData({ ...formData, percentual: Number(e.target.value) })}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="walletId">Wallet ID Asaas</Label>
-                  <Input
-                    id="walletId"
-                    value={formData.walletId}
-                    onChange={(e) => setFormData({ ...formData, walletId: e.target.value })}
-                    placeholder="wallet_abc123..."
                   />
                 </div>
 
