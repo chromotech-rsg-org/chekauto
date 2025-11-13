@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExcelUpload } from "@/components/admin/ExcelUpload";
 import { toast } from "sonner";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 
 const categorias = [
   "Caminhão trator para caminhão",
@@ -25,6 +27,8 @@ export default function TabelaCatMmv() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategoria, setFilterCategoria] = useState("todas");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [formData, setFormData] = useState({
     mmvOriginal: "",
@@ -45,8 +49,23 @@ export default function TabelaCatMmv() {
     
     const matchesCategoria = filterCategoria === "todas" || item.categoria === filterCategoria;
     
-    return matchesSearch && matchesCategoria;
+    const itemDate = new Date(item.dataCriacao || new Date());
+    const matchesDateRange = 
+      (!startDate || itemDate >= new Date(startDate)) &&
+      (!endDate || itemDate <= new Date(endDate));
+    
+    return matchesSearch && matchesCategoria && matchesDateRange;
   });
+
+  const exportFields = [
+    { key: "mmvOriginal", label: "MMV Original" },
+    { key: "codigoMmvOriginal", label: "Código MMV Original" },
+    { key: "mmvTransformada", label: "MMV Transformada" },
+    { key: "codigoMmvTransformada", label: "Código MMV Transformada" },
+    { key: "wmi", label: "WMI" },
+    { key: "categoria", label: "Categoria" },
+    { key: "dataCriacao", label: "Data Criação" }
+  ];
 
   const handleOpenModal = (item?: any) => {
     if (item) {
@@ -73,10 +92,10 @@ export default function TabelaCatMmv() {
     }
 
     if (editingItem) {
-      setCatMmvData(catMmvData.map(item => item.id === editingItem.id ? { ...formData, id: editingItem.id } : item));
+      setCatMmvData(catMmvData.map(item => item.id === editingItem.id ? { ...formData, id: editingItem.id, dataCriacao: item.dataCriacao } : item));
       toast.success("Registro atualizado com sucesso!");
     } else {
-      const newItem = { ...formData, id: catMmvData.length + 1 };
+      const newItem = { ...formData, id: catMmvData.length + 1, dataCriacao: new Date().toISOString().split('T')[0] };
       setCatMmvData([...catMmvData, newItem]);
       toast.success("Registro cadastrado com sucesso!");
     }
@@ -99,7 +118,8 @@ export default function TabelaCatMmv() {
       mmvTransformada: row["MMV Transformada"] || "",
       codigoMmvTransformada: row["Código MMV Transformada"] || "",
       wmi: row["WMI"] || "",
-      categoria: row["Categoria"] || ""
+      categoria: row["Categoria"] || "",
+      dataCriacao: new Date().toISOString().split('T')[0]
     }));
 
     setCatMmvData([...catMmvData, ...newData]);
@@ -157,6 +177,21 @@ export default function TabelaCatMmv() {
               ))}
             </SelectContent>
           </Select>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+          />
+          <ExportButton
+            data={filteredData}
+            fields={exportFields}
+            filename="tabela-cat-mmv"
+          />
         </div>
 
         <div className="bg-white rounded-lg border overflow-x-auto">

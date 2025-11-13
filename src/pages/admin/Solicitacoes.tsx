@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 
 const statusOptions = ["Pendente", "Em Análise", "Aprovado", "Concluído", "Cancelado"];
 const paymentStatusOptions = ["Pendente", "Pago", "Parcialmente Pago", "Cancelado", "Reembolsado"];
@@ -24,6 +26,8 @@ export default function Solicitacoes() {
   const [selectedSolicitacao, setSelectedSolicitacao] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("todos");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const filteredSolicitacoes = solicitacoes.filter(
     (sol) => {
@@ -35,9 +39,28 @@ export default function Solicitacoes() {
       const matchesPaymentStatus = 
         filterPaymentStatus === "todos" || sol.statusPagamento === filterPaymentStatus;
       
-      return matchesSearch && matchesPaymentStatus;
+      const solDate = new Date(sol.data);
+      const matchesDateRange = 
+        (!startDate || solDate >= new Date(startDate)) &&
+        (!endDate || solDate <= new Date(endDate));
+      
+      return matchesSearch && matchesPaymentStatus && matchesDateRange;
     }
   );
+
+  const exportFields = [
+    { key: "id", label: "ID" },
+    { key: "data", label: "Data" },
+    { key: "cliente", label: "Cliente" },
+    { key: "produto", label: "Produto" },
+    { key: "chassis", label: "Chassis" },
+    { key: "placa", label: "Placa" },
+    { key: "renavam", label: "RENAVAM" },
+    { key: "status", label: "Status" },
+    { key: "statusPagamento", label: "Status Pagamento" },
+    { key: "metodoPagamento", label: "Método Pagamento" },
+    { key: "valor", label: "Valor" }
+  ];
 
   const handleViewDetails = (solicitacao: any) => {
     setSelectedSolicitacao(solicitacao);
@@ -93,6 +116,21 @@ export default function Solicitacoes() {
               ))}
             </SelectContent>
           </Select>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+          />
+          <ExportButton
+            data={filteredSolicitacoes}
+            fields={exportFields}
+            filename="solicitacoes"
+          />
         </div>
 
         <div className="bg-white rounded-lg border">
@@ -208,7 +246,7 @@ export default function Solicitacoes() {
                         <p className="font-medium">{selectedSolicitacao?.metodoPagamento}</p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">Valor</Label>
+                        <Label className="text-muted-foreground">Valor Total</Label>
                         <p className="font-medium text-lg">
                           R$ {selectedSolicitacao?.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
@@ -217,6 +255,28 @@ export default function Solicitacoes() {
                         <Label className="text-muted-foreground">Status do Pagamento</Label>
                         <div className="mt-2">
                           <PaymentStatusBadge status={selectedSolicitacao?.statusPagamento || "Pendente"} />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <h4 className="font-semibold mb-3">Divisão de Pagamento (Split)</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <Label className="text-muted-foreground text-xs">Parceiro</Label>
+                          <p className="font-medium">{selectedSolicitacao?.parceiro || "Auto Tech Soluções LTDA"}</p>
+                          <p className="text-sm text-muted-foreground mt-1">15% do valor</p>
+                          <p className="font-bold text-lg mt-2">
+                            R$ {((selectedSolicitacao?.valor || 0) * 0.15).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-brand-yellow/10 p-3 rounded-lg">
+                          <Label className="text-muted-foreground text-xs">ChekAuto (Líquido)</Label>
+                          <p className="font-medium">ChekAuto</p>
+                          <p className="text-sm text-muted-foreground mt-1">85% do valor</p>
+                          <p className="font-bold text-lg mt-2">
+                            R$ {((selectedSolicitacao?.valor || 0) * 0.85).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
                         </div>
                       </div>
                     </div>

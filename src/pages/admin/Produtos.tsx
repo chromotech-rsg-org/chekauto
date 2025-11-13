@@ -10,12 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/admin/FileUpload";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 
 export default function Produtos() {
   const [produtos] = useState(mockProdutos);
   const [categorias, setCategorias] = useState(mockCategorias);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     // Carrega categorias dinamicamente
@@ -23,10 +27,28 @@ export default function Produtos() {
   }, []);
 
   const filteredProdutos = produtos.filter(
-    (produto) =>
-      produto.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      produto.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    (produto) => {
+      const matchesSearch = 
+        produto.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        produto.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const produtoDate = new Date(produto.dataCadastro || new Date());
+      const matchesDateRange = 
+        (!startDate || produtoDate >= new Date(startDate)) &&
+        (!endDate || produtoDate <= new Date(endDate));
+      
+      return matchesSearch && matchesDateRange;
+    }
   );
+
+  const exportFields = [
+    { key: "codigo", label: "Código" },
+    { key: "nomeTecnico", label: "Nome Técnico" },
+    { key: "nomeFantasia", label: "Nome Fantasia" },
+    { key: "preco", label: "Preço" },
+    { key: "categoria", label: "Categoria" },
+    { key: "dataCadastro", label: "Data Cadastro" }
+  ];
 
   return (
     <AdminLayout>
@@ -123,6 +145,7 @@ export default function Produtos() {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap flex-1">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -132,6 +155,22 @@ export default function Produtos() {
               className="pl-9"
             />
           </div>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+          />
+          <ExportButton
+            data={filteredProdutos}
+            fields={exportFields}
+            filename="produtos"
+          />
+        </div>
           <Select>
             <SelectTrigger className="w-[250px]">
               <SelectValue placeholder="Filtrar por categoria" />

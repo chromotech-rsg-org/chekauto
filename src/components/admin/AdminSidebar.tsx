@@ -12,7 +12,8 @@ import {
   X,
   FolderTree,
   Handshake,
-  Table2
+  Table2,
+  Receipt
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const menuItems = [
   { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes" },
   { title: "Parceiros", icon: Handshake, path: "/admin/parceiros" },
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
+  { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" }
 ];
 
