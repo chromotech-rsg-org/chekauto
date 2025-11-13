@@ -117,7 +117,8 @@ export const mockUsuarios = [
     cidade: "São Paulo",
     estado: "SP",
     perfil: "Administrador",
-    foto: null
+    foto: null,
+    dataCadastro: "2025-01-15"
   },
   {
     id: 2,
@@ -132,7 +133,8 @@ export const mockUsuarios = [
     cidade: "São Paulo",
     estado: "SP",
     perfil: "Operador",
-    foto: null
+    foto: null,
+    dataCadastro: "2025-02-20"
   },
   {
     id: 3,
@@ -147,7 +149,8 @@ export const mockUsuarios = [
     cidade: "São Paulo",
     estado: "SP",
     perfil: "Gerente Comercial",
-    foto: null
+    foto: null,
+    dataCadastro: "2025-03-10"
   },
   {
     id: 4,
@@ -162,7 +165,8 @@ export const mockUsuarios = [
     cidade: "São Paulo",
     estado: "SP",
     perfil: "Visualizador",
-    foto: null
+    foto: null,
+    dataCadastro: "2025-04-18"
   },
   {
     id: 5,
@@ -177,7 +181,8 @@ export const mockUsuarios = [
     cidade: "São Paulo",
     estado: "SP",
     perfil: "Operador",
-    foto: null
+    foto: null,
+    dataCadastro: "2025-05-22"
   }
 ];
 
