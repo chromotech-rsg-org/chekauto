@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 import { mockCategorias } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
@@ -10,19 +12,32 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
+const exportFields = [
+  { key: "id", label: "ID" },
+  { key: "nome", label: "Nome" },
+  { key: "descricao", label: "Descrição" },
+  { key: "produtosCount", label: "Quantidade Produtos" },
+  { key: "dataCriacao", label: "Data Criação" }
+];
+
 export default function Categorias() {
   const [categorias, setCategorias] = useState(mockCategorias);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
   });
 
-  const filteredCategorias = categorias.filter((cat) =>
-    cat.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCategorias = categorias.filter((cat) => {
+    const matchesSearch = cat.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDate = (!startDate || cat.dataCriacao >= startDate) && 
+      (!endDate || cat.dataCriacao <= endDate);
+    return matchesSearch && matchesDate;
+  });
 
   const handleOpenModal = (categoria?: any) => {
     if (categoria) {

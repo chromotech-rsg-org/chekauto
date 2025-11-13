@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { ExportButton } from "@/components/admin/ExportButton";
 import { mockClientes } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
@@ -15,10 +17,24 @@ import InputMask from "react-input-mask";
 
 const statusOptions = ["Pendente", "Processado", "Concluído"];
 
+const exportFields = [
+  { key: "id", label: "ID" },
+  { key: "nome", label: "Nome" },
+  { key: "cpfCnpj", label: "CPF/CNPJ" },
+  { key: "email", label: "Email" },
+  { key: "telefone", label: "Telefone" },
+  { key: "celular", label: "Celular" },
+  { key: "endereco", label: "Endereço" },
+  { key: "dataCadastro", label: "Data Cadastro" },
+  { key: "status", label: "Status" }
+];
+
 export default function Clientes() {
   const [clientes] = useState(mockClientes);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
     cpfCnpj: "",
     cep: "",
@@ -29,10 +45,16 @@ export default function Clientes() {
   });
 
   const filteredClientes = clientes.filter(
-    (cliente) =>
-      cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.cpfCnpj.includes(searchTerm)
+    (cliente) => {
+      const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cliente.cpfCnpj.includes(searchTerm);
+      
+      const matchesDate = (!startDate || cliente.dataCadastro >= startDate) && 
+        (!endDate || cliente.dataCadastro <= endDate);
+      
+      return matchesSearch && matchesDate;
+    }
   );
 
   const handleCepBlur = async () => {
@@ -195,7 +217,7 @@ export default function Clientes() {
           </Dialog>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -205,6 +227,18 @@ export default function Clientes() {
               className="pl-9"
             />
           </div>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+          <ExportButton 
+            data={filteredClientes}
+            fields={exportFields}
+            filename="clientes"
+          />
           <Select>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filtrar por status" />
