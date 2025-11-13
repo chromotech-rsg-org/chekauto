@@ -19,7 +19,7 @@ export function DateRangeFilter({
   onClear
 }: DateRangeFilterProps) {
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-center gap-2">
       <div className="space-y-2">
         <Label htmlFor="startDate">Data Inicial</Label>
         <Input

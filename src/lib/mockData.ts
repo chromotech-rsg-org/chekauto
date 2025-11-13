@@ -207,7 +207,8 @@ export const mockProdutos = [
     descricao: "Tanque de grande capacidade para transporte de combustível, com 30.000 litros. Estrutura reforçada para longas distâncias.",
     preco: 78000.00,
     categoria: "Carroceria Sobre Chassis Tanque",
-    caracteristicas: ["Aço inoxidável AISI 316", "Capacidade 30.000L", "5 compartimentos", "Sistema anti-ondas", "Isolamento térmico"]
+    caracteristicas: ["Aço inoxidável AISI 316", "Capacidade 30.000L", "5 compartimentos", "Sistema anti-ondas", "Isolamento térmico"],
+    dataCadastro: "2025-02-10"
   },
   {
     id: 3,
@@ -218,7 +219,8 @@ export const mockProdutos = [
     descricao: "Baú refrigerado de 8 metros para transporte de cargas que necessitam controle de temperatura entre -25°C e +25°C.",
     preco: 52000.00,
     categoria: "Implemento Rodoviário",
-    caracteristicas: ["8 metros de comprimento", "Isolamento em poliuretano", "Unidade refrigeradora Carrier", "Piso reforçado", "Portas traseiras com vedação"]
+    caracteristicas: ["8 metros de comprimento", "Isolamento em poliuretano", "Unidade refrigeradora Carrier", "Piso reforçado", "Portas traseiras com vedação"],
+    dataCadastro: "2025-03-05"
   },
   {
     id: 4,
@@ -229,7 +231,8 @@ export const mockProdutos = [
     descricao: "Carroceria graneleira para transporte de grãos, rações e produtos agrícolas. Estrutura em aço carbono com sistema de descarga hidráulica.",
     preco: 38000.00,
     categoria: "Implemento Rodoviário",
-    caracteristicas: ["8 metros de comprimento", "Aço carbono SAE 1020", "Sistema de descarga traseira", "Tampa superior", "Capacidade 20 toneladas"]
+    caracteristicas: ["8 metros de comprimento", "Aço carbono SAE 1020", "Sistema de descarga traseira", "Tampa superior", "Capacidade 20 toneladas"],
+    dataCadastro: "2025-04-12"
   },
   {
     id: 5,
@@ -240,7 +243,8 @@ export const mockProdutos = [
     descricao: "Semirreboque plataforma para transporte de cargas pesadas e equipamentos. Estrutura robusta com capacidade para até 30 toneladas.",
     preco: 65000.00,
     categoria: "Reboque/Semirreboque",
-    caracteristicas: ["13,5 metros de comprimento", "Capacidade 30 toneladas", "Suspensão pneumática", "Rampas traseiras removíveis", "Sistema de amarração múltiplo"]
+    caracteristicas: ["13,5 metros de comprimento", "Capacidade 30 toneladas", "Suspensão pneumática", "Rampas traseiras removíveis", "Sistema de amarração múltiplo"],
+    dataCadastro: "2025-05-18"
   },
   {
     id: 6,
@@ -251,7 +255,8 @@ export const mockProdutos = [
     descricao: "Tanque especializado para transporte de produtos químicos perigosos, com revestimento interno resistente à corrosão.",
     preco: 58000.00,
     categoria: "Carroceria Sobre Chassis Tanque",
-    caracteristicas: ["Aço inoxidável 316L", "Capacidade 12.000L", "Revestimento interno PTFE", "Sistema de segurança duplo", "Certificação ONU para produtos perigosos"]
+    caracteristicas: ["Aço inoxidável 316L", "Capacidade 12.000L", "Revestimento interno PTFE", "Sistema de segurança duplo", "Certificação ONU para produtos perigosos"],
+    dataCadastro: "2025-06-22"
   }
 ];
 
@@ -622,7 +627,8 @@ export const mockCatMmv = [
     mmvTransformada: "CAMINHÃO SEMI-LEVE",
     codigoMmvTransformada: "042003",
     wmi: "9BM",
-    categoria: "Caminhão trator para caminhão"
+    categoria: "Caminhão trator para caminhão",
+    dataCriacao: "2025-01-10"
   },
   {
     id: 2,
@@ -631,7 +637,8 @@ export const mockCatMmv = [
     mmvTransformada: "CAMINHÃO ELÉTRICO",
     codigoMmvTransformada: "042099",
     wmi: "9BW",
-    categoria: "Troca de tração para elétrico"
+    categoria: "Troca de tração para elétrico",
+    dataCriacao: "2025-02-15"
   },
   {
     id: 3,
@@ -640,7 +647,8 @@ export const mockCatMmv = [
     mmvTransformada: "CAMINHONETE CABINE DUPLA",
     codigoMmvTransformada: "043002",
     wmi: "9FB",
-    categoria: "Cabine estendida"
+    categoria: "Cabine estendida",
+    dataCriacao: "2025-03-20"
   },
   {
     id: 4,
@@ -649,7 +657,8 @@ export const mockCatMmv = [
     mmvTransformada: "UTILITÁRIO COMERCIAL",
     codigoMmvTransformada: "044005",
     wmi: "9BG",
-    categoria: "Comércio"
+    categoria: "Comércio",
+    dataCriacao: "2025-04-08"
   },
   {
     id: 5,
@@ -658,7 +667,8 @@ export const mockCatMmv = [
     mmvTransformada: "VAN ELÉTRICA",
     codigoMmvTransformada: "045099",
     wmi: "9BV",
-    categoria: "Troca de tração para elétrico"
+    categoria: "Troca de tração para elétrico",
+    dataCriacao: "2025-05-22"
   }
 ];
 
@@ -719,3 +729,116 @@ export const mockChartData = {
     { status: "Cancelado", total: 1, fill: "#EF4444" }
   ]
 };
+
+export const mockHistoricoSplits = [
+  {
+    id: 1,
+    data: "2025-10-15",
+    cliente: "Transportadora ABC Ltda",
+    produto: "Tanque 15K Premium",
+    parceiro: "Auto Tech Soluções LTDA",
+    valorTotal: 45000.00,
+    valorParceiro: 6750.00,
+    valorChekauto: 38250.00,
+    percentualParceiro: 15
+  },
+  {
+    id: 2,
+    data: "2025-10-14",
+    cliente: "Logística Rápida S.A.",
+    produto: "Baú Frigo 8000",
+    parceiro: "Auto Tech Soluções LTDA",
+    valorTotal: 52000.00,
+    valorParceiro: 7800.00,
+    valorChekauto: 44200.00,
+    percentualParceiro: 15
+  },
+  {
+    id: 3,
+    data: "2025-10-13",
+    cliente: "João Pedro Silva - MEI",
+    produto: "Graneleiro Pro 8000",
+    parceiro: "João Carlos Silva",
+    valorTotal: 38000.00,
+    valorParceiro: 3800.00,
+    valorChekauto: 34200.00,
+    percentualParceiro: 10
+  },
+  {
+    id: 4,
+    data: "2025-10-12",
+    cliente: "Expresso Sudeste Ltda",
+    produto: "Plataforma Max 13500",
+    parceiro: "Auto Tech Soluções LTDA",
+    valorTotal: 65000.00,
+    valorParceiro: 9750.00,
+    valorChekauto: 55250.00,
+    percentualParceiro: 15
+  },
+  {
+    id: 5,
+    data: "2025-10-11",
+    cliente: "Frota Nacional Transportes",
+    produto: "Tanque 30K Heavy Duty",
+    parceiro: "João Carlos Silva",
+    valorTotal: 78000.00,
+    valorParceiro: 7800.00,
+    valorChekauto: 70200.00,
+    percentualParceiro: 10
+  },
+  {
+    id: 6,
+    data: "2025-10-10",
+    cliente: "Maria Cristina Transportes - MEI",
+    produto: "Tanque Químico 12K",
+    parceiro: "Vistoria Express ME",
+    valorTotal: 58000.00,
+    valorParceiro: 6960.00,
+    valorChekauto: 51040.00,
+    percentualParceiro: 12
+  },
+  {
+    id: 7,
+    data: "2025-10-09",
+    cliente: "Transportadora ABC Ltda",
+    produto: "Baú Frigo 8000",
+    parceiro: "Auto Tech Soluções LTDA",
+    valorTotal: 52000.00,
+    valorParceiro: 7800.00,
+    valorChekauto: 44200.00,
+    percentualParceiro: 15
+  },
+  {
+    id: 8,
+    data: "2025-10-08",
+    cliente: "Expresso Sudeste Ltda",
+    produto: "Plataforma Max 13500",
+    parceiro: "João Carlos Silva",
+    valorTotal: 65000.00,
+    valorParceiro: 6500.00,
+    valorChekauto: 58500.00,
+    percentualParceiro: 10
+  },
+  {
+    id: 9,
+    data: "2025-10-06",
+    cliente: "João Pedro Silva - MEI",
+    produto: "Tanque 15K Premium",
+    parceiro: "Auto Tech Soluções LTDA",
+    valorTotal: 45000.00,
+    valorParceiro: 6750.00,
+    valorChekauto: 38250.00,
+    percentualParceiro: 15
+  },
+  {
+    id: 10,
+    data: "2025-10-05",
+    cliente: "Logística Rápida S.A.",
+    produto: "Graneleiro Pro 8000",
+    parceiro: "João Carlos Silva",
+    valorTotal: 38000.00,
+    valorParceiro: 3800.00,
+    valorChekauto: 34200.00,
+    percentualParceiro: 10
+  }
+];
