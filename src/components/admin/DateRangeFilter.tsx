@@ -21,12 +21,9 @@ export function DateRangeFilter({
   title = "Período"
 }: DateRangeFilterProps) {
   return (
-    <div className="flex items-center gap-2">
-      {title && (
-        <span className="text-sm font-medium">{title}:</span>
-      )}
-      <div className="space-y-2">
-        <Label htmlFor="startDate">Data Inicial</Label>
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="startDate" className="text-sm font-medium whitespace-nowrap">Data Inicial</Label>
         <Input
           id="startDate"
           type="date"
@@ -35,8 +32,8 @@ export function DateRangeFilter({
           className="w-40"
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="endDate">Data Final</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="endDate" className="text-sm font-medium whitespace-nowrap">Data Final</Label>
         <Input
           id="endDate"
           type="date"
@@ -46,7 +43,7 @@ export function DateRangeFilter({
         />
       </div>
       {(startDate || endDate) && (
-        <Button variant="outline" size="icon" onClick={onClear} className="mt-8">
+        <Button variant="outline" size="icon" onClick={onClear}>
           <X className="h-4 w-4" />
         </Button>
       )}
