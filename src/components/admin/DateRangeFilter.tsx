@@ -9,6 +9,7 @@ interface DateRangeFilterProps {
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   onClear: () => void;
+  title?: string;
 }
 
 export function DateRangeFilter({
@@ -16,10 +17,14 @@ export function DateRangeFilter({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  onClear
+  onClear,
+  title = "Período"
 }: DateRangeFilterProps) {
   return (
     <div className="flex items-center gap-2">
+      {title && (
+        <span className="text-sm font-medium">{title}:</span>
+      )}
       <div className="space-y-2">
         <Label htmlFor="startDate">Data Inicial</Label>
         <Input
@@ -41,7 +46,7 @@ export function DateRangeFilter({
         />
       </div>
       {(startDate || endDate) && (
-        <Button variant="outline" size="icon" onClick={onClear}>
+        <Button variant="outline" size="icon" onClick={onClear} className="mt-8">
           <X className="h-4 w-4" />
         </Button>
       )}
