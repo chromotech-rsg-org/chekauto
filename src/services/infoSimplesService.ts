@@ -54,24 +54,43 @@ export const consultarBaseEstadualSP = async (
   const startTime = performance.now();
 
   try {
+    console.log('Iniciando consulta Base SP com params:', params);
+    console.log('URL:', `${BASE_URL}/base-sp`);
+    
+    const requestBody = buildRequestBody(credentials, params);
+    console.log('Request body:', { ...requestBody, login_senha: '***' });
+
     const response = await fetch(`${BASE_URL}/base-sp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': buildAuthHeader(credentials)
       },
-      body: JSON.stringify(buildRequestBody(credentials, params))
+      body: JSON.stringify(requestBody)
     });
 
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
 
-    const data = await response.json();
+    console.log('Response status:', response.status);
+    
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('Resposta não é JSON:', text);
+      data = { error: 'Resposta inválida da API', details: text };
+    }
+
+    console.log('Response data:', data);
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.message || `Erro na API: ${response.status}`,
+        error: data.message || data.error || `Erro HTTP ${response.status}`,
         status: response.status,
         responseTime,
         data
@@ -85,9 +104,19 @@ export const consultarBaseEstadualSP = async (
       status: response.status
     };
   } catch (error) {
+    console.error('Erro ao chamar API:', error);
+    
+    let errorMessage = 'Erro ao conectar com a API';
+    
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      errorMessage = 'Erro de CORS ou rede. A API Info Simples não permite chamadas diretas do navegador. Recomendamos usar Lovable Cloud/Supabase para criar uma edge function que faça essas chamadas de forma segura.';
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Erro ao conectar com a API'
+      error: errorMessage
     };
   }
 };
@@ -107,24 +136,43 @@ export const consultarCadastroBIN = async (
   const startTime = performance.now();
 
   try {
+    console.log('Iniciando consulta BIN com params:', params);
+    console.log('URL:', `${BASE_URL}/bin`);
+    
+    const requestBody = buildRequestBody(credentials, params);
+    console.log('Request body:', { ...requestBody, login_senha: '***' });
+
     const response = await fetch(`${BASE_URL}/bin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': buildAuthHeader(credentials)
       },
-      body: JSON.stringify(buildRequestBody(credentials, params))
+      body: JSON.stringify(requestBody)
     });
 
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
 
-    const data = await response.json();
+    console.log('Response status:', response.status);
+    
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('Resposta não é JSON:', text);
+      data = { error: 'Resposta inválida da API', details: text };
+    }
+
+    console.log('Response data:', data);
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.message || `Erro na API: ${response.status}`,
+        error: data.message || data.error || `Erro HTTP ${response.status}`,
         status: response.status,
         responseTime,
         data
@@ -138,9 +186,19 @@ export const consultarCadastroBIN = async (
       status: response.status
     };
   } catch (error) {
+    console.error('Erro ao chamar API:', error);
+    
+    let errorMessage = 'Erro ao conectar com a API';
+    
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      errorMessage = 'Erro de CORS ou rede. A API Info Simples não permite chamadas diretas do navegador. Recomendamos usar Lovable Cloud/Supabase para criar uma edge function que faça essas chamadas de forma segura.';
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Erro ao conectar com a API'
+      error: errorMessage
     };
   }
 };
