@@ -104,187 +104,139 @@ export default function PaymentData() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Resumo da Compra */}
-          <div className="bg-white rounded-lg p-8">
-            <h2 className="text-xl font-bold text-black mb-4">Resumo da compra</h2>
-            <p className="text-sm text-gray-600 mb-6">Resumo do item selecionado</p>
-            
-            <div className="mb-6">
-              <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center mb-4 overflow-hidden">
-                <img src={truckProduct} alt="Produto" className="w-full h-full object-cover" />
-              </div>
-              
-              <h3 className="text-lg font-bold text-black mb-2">{productData.name}</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Uma carroceria sobre chassi tanque é um implemento rodoviário para caminhões, composto por um reservatório, geralmente cilíndrico, montado sobre a estrutura do chassi do veículo.
-              </p>
-              
-              <div className="border-t border-gray-200 pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">R$ {productData.price.toFixed(2)}</span>
+          <div className="space-y-6">
+            <Card className="p-6 border-2">
+              <h2 className="text-xl font-bold mb-4">Resumo da Compra</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Produto:</span>
+                  <span className="font-semibold">{product.name || 'CARROCERIA SOBRE CHASSI TANQUE'}</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total</span>
-                  <span className="text-brand-yellow">R$ {productData.price.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Cliente:</span>
+                  <span className="font-semibold">{customer.nomeCompleto}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Veículo:</span>
+                  <span className="font-semibold">{vehicle.placa}</span>
+                </div>
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="text-brand-yellow">R$ {(product.price || 1800).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
+            </Card>
+
+            <div className="bg-white rounded-lg p-6 border-2">
+              <h2 className="text-xl font-bold mb-4">Forma de Pagamento</h2>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('PIX')}
+                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${
+                    paymentMethod === 'PIX' 
+                      ? 'border-brand-yellow bg-brand-yellow/10' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  PIX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('CREDIT_CARD')}
+                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${
+                    paymentMethod === 'CREDIT_CARD' 
+                      ? 'border-brand-yellow bg-brand-yellow/10' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <CreditCard className="inline mr-2 h-5 w-5" />
+                  Cartão
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {paymentMethod === 'CREDIT_CARD' && (
+                  <>
+                    <Input
+                      placeholder="Número do Cartão"
+                      value={cardData.number}
+                      onChange={e => setCardData(prev => ({ ...prev, number: e.target.value }))}
+                      className="bg-gray-100 border-0"
+                      maxLength={16}
+                      required
+                    />
+                    <Input
+                      placeholder="Nome no Cartão"
+                      value={cardData.name}
+                      onChange={e => setCardData(prev => ({ ...prev, name: e.target.value }))}
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        placeholder="MM/AA"
+                        value={cardData.expiry}
+                        onChange={e => setCardData(prev => ({ ...prev, expiry: e.target.value }))}
+                        className="bg-gray-100 border-0"
+                        maxLength={5}
+                        required
+                      />
+                      <Input
+                        placeholder="CVV"
+                        value={cardData.cvv}
+                        onChange={e => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
+                        className="bg-gray-100 border-0"
+                        maxLength={4}
+                        type="password"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                {paymentMethod === 'PIX' && (
+                  <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                    <p className="font-semibold mb-2">Pagamento via PIX</p>
+                    <p>Após finalizar, você receberá o QR Code para pagamento instantâneo.</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => navigate('/solicitacao/cliente')}
+                    className="flex-1"
+                    disabled={loading}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Voltar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1 bg-brand-yellow hover:bg-brand-yellow/90 text-black font-semibold"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      'Finalizar Compra'
+                    )}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
 
-          {/* Dados de Pagamento */}
-          <div className="bg-white rounded-lg p-8">
-            <h2 className="text-xl font-bold text-black mb-4">Dados de pagamento</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Dados do Cliente */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700">Dados do Cliente</h3>
-                
-                <div>
-                  <Label htmlFor="customerName">Nome Completo</Label>
-                  <Input 
-                    id="customerName" 
-                    required
-                    value={customerData.name}
-                    onChange={(e) => setCustomerData({...customerData, name: e.target.value})}
-                    placeholder="Nome completo" 
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customerEmail">Email</Label>
-                  <Input 
-                    id="customerEmail" 
-                    type="email"
-                    required
-                    value={customerData.email}
-                    onChange={(e) => setCustomerData({...customerData, email: e.target.value})}
-                    placeholder="email@exemplo.com" 
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customerCpf">CPF</Label>
-                  <Input 
-                    id="customerCpf" 
-                    required
-                    value={customerData.cpf}
-                    onChange={(e) => setCustomerData({...customerData, cpf: e.target.value})}
-                    placeholder="000.000.000-00" 
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customerPhone">Telefone</Label>
-                  <Input 
-                    id="customerPhone" 
-                    required
-                    value={customerData.phone}
-                    onChange={(e) => setCustomerData({...customerData, phone: e.target.value})}
-                    placeholder="(00) 00000-0000" 
-                  />
-                </div>
-              </div>
-
-              {/* Método de Pagamento */}
-              <div>
-                <Label htmlFor="paymentMethod">Forma de pagamento</Label>
-                <Select 
-                  value={paymentMethod} 
-                  onValueChange={(value: 'CREDIT_CARD' | 'PIX') => setPaymentMethod(value)}
-                >
-                  <SelectTrigger id="paymentMethod">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CREDIT_CARD">Cartão de Crédito</SelectItem>
-                    <SelectItem value="PIX">PIX</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Dados do Cartão (se cartão selecionado) */}
-              {paymentMethod === 'CREDIT_CARD' && (
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-sm font-semibold text-gray-700">Dados do Cartão</h3>
-                  
-                  <div>
-                    <Label htmlFor="cardNumber">Número do cartão</Label>
-                    <div className="relative">
-                      <Input 
-                        id="cardNumber" 
-                        required
-                        value={cardData.number}
-                        onChange={(e) => setCardData({...cardData, number: e.target.value})}
-                        placeholder="0000 0000 0000 0000" 
-                        maxLength={19}
-                      />
-                      <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="cardName">Nome no cartão</Label>
-                    <Input 
-                      id="cardName" 
-                      required
-                      value={cardData.name}
-                      onChange={(e) => setCardData({...cardData, name: e.target.value})}
-                      placeholder="Nome como está no cartão" 
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cardExpiry">Validade</Label>
-                      <Input 
-                        id="cardExpiry" 
-                        required
-                        value={cardData.expiry}
-                        onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
-                        placeholder="MM/AA" 
-                        maxLength={5}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cardCvv">CVV</Label>
-                      <Input 
-                        id="cardCvv" 
-                        required
-                        value={cardData.cvv}
-                        onChange={(e) => setCardData({...cardData, cvv: e.target.value})}
-                        placeholder="123" 
-                        maxLength={4}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Info PIX */}
-              {paymentMethod === 'PIX' && (
-                <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    Após confirmar, você receberá o QR Code PIX para realizar o pagamento.
-                  </p>
-                </div>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full bg-brand-yellow hover:bg-brand-yellow/90 text-black font-bold"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  'Finalizar Compra'
-                )}
-              </Button>
-            </form>
+          <div className="hidden md:block">
+            <img src={truckProduct} alt="Produto" className="w-full rounded-lg" />
           </div>
         </div>
       </div>
