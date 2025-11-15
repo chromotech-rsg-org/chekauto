@@ -35,6 +35,30 @@ export default function Confirmation() {
     }
   }, []);
 
+  // Auto-check payment status every 5 seconds if payment is pending
+  useEffect(() => {
+    if (!paymentData?.payment?.id || paymentStatus !== 'PENDING') return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const result = await checkPaymentStatus(paymentData.payment.id);
+        setPaymentStatus(result.status);
+        
+        if (result.status === 'RECEIVED' || result.status === 'CONFIRMED') {
+          toast({
+            title: "Pagamento confirmado!",
+            description: "Seu pagamento foi aprovado com sucesso.",
+          });
+          clearInterval(intervalId);
+        }
+      } catch (error) {
+        console.error('Erro ao consultar status automaticamente:', error);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [paymentData, paymentStatus, toast]);
+
   const handleCheckStatus = async () => {
     if (!paymentData?.payment?.id) return;
 
