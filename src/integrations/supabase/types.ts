@@ -14,6 +14,145 @@ export type Database = {
   }
   public: {
     Tables: {
+      cat_mmv: {
+        Row: {
+          codigo_cat: string | null
+          codigo_mmv: string | null
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          tipo_veiculo: string | null
+        }
+        Insert: {
+          codigo_cat?: string | null
+          codigo_mmv?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          tipo_veiculo?: string | null
+        }
+        Update: {
+          codigo_cat?: string | null
+          codigo_mmv?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          tipo_veiculo?: string | null
+        }
+        Relationships: []
+      }
+      categorias: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          produtos_count: number | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          produtos_count?: number | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          produtos_count?: number | null
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          atualizado_em: string | null
+          cpf_cnpj: string
+          criado_em: string | null
+          email: string | null
+          endereco: Json | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          cpf_cnpj: string
+          criado_em?: string | null
+          email?: string | null
+          endereco?: Json | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          cpf_cnpj?: string
+          criado_em?: string | null
+          email?: string | null
+          endereco?: Json | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      historico_splits: {
+        Row: {
+          criado_em: string | null
+          id: string
+          pagamento_id: string | null
+          parceiro_id: string | null
+          produto_id: string | null
+          status: string | null
+          valor: number
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          pagamento_id?: string | null
+          parceiro_id?: string | null
+          produto_id?: string | null
+          status?: string | null
+          valor: number
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          pagamento_id?: string | null
+          parceiro_id?: string | null
+          produto_id?: string | null
+          status?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_splits_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_splits_parceiro_id_fkey"
+            columns: ["parceiro_id"]
+            isOneToOne: false
+            referencedRelation: "parceiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_splits_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pagamentos: {
         Row: {
           asaas_payment_id: string
@@ -64,6 +203,107 @@ export type Database = {
           valor?: number
         }
         Relationships: []
+      }
+      parceiros: {
+        Row: {
+          ativo: boolean | null
+          atualizado_em: string | null
+          cpf_cnpj: string
+          criado_em: string | null
+          email: string | null
+          id: string
+          nome: string
+          percentual_split: number | null
+          telefone: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          cpf_cnpj: string
+          criado_em?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          percentual_split?: number | null
+          telefone?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          cpf_cnpj?: string
+          criado_em?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          percentual_split?: number | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      perfis_permissoes: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          id: string
+          nome: string
+          permissoes: Json
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome: string
+          permissoes?: Json
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          permissoes?: Json
+        }
+        Relationships: []
+      }
+      produtos: {
+        Row: {
+          ativo: boolean | null
+          atualizado_em: string | null
+          categoria_id: string | null
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          preco: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          categoria_id?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          preco: number
+        }
+        Update: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          categoria_id?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          preco?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -118,6 +358,141 @@ export type Database = {
           usuario?: string | null
         }
         Relationships: []
+      }
+      solicitacoes: {
+        Row: {
+          atualizado_em: string | null
+          cliente_id: string | null
+          criado_em: string | null
+          dados_veiculo: Json | null
+          id: string
+          pagamento_id: string | null
+          produto_id: string | null
+          status: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          cliente_id?: string | null
+          criado_em?: string | null
+          dados_veiculo?: Json | null
+          id?: string
+          pagamento_id?: string | null
+          produto_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          cliente_id?: string | null
+          criado_em?: string | null
+          dados_veiculo?: Json | null
+          id?: string
+          pagamento_id?: string | null
+          produto_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      splits: {
+        Row: {
+          criado_em: string | null
+          id: string
+          parceiro_id: string
+          percentual: number
+          produto_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          parceiro_id: string
+          percentual: number
+          produto_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          parceiro_id?: string
+          percentual?: number
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "splits_parceiro_id_fkey"
+            columns: ["parceiro_id"]
+            isOneToOne: false
+            referencedRelation: "parceiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "splits_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          ativo: boolean | null
+          atualizado_em: string | null
+          auth_user_id: string | null
+          criado_em: string | null
+          email: string
+          id: string
+          nome: string
+          perfil_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          auth_user_id?: string | null
+          criado_em?: string | null
+          email: string
+          id?: string
+          nome: string
+          perfil_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          atualizado_em?: string | null
+          auth_user_id?: string | null
+          criado_em?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          perfil_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_permissoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
