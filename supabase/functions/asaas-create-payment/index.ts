@@ -45,10 +45,10 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           name: customerData.name,
-          cpfCnpj: customerData.cpfCnpj,
+          cpfCnpj: String(customerData.cpfCnpj).replace(/\D/g, ''),
           email: customerData.email,
           phone: customerData.phone,
-          mobilePhone: customerData.mobilePhone,
+          mobilePhone: String(customerData.mobilePhone || '').replace(/\D/g, ''),
         }),
       });
 
@@ -67,10 +67,10 @@ serve(async (req) => {
     const paymentPayload: any = {
       customer: customerId,
       billingType: paymentData.billingType,
-      value: paymentData.value,
+      value: Number(paymentData.value),
       dueDate: paymentData.dueDate || new Date().toISOString().split('T')[0],
       description: paymentData.description,
-      externalReference: paymentData.externalReference,
+      externalReference: String(paymentData.externalReference),
     };
 
     // Se for cartão de crédito, adicionar dados do cartão
@@ -123,16 +123,16 @@ serve(async (req) => {
       .from('pagamentos')
       .insert({
         asaas_payment_id: payment.id,
-        user_id: userId,
-        valor: payment.value,
+        user_id: userId || null,
+        valor: Number(payment.value),
         metodo_pagamento: payment.billingType,
         status: payment.status,
         qr_code_pix: pixData?.encodedImage || null,
         qr_code_copy_paste: pixData?.payload || null,
         invoice_url: payment.invoiceUrl,
         dados_cliente: customerData,
-        dados_produto: productData,
-        dados_veiculo: vehicleData,
+        dados_produto: productData || null,
+        dados_veiculo: vehicleData || null,
       });
 
     if (dbError) {
@@ -169,7 +169,7 @@ serve(async (req) => {
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200,
       }
     );
   }
