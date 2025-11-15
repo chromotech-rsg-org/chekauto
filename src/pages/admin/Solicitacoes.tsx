@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
-import { mockSolicitacoes } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Search, Eye, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,62 +14,228 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const statusOptions = ["Pendente", "Em Análise", "Aprovado", "Concluído", "Cancelado"];
-const paymentStatusOptions = ["Pendente", "Pago", "Parcialmente Pago", "Cancelado", "Reembolsado"];
+const paymentStatusOptions = ["PENDING", "RECEIVED", "CONFIRMED", "OVERDUE", "REFUNDED", "RECEIVED_IN_CASH", "REFUND_REQUESTED"];
+
+interface Solicitacao {
+  id: string;
+  status: string;
+  criado_em: string;
+  dados_veiculo: any;
+  clientes: {
+    id: string;
+    nome: string;
+    email: string;
+    cpf_cnpj: string;
+    telefone: string;
+  };
+  produtos: {
+    id: string;
+    nome: string;
+    preco: number;
+  };
+  pagamentos: {
+    id: string;
+    status: string;
+    metodo_pagamento: string;
+    valor: number;
+  };
+}
 
 export default function Solicitacoes() {
-  const [solicitacoes] = useState(mockSolicitacoes);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
-  const [selectedSolicitacao, setSelectedSolicitacao] = useState<any>(null);
+  const [selectedSolicitacao, setSelectedSolicitacao] = useState<Solicitacao | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("todos");
+  const [filterStatus, setFilterStatus] = useState("todos");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const filteredSolicitacoes = solicitacoes.filter(
-    (sol) => {
-      const matchesSearch = 
-        sol.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sol.id.toString().includes(searchTerm) ||
-        sol.chassis.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesPaymentStatus = 
-        filterPaymentStatus === "todos" || sol.statusPagamento === filterPaymentStatus;
-      
-      const solDate = new Date(sol.data);
-      const matchesDateRange = 
-        (!startDate || solDate >= new Date(startDate)) &&
-        (!endDate || solDate <= new Date(endDate));
-      
-      return matchesSearch && matchesPaymentStatus && matchesDateRange;
+  useEffect(() => {
+    fetchSolicitacoes();
+  }, []);
+
+  const fetchSolicitacoes = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('solicitacoes')
+        .select(`
+          *,
+          clientes (*),
+          produtos (*),
+          pagamentos (*)
+        `)
+        .order('criado_em', { ascending: false });
+
+      if (error) throw error;
+      setSolicitacoes(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar solicitações:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as solicitações",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  );
+  };
+
+  const filteredSolicitacoes = solicitacoes.filter((sol) => {
+    const matchesSearch = 
+      sol.clientes?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sol.id.includes(searchTerm) ||
+      sol.dados_veiculo?.chassis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sol.dados_veiculo?.placa?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesPaymentStatus = 
+      filterPaymentStatus === "todos" || sol.pagamentos?.status === filterPaymentStatus;
+    
+    const matchesStatus = 
+      filterStatus === "todos" || sol.status === filterStatus;
+    
+    const solDate = new Date(sol.criado_em);
+    const matchesDateRange = 
+      (!startDate || solDate >= new Date(startDate)) &&
+      (!endDate || solDate <= new Date(endDate));
+    
+    return matchesSearch && matchesPaymentStatus && matchesStatus && matchesDateRange;
+  });
 
   const exportFields = [
     { key: "id", label: "ID" },
-    { key: "data", label: "Data" },
-    { key: "cliente", label: "Cliente" },
-    { key: "produto", label: "Produto" },
-    { key: "chassis", label: "Chassis" },
-    { key: "placa", label: "Placa" },
-    { key: "renavam", label: "RENAVAM" },
+    { key: "criado_em", label: "Data" },
+    { key: "clientes.nome", label: "Cliente" },
+    { key: "produtos.nome", label: "Produto" },
+    { key: "dados_veiculo.chassis", label: "Chassis" },
+    { key: "dados_veiculo.placa", label: "Placa" },
+    { key: "dados_veiculo.renavam", label: "RENAVAM" },
     { key: "status", label: "Status" },
-    { key: "statusPagamento", label: "Status Pagamento" },
-    { key: "metodoPagamento", label: "Método Pagamento" },
-    { key: "valor", label: "Valor" }
+    { key: "pagamentos.status", label: "Status Pagamento" },
+    { key: "pagamentos.metodo_pagamento", label: "Método Pagamento" },
+    { key: "pagamentos.valor", label: "Valor" }
   ];
 
-  const handleViewDetails = (solicitacao: any) => {
+  const handleViewDetails = (solicitacao: Solicitacao) => {
     setSelectedSolicitacao(solicitacao);
+    setNewStatus(solicitacao.status);
+    setObservacoes("");
     setIsDetailsOpen(true);
   };
 
+  const handleUpdateStatus = async () => {
+    if (!selectedSolicitacao) return;
+
+    try {
+      setIsSaving(true);
+      const { error } = await supabase
+        .from('solicitacoes')
+        .update({ status: newStatus })
+        .eq('id', selectedSolicitacao.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Status atualizado com sucesso",
+      });
+
+      fetchSolicitacoes();
+      setIsDetailsOpen(false);
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSendEmail = () => {
+    setEmailSubject(`Atualização do Pedido #${selectedSolicitacao?.id.substring(0, 8)}`);
+    setEmailBody("");
     setIsDetailsOpen(false);
     setIsEmailOpen(true);
   };
+
+  const handleSendEmailSubmit = async () => {
+    if (!selectedSolicitacao) return;
+
+    try {
+      setIsSaving(true);
+      const { error } = await supabase.functions.invoke('enviar-email-pedido', {
+        body: {
+          to: selectedSolicitacao.clientes.email,
+          subject: emailSubject,
+          html: emailBody.replace(/\n/g, '<br>'),
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Email enviado com sucesso",
+      });
+
+      setIsEmailOpen(false);
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getPaymentStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      PENDING: "Pendente",
+      RECEIVED: "Recebido",
+      CONFIRMED: "Confirmado",
+      OVERDUE: "Vencido",
+      REFUNDED: "Reembolsado",
+      RECEIVED_IN_CASH: "Recebido em Dinheiro",
+      REFUND_REQUESTED: "Reembolso Solicitado",
+    };
+    return labels[status] || status;
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <div className="flex gap-4">
+            <Skeleton className="h-10 flex-1 max-w-md" />
+            <Skeleton className="h-10 w-[200px]" />
+            <Skeleton className="h-10 w-[200px]" />
+          </div>
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -84,18 +249,18 @@ export default function Solicitacoes() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por ID, cliente ou chassis..."
+              placeholder="Buscar por ID, cliente, chassis ou placa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="todos">Todos os Status</SelectItem>
               {statusOptions.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
@@ -111,7 +276,7 @@ export default function Solicitacoes() {
               <SelectItem value="todos">Todos Pagamentos</SelectItem>
               {paymentStatusOptions.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {status}
+                  {getPaymentStatusLabel(status)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -148,31 +313,39 @@ export default function Solicitacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSolicitacoes.map((solicitacao) => (
-                <TableRow key={solicitacao.id}>
-                  <TableCell className="font-medium">#{solicitacao.id}</TableCell>
-                  <TableCell>{new Date(solicitacao.data).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{solicitacao.cliente}</TableCell>
-                  <TableCell>{solicitacao.produto}</TableCell>
-                  <TableCell className="font-mono text-sm">{solicitacao.chassis}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={solicitacao.status} />
-                  </TableCell>
-                  <TableCell>
-                    <PaymentStatusBadge status={solicitacao.statusPagamento} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewDetails(solicitacao)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
+              {filteredSolicitacoes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    Nenhuma solicitação encontrada
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredSolicitacoes.map((solicitacao) => (
+                  <TableRow key={solicitacao.id}>
+                    <TableCell className="font-medium">#{solicitacao.id.substring(0, 8)}</TableCell>
+                    <TableCell>{new Date(solicitacao.criado_em).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>{solicitacao.clientes?.nome || "N/A"}</TableCell>
+                    <TableCell>{solicitacao.produtos?.nome || "N/A"}</TableCell>
+                    <TableCell className="font-mono text-sm">{solicitacao.dados_veiculo?.chassis || "N/A"}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={solicitacao.status} />
+                    </TableCell>
+                    <TableCell>
+                      <PaymentStatusBadge status={getPaymentStatusLabel(solicitacao.pagamentos?.status || "PENDING")} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetails(solicitacao)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -181,7 +354,7 @@ export default function Solicitacoes() {
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Detalhes da Solicitação #{selectedSolicitacao?.id}</DialogTitle>
+              <DialogTitle>Detalhes da Solicitação #{selectedSolicitacao?.id.substring(0, 8)}</DialogTitle>
             </DialogHeader>
             
             <Tabs defaultValue="veiculo" className="w-full">
@@ -198,23 +371,23 @@ export default function Solicitacoes() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Placa</Label>
-                        <p className="font-medium">{selectedSolicitacao?.placa}</p>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.placa || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">RENAVAM</Label>
-                        <p className="font-medium">{selectedSolicitacao?.renavam}</p>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.renavam || "N/A"}</p>
                       </div>
                       <div className="col-span-2">
                         <Label className="text-muted-foreground">Chassis</Label>
-                        <p className="font-medium font-mono">{selectedSolicitacao?.chassis}</p>
+                        <p className="font-medium font-mono">{selectedSolicitacao?.dados_veiculo?.chassis || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Categoria</Label>
-                        <p className="font-medium">{selectedSolicitacao?.categoria}</p>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.categoria || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Tipo de Carroceria</Label>
-                        <p className="font-medium">{selectedSolicitacao?.tipoCarroceria}</p>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.tipoCarroceria || "N/A"}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -227,11 +400,20 @@ export default function Solicitacoes() {
                     <div className="space-y-3">
                       <div>
                         <Label className="text-muted-foreground">Nome</Label>
-                        <p className="font-medium">{selectedSolicitacao?.cliente}</p>
+                        <p className="font-medium">{selectedSolicitacao?.clientes?.nome || "N/A"}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Informações detalhadas do cliente podem ser visualizadas na seção de Clientes.
-                      </p>
+                      <div>
+                        <Label className="text-muted-foreground">Email</Label>
+                        <p className="font-medium">{selectedSolicitacao?.clientes?.email || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">CPF/CNPJ</Label>
+                        <p className="font-medium">{selectedSolicitacao?.clientes?.cpf_cnpj || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Telefone</Label>
+                        <p className="font-medium">{selectedSolicitacao?.clientes?.telefone || "N/A"}</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -243,40 +425,18 @@ export default function Solicitacoes() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Método de Pagamento</Label>
-                        <p className="font-medium">{selectedSolicitacao?.metodoPagamento}</p>
+                        <p className="font-medium">{selectedSolicitacao?.pagamentos?.metodo_pagamento || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Valor Total</Label>
                         <p className="font-medium text-lg">
-                          R$ {selectedSolicitacao?.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {(selectedSolicitacao?.pagamentos?.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       <div className="col-span-2">
                         <Label className="text-muted-foreground">Status do Pagamento</Label>
                         <div className="mt-2">
-                          <PaymentStatusBadge status={selectedSolicitacao?.statusPagamento || "Pendente"} />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <h4 className="font-semibold mb-3">Divisão de Pagamento (Split)</h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-muted/50 p-3 rounded-lg">
-                          <Label className="text-muted-foreground text-xs">Parceiro</Label>
-                          <p className="font-medium">{selectedSolicitacao?.parceiro || "Auto Tech Soluções LTDA"}</p>
-                          <p className="text-sm text-muted-foreground mt-1">15% do valor</p>
-                          <p className="font-bold text-lg mt-2">
-                            R$ {((selectedSolicitacao?.valor || 0) * 0.15).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="bg-brand-yellow/10 p-3 rounded-lg">
-                          <Label className="text-muted-foreground text-xs">ChekAuto (Líquido)</Label>
-                          <p className="font-medium">ChekAuto</p>
-                          <p className="text-sm text-muted-foreground mt-1">85% do valor</p>
-                          <p className="font-bold text-lg mt-2">
-                            R$ {((selectedSolicitacao?.valor || 0) * 0.85).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
+                          <PaymentStatusBadge status={getPaymentStatusLabel(selectedSolicitacao?.pagamentos?.status || "PENDING")} />
                         </div>
                       </div>
                     </div>
@@ -289,7 +449,7 @@ export default function Solicitacoes() {
                   <CardContent className="pt-6 space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="status">Status da Solicitação</Label>
-                      <Select defaultValue={selectedSolicitacao?.status}>
+                      <Select value={newStatus} onValueChange={setNewStatus}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -309,7 +469,8 @@ export default function Solicitacoes() {
                         id="observacoes"
                         placeholder="Adicione observações sobre esta solicitação..."
                         rows={4}
-                        defaultValue={selectedSolicitacao?.observacoes}
+                        value={observacoes}
+                        onChange={(e) => setObservacoes(e.target.value)}
                       />
                     </div>
                     
@@ -330,8 +491,12 @@ export default function Solicitacoes() {
               <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
                 Fechar
               </Button>
-              <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
-                Atualizar Status
+              <Button 
+                className="bg-brand-yellow hover:bg-brand-yellow/90 text-black"
+                onClick={handleUpdateStatus}
+                disabled={isSaving}
+              >
+                {isSaving ? "Atualizando..." : "Atualizar Status"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -346,12 +511,21 @@ export default function Solicitacoes() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="destinatario">Destinatário</Label>
-                <Input id="destinatario" value="cliente@exemplo.com" disabled />
+                <Input 
+                  id="destinatario" 
+                  value={selectedSolicitacao?.clientes?.email || ""} 
+                  disabled 
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="assunto">Assunto</Label>
-                <Input id="assunto" placeholder="Assunto do email..." />
+                <Input 
+                  id="assunto" 
+                  placeholder="Assunto do email..."
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
@@ -360,6 +534,8 @@ export default function Solicitacoes() {
                   id="corpo"
                   placeholder="Digite sua mensagem..."
                   rows={8}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
                 />
               </div>
             </div>
@@ -369,10 +545,10 @@ export default function Solicitacoes() {
               </Button>
               <Button 
                 className="bg-brand-yellow hover:bg-brand-yellow/90 text-black"
-                onClick={() => setIsEmailOpen(false)}
+                onClick={handleSendEmailSubmit}
+                disabled={isSaving || !emailSubject || !emailBody}
               >
-                <Mail className="mr-2 h-4 w-4" />
-                Enviar
+                {isSaving ? "Enviando..." : "Enviar Email"}
               </Button>
             </DialogFooter>
           </DialogContent>
