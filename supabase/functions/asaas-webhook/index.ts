@@ -52,6 +52,51 @@ serve(async (req) => {
 
     console.log(`Pagamento ${payment.id} atualizado para status: ${payment.status}`);
 
+    // Se pagamento foi confirmado, enviar email de confirmação e atualizar solicitação
+    if (payment.status === 'RECEIVED' || payment.status === 'CONFIRMED') {
+      // Buscar dados completos do pagamento
+      const { data: pagamentoCompleto } = await supabase
+        .from('pagamentos')
+        .select('*')
+        .eq('asaas_payment_id', payment.id)
+        .single();
+
+      if (pagamentoCompleto) {
+        // Atualizar status da solicitação
+        const { error: solicitacaoError } = await supabase
+          .from('solicitacoes')
+          .update({ status: 'em_andamento' })
+          .eq('pagamento_id', pagamentoCompleto.id);
+
+        if (solicitacaoError) {
+          console.error('Erro ao atualizar solicitação:', solicitacaoError);
+        }
+
+        // Enviar email de confirmação
+        try {
+          const response = await fetch(`${supabaseUrl}/functions/v1/enviar-email-pedido`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({
+              tipo: 'confirmacao',
+              pagamento: pagamentoCompleto
+            })
+          });
+
+          if (response.ok) {
+            console.log('Email de confirmação enviado');
+          } else {
+            console.error('Erro ao enviar email de confirmação');
+          }
+        } catch (emailError) {
+          console.error('Erro ao enviar email de confirmação:', emailError);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
