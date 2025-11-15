@@ -138,8 +138,15 @@ export const createFullPayment = async (
       },
     });
 
-    if (error) throw error;
-    if (!data.success) throw new Error(data.error);
+    if (error) {
+      // Tentar extrair mensagem do Edge mesmo em non-2xx
+      const raw = (error as any).message || 'Erro ao criar pagamento';
+      throw new Error(raw);
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.error || 'Falha ao criar pagamento');
+    }
 
     return data;
   } catch (error) {

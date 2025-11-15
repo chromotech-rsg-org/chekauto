@@ -46,6 +46,33 @@ export default function PaymentData() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação rápida de CPF/CNPJ antes de chamar a API
+    const digits = (customer.cpfCnpj || '').replace(/\D/g, '');
+    const isCpf = digits.length === 11;
+    const isCnpj = digits.length === 14;
+
+    const isValidCpf = (cpf: string) => {
+      if (!cpf || cpf.length !== 11 || /^([0-9])\1+$/.test(cpf)) return false;
+      let sum = 0; let rest = 0;
+      for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+      rest = (sum * 10) % 11; if (rest === 10 || rest === 11) rest = 0;
+      if (rest !== parseInt(cpf.substring(9, 10))) return false;
+      sum = 0; for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+      rest = (sum * 10) % 11; if (rest === 10 || rest === 11) rest = 0;
+      if (rest !== parseInt(cpf.substring(10, 11))) return false;
+      return true;
+    };
+
+    if (!(isCpf || isCnpj) || (isCpf && !isValidCpf(digits))) {
+      toast({
+        title: 'CPF/CNPJ inválido',
+        description: 'Verifique o documento informado para continuar.',
+        variant: 'destructive',
+      });
+      return; 
+    }
+
     setLoading(true);
 
     try {
@@ -57,23 +84,24 @@ export default function PaymentData() {
         paymentMethod === 'CREDIT_CARD' ? cardData : undefined
       );
       
-      // Armazenar dados do pagamento para mostrar na confirmação
       sessionStorage.setItem('paymentResult', JSON.stringify(result));
 
       toast({
-        title: "Pagamento iniciado",
+        title: 'Pagamento iniciado',
         description: paymentMethod === 'PIX' 
-          ? "QR Code gerado com sucesso!" 
-          : "Processando pagamento...",
+          ? 'QR Code gerado com sucesso!' 
+          : 'Processando pagamento...',
       });
 
       navigate('/solicitacao/confirmacao');
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
+      const message = error instanceof Error ? error.message : 'Tente novamente';
+      const friendly = /cpf|cnpj/i.test(message) ? 'CPF/CNPJ inválido. Verifique os dados.' : message;
       toast({
-        title: "Erro ao processar pagamento",
-        description: error instanceof Error ? error.message : "Tente novamente",
-        variant: "destructive",
+        title: 'Erro ao processar pagamento',
+        description: friendly,
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
