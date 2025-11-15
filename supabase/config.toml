@@ -1,1 +1,7 @@
 project_id = "ybimcjurdmjmdjzfbfup"
+
+[functions.consulta-base-sp]
+verify_jwt = false
+
+[functions.consulta-bin]
+verify_jwt = false
