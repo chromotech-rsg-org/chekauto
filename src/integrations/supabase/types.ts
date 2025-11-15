@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      pagamentos: {
+        Row: {
+          asaas_payment_id: string
+          atualizado_em: string | null
+          criado_em: string | null
+          dados_cliente: Json | null
+          dados_produto: Json | null
+          id: string
+          invoice_url: string | null
+          metodo_pagamento: string
+          qr_code_copy_paste: string | null
+          qr_code_pix: string | null
+          status: string
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          asaas_payment_id: string
+          atualizado_em?: string | null
+          criado_em?: string | null
+          dados_cliente?: Json | null
+          dados_produto?: Json | null
+          id?: string
+          invoice_url?: string | null
+          metodo_pagamento: string
+          qr_code_copy_paste?: string | null
+          qr_code_pix?: string | null
+          status?: string
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          asaas_payment_id?: string
+          atualizado_em?: string | null
+          criado_em?: string | null
+          dados_cliente?: Json | null
+          dados_produto?: Json | null
+          id?: string
+          invoice_url?: string | null
+          metodo_pagamento?: string
+          qr_code_copy_paste?: string | null
+          qr_code_pix?: string | null
+          status?: string
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
