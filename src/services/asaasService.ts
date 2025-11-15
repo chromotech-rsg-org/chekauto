@@ -86,11 +86,8 @@ export const createFullPayment = async (
   cardData?: any
 ) => {
   try {
+    // Obter usuário se estiver autenticado (opcional)
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
 
     const customerData = {
       name: customer.nomeCompleto,
@@ -109,7 +106,7 @@ export const createFullPayment = async (
       value: product.price || 1800,
       dueDate: new Date().toISOString().split('T')[0],
       description: `Compra: ${product.name || 'CARROCERIA SOBRE CHASSI TANQUE'}`,
-      externalReference: `${user.id}-${Date.now()}`,
+      externalReference: `${customer.cpfCnpj.replace(/\D/g, '')}-${Date.now()}`,
     };
 
     if (paymentMethod === 'CREDIT_CARD' && cardData) {
@@ -137,7 +134,7 @@ export const createFullPayment = async (
         paymentData: asaasPaymentData,
         vehicleData: vehicle,
         productData: product,
-        userId: user.id,
+        userId: user?.id || null,
       },
     });
 

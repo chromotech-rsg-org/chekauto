@@ -3,16 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Search, Loader2 } from 'lucide-react';
 import { useCheckout } from '@/contexts/CheckoutContext';
+import { useToast } from '@/hooks/use-toast';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import clientDataPerson from '@/assets/client-data-person.png';
 import { buscarCep } from '@/lib/cep';
+import { supabase } from '@/integrations/supabase/client';
 import InputMask from 'react-input-mask';
 
 export default function ClientData() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { customer, setCustomerData } = useCheckout();
+  const [searchingCpf, setSearchingCpf] = useState(false);
   
   const [formData, setFormData] = useState({
     nomeCompleto: customer.nomeCompleto || '',
@@ -59,6 +63,58 @@ export default function ClientData() {
       }));
     }
   };
+
+  const handleBuscarCliente = async () => {
+    if (!formData.cpfCnpj) {
+      toast({
+        title: "CPF/CNPJ obrigatório",
+        description: "Digite o CPF/CNPJ para buscar o cliente",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSearchingCpf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('buscar-cliente', {
+        body: { cpf: formData.cpfCnpj.replace(/\D/g, '') }
+      });
+
+      if (error) throw error;
+
+      if (data.found && data.cliente) {
+        setFormData({
+          nomeCompleto: data.cliente.nomeCompleto || '',
+          cpfCnpj: data.cliente.cpfCnpj || formData.cpfCnpj,
+          cep: data.cliente.cep || '',
+          rua: data.cliente.rua || '',
+          numero: data.cliente.numero || '',
+          bairro: data.cliente.bairro || '',
+          complemento: data.cliente.complemento || '',
+          email: data.cliente.email || '',
+          telefone: data.cliente.telefone || ''
+        });
+        toast({
+          title: "Cliente encontrado!",
+          description: "Dados preenchidos automaticamente",
+        });
+      } else {
+        toast({
+          title: "Cliente não encontrado",
+          description: "Preencha os dados manualmente",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      toast({
+        title: "Erro ao buscar cliente",
+        description: "Continue preenchendo os dados manualmente",
+        variant: "destructive",
+      });
+    } finally {
+      setSearchingCpf(false);
+    }
+  };
   return <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black py-6 px-6 border-b border-gray-800">
@@ -88,30 +144,43 @@ export default function ClientData() {
             <p className="text-gray-600 mb-6 text-sm">Preencha todas as informações corretamente</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-700">CPF/CNPJ</label>
+                <div className="flex gap-2">
+                  <InputMask
+                    mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
+                    value={formData.cpfCnpj}
+                    onChange={e => setFormData(prev => ({
+                      ...prev,
+                      cpfCnpj: e.target.value
+                    }))}
+                  >
+                    {(inputProps: any) => (
+                      <Input {...inputProps} placeholder="CPF/CNPJ:" className="bg-gray-100 border-0 flex-1" required />
+                    )}
+                  </InputMask>
+                  <Button
+                    type="button"
+                    onClick={handleBuscarCliente}
+                    disabled={searchingCpf || !formData.cpfCnpj}
+                    variant="outline"
+                    className="shrink-0"
+                  >
+                    {searchingCpf ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               <Input id="nomeCompleto" value={formData.nomeCompleto} onChange={e => setFormData(prev => ({
               ...prev,
               nomeCompleto: e.target.value
             }))} placeholder="Nome Completo:" className="bg-gray-100 border-0" required />
 
               <div className="grid grid-cols-2 gap-3">
-                <InputMask
-                  mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
-                  value={formData.cpfCnpj}
-                  onChange={e => setFormData(prev => ({
-                    ...prev,
-                    cpfCnpj: e.target.value
-                  }))}
-                >
-                  {(inputProps: any) => (
-                    <Input 
-                      {...inputProps}
-                      id="cpfCnpj"
-                      placeholder="CPF/CNPJ:" 
-                      className="bg-gray-100 border-0" 
-                      required 
-                    />
-                  )}
-                </InputMask>
                 
                 <InputMask
                   mask="99999-999"
