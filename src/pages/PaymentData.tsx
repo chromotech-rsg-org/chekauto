@@ -1,29 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createPayment } from '@/services/asaasService';
+import { useCheckout } from '@/contexts/CheckoutContext';
+import { createFullPayment } from '@/services/asaasService';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckProduct from '@/assets/truck-yellow-close.png';
 
 export default function PaymentData() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { vehicle, customer, product } = useCheckout();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'PIX'>('CREDIT_CARD');
+  const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'PIX'>('PIX');
   
-  const [customerData, setCustomerData] = useState({
-    name: '',
-    email: '',
-    cpf: '',
-    phone: ''
-  });
-
   const [cardData, setCardData] = useState({
     number: '',
     name: '',
@@ -38,28 +32,30 @@ export default function PaymentData() {
     { label: 'Finalizado', completed: false, active: false }
   ];
 
-  const productData = {
-    name: 'CARROCERIA SOBRE CHASSI TANQUE',
-    price: 1800.00
-  };
+  // Verificar se há dados do cliente e veículo
+  useEffect(() => {
+    if (!customer.nomeCompleto || !vehicle.chassi) {
+      toast({
+        title: "Dados incompletos",
+        description: "Por favor, preencha os dados anteriores primeiro.",
+        variant: "destructive",
+      });
+      navigate('/solicitacao/veiculo');
+    }
+  }, [customer, vehicle, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const paymentData = {
-        productName: productData.name,
-        productPrice: productData.price,
-        customerName: customerData.name,
-        customerEmail: customerData.email,
-        customerCpf: customerData.cpf.replace(/\D/g, ''),
-        customerPhone: customerData.phone.replace(/\D/g, ''),
+      const result = await createFullPayment(
+        vehicle,
+        customer,
+        product,
         paymentMethod,
-        cardData: paymentMethod === 'CREDIT_CARD' ? cardData : undefined
-      };
-
-      const result = await createPayment(paymentData);
+        paymentMethod === 'CREDIT_CARD' ? cardData : undefined
+      );
       
       // Armazenar dados do pagamento para mostrar na confirmação
       sessionStorage.setItem('paymentResult', JSON.stringify(result));

@@ -2,23 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft } from 'lucide-react';
+import { useCheckout } from '@/contexts/CheckoutContext';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckVehicleData from '@/assets/truck-vehicle-data.png';
+
 export default function VehicleData() {
   const navigate = useNavigate();
+  const { vehicle, setVehicleData } = useCheckout();
+  
   const [formData, setFormData] = useState({
-    chassi: '',
-    renavam: '',
-    ano: '',
-    placa: '',
-    estado: '',
-    cidade: '',
-    informacaoAdicional: '',
-    notaFiscal: null as File | null
+    chassi: vehicle.chassi || '',
+    renavam: vehicle.renavam || '',
+    ano: vehicle.ano || '',
+    placa: vehicle.placa || '',
+    estado: vehicle.estado || '',
+    cidade: vehicle.cidade || '',
+    informacaoAdicional: vehicle.informacaoAdicional || '',
+    notaFiscal: vehicle.notaFiscal || null
   });
   const steps = [{
     label: 'Dados do Veículo',
@@ -39,7 +43,7 @@ export default function VehicleData() {
   }];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Vehicle data:', formData);
+    setVehicleData(formData);
     navigate('/solicitacao/cliente');
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

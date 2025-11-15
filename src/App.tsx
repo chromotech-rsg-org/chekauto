@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { CheckoutProvider } from "./contexts/CheckoutContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Login } from "./components/auth/Login";
@@ -52,11 +53,17 @@ const App = () => (
           {/* Product Routes */}
           <Route path="/produto/:id" element={<ProductDetail />} />
           
-          {/* Purchase Flow */}
-          <Route path="/solicitacao/veiculo" element={<VehicleData />} />
-          <Route path="/solicitacao/cliente" element={<ClientData />} />
-          <Route path="/solicitacao/pagamento" element={<PaymentData />} />
-          <Route path="/solicitacao/confirmacao" element={<Confirmation />} />
+          {/* Purchase Flow com CheckoutProvider */}
+          <Route path="/solicitacao/*" element={
+            <CheckoutProvider>
+              <Routes>
+                <Route path="veiculo" element={<VehicleData />} />
+                <Route path="cliente" element={<ClientData />} />
+                <Route path="pagamento" element={<PaymentData />} />
+                <Route path="confirmacao" element={<Confirmation />} />
+              </Routes>
+            </CheckoutProvider>
+          } />
           
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<Dashboard />} />

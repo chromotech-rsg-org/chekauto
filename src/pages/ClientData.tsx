@@ -2,24 +2,28 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { useCheckout } from '@/contexts/CheckoutContext';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import clientDataPerson from '@/assets/client-data-person.png';
 import { buscarCep } from '@/lib/cep';
 import InputMask from 'react-input-mask';
+
 export default function ClientData() {
   const navigate = useNavigate();
+  const { customer, setCustomerData } = useCheckout();
+  
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
-    cpfCnpj: '',
-    cep: '',
-    rua: '',
-    numero: '',
-    bairro: '',
-    complemento: '',
-    email: '',
-    telefone: ''
+    nomeCompleto: customer.nomeCompleto || '',
+    cpfCnpj: customer.cpfCnpj || '',
+    cep: customer.cep || '',
+    rua: customer.rua || '',
+    numero: customer.numero || '',
+    bairro: customer.bairro || '',
+    complemento: customer.complemento || '',
+    email: customer.email || '',
+    telefone: customer.telefone || ''
   });
   const steps = [{
     label: 'Dados do Veículo',
@@ -40,7 +44,7 @@ export default function ClientData() {
   }];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Client data:', formData);
+    setCustomerData(formData);
     navigate('/solicitacao/pagamento');
   };
   const handleCepBlur = async () => {
