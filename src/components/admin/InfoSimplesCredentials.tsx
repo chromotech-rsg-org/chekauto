@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Save, Trash2, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Save, Trash2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { saveCredentials, getCredentials, clearCredentials } from '@/services/infoSimplesService';
 import { InfoSimplesCredentials } from '@/types/infoSimples';
 import { useToast } from '@/hooks/use-toast';
@@ -66,11 +66,27 @@ export const InfoSimplesCredentialsComponent = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert variant="destructive">
+        <Alert>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Aviso de Segurança:</strong> As credenciais estão sendo armazenadas no localStorage do navegador.
-            Para produção, recomendamos usar Lovable Cloud/Supabase para armazenar credenciais de forma segura.
+          <AlertDescription className="space-y-3">
+            <div>
+              <strong>⚙️ Configuração no Supabase (Recomendado)</strong>
+              <p className="mt-1">As credenciais devem ser configuradas como secrets no Supabase:</p>
+              <ul className="list-disc ml-6 mt-1 space-y-1">
+                <li><code className="text-xs bg-muted px-1 py-0.5 rounded">INFOSIMPLES_A3</code> - Token da API</li>
+                <li><code className="text-xs bg-muted px-1 py-0.5 rounded">INFOSIMPLES_A3_PIN</code> - Token Secret</li>
+                <li><code className="text-xs bg-muted px-1 py-0.5 rounded">INFOSIMPLES_LOGIN_CPF</code> - CPF para acessar o portal ECRVSP</li>
+                <li><code className="text-xs bg-muted px-1 py-0.5 rounded">INFOSIMPLES_LOGIN_SENHA</code> - Senha para acessar o portal ECRVSP</li>
+              </ul>
+            </div>
+            <div className="border-t pt-2">
+              <strong>📝 Como obter as credenciais:</strong>
+              <p className="mt-1"><strong>1. Token (a3) e Secret (a3_pin):</strong></p>
+              <p className="ml-4 text-sm">→ Acesse <a href="https://api.infosimples.com/tokens" target="_blank" rel="noopener noreferrer" className="text-primary underline">api.infosimples.com/tokens</a> e copie suas credenciais</p>
+              
+              <p className="mt-2"><strong>2. CPF e Senha de Login:</strong></p>
+              <p className="ml-4 text-sm">→ São as credenciais para acessar o portal do ECRVSP/Detran (NÃO são da Info Simples)</p>
+            </div>
           </AlertDescription>
         </Alert>
 
