@@ -106,7 +106,7 @@ export default function Confirmation() {
         return {
           title: 'PAGAMENTO APROVADO',
           description: 'Todas as informações serão enviadas por email.',
-          color: 'bg-brand-yellow',
+          color: 'bg-green-500',
           icon: CheckCircle2
         };
       case 'PENDING':

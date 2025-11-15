@@ -142,6 +142,92 @@ serve(async (req) => {
 
     console.log('Pagamento salvo no banco de dados');
 
+    // Criar ou atualizar cliente na tabela clientes
+    let clienteId = null;
+    if (customerData.cpfCnpj) {
+      const cpfCnpjLimpo = String(customerData.cpfCnpj).replace(/\D/g, '');
+      
+      // Buscar cliente existente
+      const { data: clienteExistente } = await supabase
+        .from('clientes')
+        .select('id')
+        .eq('cpf_cnpj', cpfCnpjLimpo)
+        .maybeSingle();
+
+      if (clienteExistente) {
+        // Atualizar cliente existente
+        const { data: clienteAtualizado } = await supabase
+          .from('clientes')
+          .update({
+            nome: customerData.name,
+            email: customerData.email,
+            telefone: customerData.phone || customerData.mobilePhone,
+            endereco: {
+              logradouro: customerData.address,
+              numero: customerData.addressNumber,
+              complemento: customerData.complement,
+              bairro: customerData.province,
+              cep: customerData.postalCode
+            }
+          })
+          .eq('id', clienteExistente.id)
+          .select()
+          .single();
+        
+        clienteId = clienteAtualizado?.id;
+      } else {
+        // Criar novo cliente
+        const { data: novoCliente } = await supabase
+          .from('clientes')
+          .insert({
+            nome: customerData.name,
+            email: customerData.email,
+            cpf_cnpj: cpfCnpjLimpo,
+            telefone: customerData.phone || customerData.mobilePhone,
+            endereco: {
+              logradouro: customerData.address,
+              numero: customerData.addressNumber,
+              complemento: customerData.complement,
+              bairro: customerData.province,
+              cep: customerData.postalCode
+            }
+          })
+          .select()
+          .single();
+        
+        clienteId = novoCliente?.id;
+      }
+    }
+
+    // Criar solicitação vinculada ao pagamento
+    if (clienteId) {
+      await supabase
+        .from('solicitacoes')
+        .insert({
+          pagamento_id: payment.id,
+          cliente_id: clienteId,
+          produto_id: productData?.id || null,
+          status: 'pendente',
+          dados_veiculo: vehicleData
+        });
+    }
+
+    // Enviar email de confirmação de pedido
+    try {
+      await supabase.functions.invoke('enviar-email-pedido', {
+        body: {
+          cliente: customerData,
+          veiculo: vehicleData,
+          produto: productData,
+          pagamento: payment,
+          pixData: pixData
+        }
+      });
+      console.log('Email de pedido enviado');
+    } catch (emailError) {
+      console.error('Erro ao enviar email, mas continuando:', emailError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

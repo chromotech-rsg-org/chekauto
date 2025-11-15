@@ -1,10 +1,11 @@
-// Mock data for administrative system (no backend)
+// Mock data deprecated - using Supabase database now
+// This file is kept for backward compatibility but should not be used
 
 export const mockStats = {
-  totalSolicitacoes: 247,
-  clientesAtivos: 89,
-  produtos: 43,
-  receita: 3420000.00
+  totalSolicitacoes: 0,
+  clientesAtivos: 0,
+  produtos: 0,
+  receita: 0
 };
 
 // Mock Categorias
