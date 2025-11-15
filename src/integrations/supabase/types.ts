@@ -21,6 +21,7 @@ export type Database = {
           criado_em: string | null
           dados_cliente: Json | null
           dados_produto: Json | null
+          dados_veiculo: Json | null
           id: string
           invoice_url: string | null
           metodo_pagamento: string
@@ -36,6 +37,7 @@ export type Database = {
           criado_em?: string | null
           dados_cliente?: Json | null
           dados_produto?: Json | null
+          dados_veiculo?: Json | null
           id?: string
           invoice_url?: string | null
           metodo_pagamento: string
@@ -51,6 +53,7 @@ export type Database = {
           criado_em?: string | null
           dados_cliente?: Json | null
           dados_produto?: Json | null
+          dados_veiculo?: Json | null
           id?: string
           invoice_url?: string | null
           metodo_pagamento?: string

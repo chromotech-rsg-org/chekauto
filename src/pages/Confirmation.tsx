@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Loader2, QrCode, Copy } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { CheckCircle2, Loader2, QrCode, Copy, Home, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCheckout } from '@/contexts/CheckoutContext';
 import { checkPaymentStatus } from '@/services/asaasService';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 
 export default function Confirmation() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { vehicle, customer, product, clearCheckout } = useCheckout();
   const [paymentData, setPaymentData] = useState<any>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>('PENDING');
   const [checking, setChecking] = useState(false);
@@ -26,16 +29,18 @@ export default function Confirmation() {
     if (storedData) {
       const data = JSON.parse(storedData);
       setPaymentData(data);
-      setPaymentStatus(data.status);
+      if (data.payment?.status) {
+        setPaymentStatus(data.payment.status);
+      }
     }
   }, []);
 
   const handleCheckStatus = async () => {
-    if (!paymentData?.id) return;
+    if (!paymentData?.payment?.id) return;
 
     setChecking(true);
     try {
-      const result = await checkPaymentStatus(paymentData.id);
+      const result = await checkPaymentStatus(paymentData.payment.id);
       setPaymentStatus(result.status);
       
       if (result.status === 'RECEIVED' || result.status === 'CONFIRMED') {
@@ -64,6 +69,12 @@ export default function Confirmation() {
     });
   };
 
+  const handleNewRequest = () => {
+    clearCheckout();
+    sessionStorage.removeItem('paymentResult');
+    navigate('/');
+  };
+
   const getStatusMessage = () => {
     switch (paymentStatus) {
       case 'RECEIVED':
@@ -71,32 +82,37 @@ export default function Confirmation() {
         return {
           title: 'PAGAMENTO APROVADO',
           description: 'Todas as informações serão enviadas por email.',
-          color: 'bg-brand-yellow'
+          color: 'bg-brand-yellow',
+          icon: CheckCircle2
         };
       case 'PENDING':
         return {
           title: 'AGUARDANDO PAGAMENTO',
-          description: paymentData?.pixCopyPaste 
+          description: paymentData?.payment?.pixCopyPaste 
             ? 'Complete o pagamento via PIX para continuar.'
             : 'Estamos processando seu pagamento.',
-          color: 'bg-blue-500'
+          color: 'bg-blue-500',
+          icon: Loader2
         };
       case 'OVERDUE':
         return {
           title: 'PAGAMENTO VENCIDO',
           description: 'Entre em contato para gerar um novo pagamento.',
-          color: 'bg-red-500'
+          color: 'bg-red-500',
+          icon: CheckCircle2
         };
       default:
         return {
           title: 'PROCESSANDO PAGAMENTO',
           description: 'Aguarde enquanto processamos sua transação.',
-          color: 'bg-gray-500'
+          color: 'bg-gray-500',
+          icon: Loader2
         };
     }
   };
 
   const status = getStatusMessage();
+  const StatusIcon = status.icon;
 
   return (
     <div className="min-h-screen bg-white">

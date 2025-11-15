@@ -26,6 +26,8 @@ serve(async (req) => {
     const { 
       customerData, 
       paymentData, 
+      vehicleData,
+      productData,
       userId 
     } = await req.json();
 
@@ -129,7 +131,8 @@ serve(async (req) => {
         qr_code_copy_paste: pixData?.payload || null,
         invoice_url: payment.invoiceUrl,
         dados_cliente: customerData,
-        dados_produto: paymentData,
+        dados_produto: productData,
+        dados_veiculo: vehicleData,
       });
 
     if (dbError) {

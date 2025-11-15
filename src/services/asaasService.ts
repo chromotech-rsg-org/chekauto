@@ -78,6 +78,79 @@ export const checkPaymentStatus = async (paymentId: string) => {
   }
 };
 
+export const createFullPayment = async (
+  vehicle: any,
+  customer: any,
+  product: any,
+  paymentMethod: 'PIX' | 'CREDIT_CARD',
+  cardData?: any
+) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const customerData = {
+      name: customer.nomeCompleto,
+      cpfCnpj: customer.cpfCnpj.replace(/\D/g, ''),
+      email: customer.email,
+      mobilePhone: customer.telefone.replace(/\D/g, ''),
+      postalCode: customer.cep.replace(/\D/g, ''),
+      address: customer.rua,
+      addressNumber: customer.numero,
+      complement: customer.complemento,
+      province: customer.bairro,
+    };
+
+    const asaasPaymentData: any = {
+      billingType: paymentMethod,
+      value: product.price || 1800,
+      dueDate: new Date().toISOString().split('T')[0],
+      description: `Compra: ${product.name || 'CARROCERIA SOBRE CHASSI TANQUE'}`,
+      externalReference: `${user.id}-${Date.now()}`,
+    };
+
+    if (paymentMethod === 'CREDIT_CARD' && cardData) {
+      const [expiryMonth, expiryYear] = cardData.expiry.split('/');
+      asaasPaymentData.creditCard = {
+        holderName: cardData.name,
+        number: cardData.number.replace(/\s/g, ''),
+        expiryMonth: expiryMonth.trim(),
+        expiryYear: `20${expiryYear.trim()}`,
+        ccv: cardData.cvv,
+      };
+      asaasPaymentData.creditCardHolderInfo = {
+        name: customer.nomeCompleto,
+        email: customer.email,
+        cpfCnpj: customer.cpfCnpj.replace(/\D/g, ''),
+        postalCode: customer.cep.replace(/\D/g, ''),
+        addressNumber: customer.numero,
+        phone: customer.telefone.replace(/\D/g, ''),
+      };
+    }
+
+    const { data, error } = await supabase.functions.invoke('asaas-create-payment', {
+      body: {
+        customerData,
+        paymentData: asaasPaymentData,
+        vehicleData: vehicle,
+        productData: product,
+        userId: user.id,
+      },
+    });
+
+    if (error) throw error;
+    if (!data.success) throw new Error(data.error);
+
+    return data;
+  } catch (error) {
+    console.error('Erro ao criar pagamento:', error);
+    throw error;
+  }
+};
+
 export const getUserPayments = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
