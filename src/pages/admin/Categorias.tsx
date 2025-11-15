@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
-import { mockCategorias } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,8 @@ const exportFields = [
 ];
 
 export default function Categorias() {
-  const [categorias, setCategorias] = useState(mockCategorias);
+  const [categorias, setCategorias] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,10 +33,34 @@ export default function Categorias() {
     descricao: "",
   });
 
+  // Carregar categorias do banco
+  useEffect(() => {
+    loadCategorias();
+  }, []);
+
+  const loadCategorias = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('categorias')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (error) throw error;
+      setCategorias(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+      toast.error('Erro ao carregar categorias');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredCategorias = categorias.filter((cat) => {
     const matchesSearch = cat.nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDate = (!startDate || cat.dataCriacao >= startDate) && 
-      (!endDate || cat.dataCriacao <= endDate);
+    const dataCriacao = cat.criado_em ? new Date(cat.criado_em).toISOString().split('T')[0] : '';
+    const matchesDate = (!startDate || dataCriacao >= startDate) && 
+      (!endDate || dataCriacao <= endDate);
     return matchesSearch && matchesDate;
   });
 
@@ -53,48 +78,75 @@ export default function Categorias() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.nome.trim()) {
       toast.error("Nome da categoria é obrigatório");
       return;
     }
 
-    if (editingCategoria) {
-      // Editar
-      setCategorias(
-        categorias.map((cat) =>
-          cat.id === editingCategoria.id
-            ? { ...cat, ...formData }
-            : cat
-        )
-      );
-      toast.success("Categoria atualizada com sucesso!");
-    } else {
-      // Criar
-      const newCategoria = {
-        id: categorias.length + 1,
-        ...formData,
-        produtosCount: 0,
-        dataCriacao: new Date().toISOString().split('T')[0],
-      };
-      setCategorias([...categorias, newCategoria]);
-      toast.success("Categoria criada com sucesso!");
-    }
+    try {
+      if (editingCategoria) {
+        // Editar
+        const { error } = await supabase
+          .from('categorias')
+          .update({
+            nome: formData.nome,
+            descricao: formData.descricao,
+          })
+          .eq('id', editingCategoria.id);
 
-    setIsModalOpen(false);
-    setFormData({ nome: "", descricao: "" });
+        if (error) throw error;
+        toast.success("Categoria atualizada com sucesso!");
+      } else {
+        // Criar
+        const { error } = await supabase
+          .from('categorias')
+          .insert({
+            nome: formData.nome,
+            descricao: formData.descricao,
+          });
+
+        if (error) throw error;
+        toast.success("Categoria criada com sucesso!");
+      }
+
+      setIsModalOpen(false);
+      setFormData({ nome: "", descricao: "" });
+      loadCategorias();
+    } catch (error) {
+      console.error('Erro ao salvar categoria:', error);
+      toast.error('Erro ao salvar categoria');
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     const categoria = categorias.find((cat) => cat.id === id);
-    if (categoria && categoria.produtosCount > 0) {
-      toast.error(`Não é possível excluir. Esta categoria tem ${categoria.produtosCount} produto(s) associado(s).`);
+    
+    // Verificar se tem produtos associados
+    const { count } = await supabase
+      .from('produtos')
+      .select('*', { count: 'exact', head: true })
+      .eq('categoria_id', id);
+
+    if (count && count > 0) {
+      toast.error(`Não é possível excluir. Esta categoria tem ${count} produto(s) associado(s).`);
       return;
     }
 
     if (confirm("Tem certeza que deseja excluir esta categoria?")) {
-      setCategorias(categorias.filter((cat) => cat.id !== id));
-      toast.success("Categoria excluída com sucesso!");
+      try {
+        const { error } = await supabase
+          .from('categorias')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success("Categoria excluída com sucesso!");
+        loadCategorias();
+      } catch (error) {
+        console.error('Erro ao excluir categoria:', error);
+        toast.error('Erro ao excluir categoria');
+      }
     }
   };
 
@@ -204,7 +256,7 @@ export default function Categorias() {
                   <TableCell className="text-center">
                     <span className="inline-flex items-center gap-1 text-sm">
                       <Package className="h-4 w-4" />
-                      {categoria.produtosCount}
+                      {categoria.produtos_count || 0}
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
@@ -230,7 +282,7 @@ export default function Categorias() {
               {filteredCategorias.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    Nenhuma categoria encontrada
+                    {loading ? 'Carregando...' : 'Nenhuma categoria encontrada'}
                   </TableCell>
                 </TableRow>
               )}
