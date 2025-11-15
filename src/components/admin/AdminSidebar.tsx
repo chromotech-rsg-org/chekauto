@@ -14,7 +14,8 @@ import {
   Handshake,
   Table2,
   Receipt,
-  TestTube2
+  TestTube2,
+  CreditCard
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,8 @@ const menuItems = [
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
   { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
-  { title: "Testes API Info Simples", icon: TestTube2, path: "/admin/testes-api" }
+  { title: "Testes API Info Simples", icon: TestTube2, path: "/admin/testes-api" },
+  { title: "Configuração Asaas", icon: CreditCard, path: "/admin/config-asaas" }
 ];
 
 export const AdminSidebar = () => {

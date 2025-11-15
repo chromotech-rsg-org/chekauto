@@ -5,19 +5,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { createPayment } from '@/services/asaasService';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckProduct from '@/assets/truck-yellow-close.png';
 
 export default function PaymentData() {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix'>('cartao');
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'PIX'>('CREDIT_CARD');
+  
+  const [customerData, setCustomerData] = useState({
+    name: '',
+    email: '',
+    cpf: '',
+    phone: ''
+  });
+
   const [cardData, setCardData] = useState({
-    numero: '',
-    titular: '',
-    cvv: '',
-    validade: '',
-    parcelas: '1'
+    number: '',
+    name: '',
+    expiry: '',
+    cvv: ''
   });
 
   const steps = [
@@ -27,10 +38,50 @@ export default function PaymentData() {
     { label: 'Finalizado', completed: false, active: false }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const productData = {
+    name: 'CARROCERIA SOBRE CHASSI TANQUE',
+    price: 1800.00
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Payment data:', { paymentMethod, cardData });
-    navigate('/solicitacao/confirmacao');
+    setLoading(true);
+
+    try {
+      const paymentData = {
+        productName: productData.name,
+        productPrice: productData.price,
+        customerName: customerData.name,
+        customerEmail: customerData.email,
+        customerCpf: customerData.cpf.replace(/\D/g, ''),
+        customerPhone: customerData.phone.replace(/\D/g, ''),
+        paymentMethod,
+        cardData: paymentMethod === 'CREDIT_CARD' ? cardData : undefined
+      };
+
+      const result = await createPayment(paymentData);
+      
+      // Armazenar dados do pagamento para mostrar na confirmação
+      sessionStorage.setItem('paymentResult', JSON.stringify(result));
+
+      toast({
+        title: "Pagamento iniciado",
+        description: paymentMethod === 'PIX' 
+          ? "QR Code gerado com sucesso!" 
+          : "Processando pagamento...",
+      });
+
+      navigate('/solicitacao/confirmacao');
+    } catch (error) {
+      console.error('Erro ao processar pagamento:', error);
+      toast({
+        title: "Erro ao processar pagamento",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,28 +118,19 @@ export default function PaymentData() {
                 <img src={truckProduct} alt="Produto" className="w-full h-full object-cover" />
               </div>
               
-              <h3 className="text-lg font-bold text-black mb-2">CARROCERIA SOBRE CHASSI TANQUE</h3>
+              <h3 className="text-lg font-bold text-black mb-2">{productData.name}</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Uma carroceria sobre chassi tanque é um implemento rodoviário para caminhões, composto por um reservatório, geralmente cilíndrico, montado sobre a estrutura do chassi do veículo, e que tem como principal função o transporte de líquidos.
+                Uma carroceria sobre chassi tanque é um implemento rodoviário para caminhões, composto por um reservatório, geralmente cilíndrico, montado sobre a estrutura do chassi do veículo.
               </p>
-              
-              <div className="bg-gray-50 rounded p-4 mb-4">
-                <p className="text-xs text-gray-600">Placeholder para características do produto</p>
-              </div>
               
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">R$1950,00</span>
+                  <span className="font-semibold">R$ {productData.price.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Desconto</span>
-                  <span className="font-semibold">R$150,00</span>
-                </div>
-                <div className="border-t border-gray-200 pt-2 mt-2"></div>
-                <div className="flex justify-between text-base">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold text-brand-yellow">R$1750,00</span>
+                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-brand-yellow">R$ {productData.price.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -96,112 +138,155 @@ export default function PaymentData() {
 
           {/* Dados de Pagamento */}
           <div className="bg-white rounded-lg p-8">
-            <h2 className="text-xl font-bold text-black mb-4">Dados do Pagamento</h2>
-            <p className="text-sm text-gray-600 mb-6">Preencha as informações para finalizar a compra</p>
-            
-            {/* Método de Pagamento */}
-            <div className="flex gap-3 mb-6">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('cartao')}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all text-sm ${
-                  paymentMethod === 'cartao'
-                    ? 'bg-black text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                <CreditCard className="inline-block w-4 h-4 mr-2" />
-                Cartão de Crédito
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('pix')}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all text-sm ${
-                  paymentMethod === 'pix'
-                    ? 'bg-black text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Pagamento via PIX
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              {paymentMethod === 'cartao' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Input
-                      id="numeroCartao"
-                      value={cardData.numero}
-                      onChange={(e) => setCardData(prev => ({ ...prev, numero: e.target.value }))}
-                      placeholder="Número do Cartão"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      id="titular"
-                      value={cardData.titular}
-                      onChange={(e) => setCardData(prev => ({ ...prev, titular: e.target.value }))}
-                      placeholder="Nome do Titular"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      id="cvv"
-                      value={cardData.cvv}
-                      onChange={(e) => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
-                      placeholder="CVV"
-                      maxLength={3}
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                    <Input
-                      id="validade"
-                      value={cardData.validade}
-                      onChange={(e) => setCardData(prev => ({ ...prev, validade: e.target.value }))}
-                      placeholder="Validade"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Select value={cardData.parcelas} onValueChange={(value) => setCardData(prev => ({ ...prev, parcelas: value }))}>
-                      <SelectTrigger className="bg-gray-100 border-0">
-                        <SelectValue placeholder="Número de Parcelas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1x de R$ 1.750,00 sem juros</SelectItem>
-                        <SelectItem value="2">2x de R$ 875,00 sem juros</SelectItem>
-                        <SelectItem value="3">3x de R$ 583,33 sem juros</SelectItem>
-                        <SelectItem value="6">6x de R$ 291,67 sem juros</SelectItem>
-                        <SelectItem value="12">12x de R$ 145,83 sem juros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <h2 className="text-xl font-bold text-black mb-4">Dados de pagamento</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Dados do Cliente */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700">Dados do Cliente</h3>
+                
+                <div>
+                  <Label htmlFor="customerName">Nome Completo</Label>
+                  <Input 
+                    id="customerName" 
+                    required
+                    value={customerData.name}
+                    onChange={(e) => setCustomerData({...customerData, name: e.target.value})}
+                    placeholder="Nome completo" 
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="border border-gray-200 rounded-lg p-6 text-center">
-                    <div className="bg-gray-200 w-40 h-40 mx-auto mb-3 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-500 text-sm">QR Code PIX</p>
+
+                <div>
+                  <Label htmlFor="customerEmail">Email</Label>
+                  <Input 
+                    id="customerEmail" 
+                    type="email"
+                    required
+                    value={customerData.email}
+                    onChange={(e) => setCustomerData({...customerData, email: e.target.value})}
+                    placeholder="email@exemplo.com" 
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerCpf">CPF</Label>
+                  <Input 
+                    id="customerCpf" 
+                    required
+                    value={customerData.cpf}
+                    onChange={(e) => setCustomerData({...customerData, cpf: e.target.value})}
+                    placeholder="000.000.000-00" 
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerPhone">Telefone</Label>
+                  <Input 
+                    id="customerPhone" 
+                    required
+                    value={customerData.phone}
+                    onChange={(e) => setCustomerData({...customerData, phone: e.target.value})}
+                    placeholder="(00) 00000-0000" 
+                  />
+                </div>
+              </div>
+
+              {/* Método de Pagamento */}
+              <div>
+                <Label htmlFor="paymentMethod">Forma de pagamento</Label>
+                <Select 
+                  value={paymentMethod} 
+                  onValueChange={(value: 'CREDIT_CARD' | 'PIX') => setPaymentMethod(value)}
+                >
+                  <SelectTrigger id="paymentMethod">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CREDIT_CARD">Cartão de Crédito</SelectItem>
+                    <SelectItem value="PIX">PIX</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Dados do Cartão (se cartão selecionado) */}
+              {paymentMethod === 'CREDIT_CARD' && (
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700">Dados do Cartão</h3>
+                  
+                  <div>
+                    <Label htmlFor="cardNumber">Número do cartão</Label>
+                    <div className="relative">
+                      <Input 
+                        id="cardNumber" 
+                        required
+                        value={cardData.number}
+                        onChange={(e) => setCardData({...cardData, number: e.target.value})}
+                        placeholder="0000 0000 0000 0000" 
+                        maxLength={19}
+                      />
+                      <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">Escaneie o QR Code ou copie o código abaixo</p>
-                    <div className="bg-gray-50 p-2 rounded text-xs font-mono break-all">
-                      00020126580014br.gov.bcb.pix...
+                  </div>
+
+                  <div>
+                    <Label htmlFor="cardName">Nome no cartão</Label>
+                    <Input 
+                      id="cardName" 
+                      required
+                      value={cardData.name}
+                      onChange={(e) => setCardData({...cardData, name: e.target.value})}
+                      placeholder="Nome como está no cartão" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="cardExpiry">Validade</Label>
+                      <Input 
+                        id="cardExpiry" 
+                        required
+                        value={cardData.expiry}
+                        onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
+                        placeholder="MM/AA" 
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cardCvv">CVV</Label>
+                      <Input 
+                        id="cardCvv" 
+                        required
+                        value={cardData.cvv}
+                        onChange={(e) => setCardData({...cardData, cvv: e.target.value})}
+                        placeholder="123" 
+                        maxLength={4}
+                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-semibold rounded-full mt-6">
-                Finalizar Compra
+              {/* Info PIX */}
+              {paymentMethod === 'PIX' && (
+                <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    Após confirmar, você receberá o QR Code PIX para realizar o pagamento.
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full bg-brand-yellow hover:bg-brand-yellow/90 text-black font-bold"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Finalizar Compra'
+                )}
               </Button>
             </form>
           </div>
