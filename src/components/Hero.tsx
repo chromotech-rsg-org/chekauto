@@ -6,9 +6,8 @@ import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { toast } from '@/hooks/use-toast';
 export const Hero: React.FC = () => {
-  const [isNewVehicle, setIsNewVehicle] = useState(false);
-  const [isUsedVehicle, setIsUsedVehicle] = useState(false);
-  const [originState, setOriginState] = useState('');
+  const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
+  const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [chassisNumber, setChassisNumber] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [vehicleData, setVehicleData] = useState<any>(null);
@@ -37,7 +36,20 @@ export const Hero: React.FC = () => {
       tipo = 'placa';
     }
 
-    const resultado = await consultar(tipo, valorLimpo, 'base-sp', originState);
+    // Determinar endpoint baseado nas regras:
+    // - 0KM (novo) → sempre BIN
+    // - Usado de SP → base-sp
+    // - Usado de outros estados → BIN
+    let endpoint: 'base-sp' | 'bin' = 'bin';
+    let uf = originState === 'SP' ? 'SP' : '';
+    
+    if (vehicleType === 'usado' && originState === 'SP') {
+      endpoint = 'base-sp';
+    } else {
+      endpoint = 'bin';
+    }
+
+    const resultado = await consultar(tipo, valorLimpo, endpoint, uf);
     
     if (resultado) {
       setVehicleData(resultado);
@@ -76,23 +88,38 @@ export const Hero: React.FC = () => {
           </p>
           
           <div className="mt-6 w-full max-w-[700px]">
-            <div className="flex flex-wrap items-center gap-3 mb-4 justify-center">
+            <div className="flex flex-wrap items-center gap-4 mb-4 justify-center">
+              {/* Radio buttons para novo/usado */}
               <label className="flex items-center gap-2 text-white cursor-pointer">
-                <input type="checkbox" checked={isNewVehicle} onChange={e => setIsNewVehicle(e.target.checked)} className="w-4 h-4 accent-brand-yellow" />
-                <span className="text-sm">Automóvel novo</span>
+                <input 
+                  type="radio" 
+                  name="vehicleType"
+                  checked={vehicleType === 'novo'} 
+                  onChange={() => setVehicleType('novo')} 
+                  className="w-4 h-4 accent-brand-yellow" 
+                />
+                <span className="text-sm font-medium">Automóvel novo (0KM)</span>
               </label>
               
               <label className="flex items-center gap-2 text-white cursor-pointer">
-                <input type="checkbox" checked={isUsedVehicle} onChange={e => setIsUsedVehicle(e.target.checked)} className="w-4 h-4 accent-brand-yellow" />
-                <span className="text-sm">Automóvel usado</span>
+                <input 
+                  type="radio" 
+                  name="vehicleType"
+                  checked={vehicleType === 'usado'} 
+                  onChange={() => setVehicleType('usado')} 
+                  className="w-4 h-4 accent-brand-yellow" 
+                />
+                <span className="text-sm font-medium">Automóvel usado</span>
               </label>
               
-              <select value={originState} onChange={e => setOriginState(e.target.value)} className="bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px]">
-                <option value="">Estado de Origem</option>
-                <option value="SP">São Paulo</option>
-                <option value="RJ">Rio de Janeiro</option>
-                <option value="MG">Minas Gerais</option>
-                <option value="RS">Rio Grande do Sul</option>
+              {/* Dropdown SP ou Outros */}
+              <select 
+                value={originState} 
+                onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
+                className="bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium"
+              >
+                <option value="SP">SP</option>
+                <option value="outros">Outros Estados</option>
               </select>
             </div>
             

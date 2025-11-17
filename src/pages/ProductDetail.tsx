@@ -11,6 +11,8 @@ import { VehicleDataDisplay } from '@/components/VehicleDataDisplay';
 import { Loader2 } from 'lucide-react';
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
+  const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
+  const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [showResults, setShowResults] = useState(false);
   const { consultar, loading, resultado } = useVehicleConsultation();
   
@@ -37,7 +39,17 @@ export default function ProductDetail() {
       tipo = 'placa';
     }
 
-    const result = await consultar(tipo, valorLimpo);
+    // Determinar endpoint: 0KM = BIN, Usado SP = base-sp, Usado outros = BIN
+    let endpoint: 'base-sp' | 'bin' = 'bin';
+    let uf = originState === 'SP' ? 'SP' : '';
+    
+    if (vehicleType === 'usado' && originState === 'SP') {
+      endpoint = 'base-sp';
+    } else {
+      endpoint = 'bin';
+    }
+
+    const result = await consultar(tipo, valorLimpo, endpoint, uf);
     if (result) {
       setShowResults(true);
     }
@@ -146,7 +158,43 @@ export default function ProductDetail() {
             </Button>
 
             <div className="border-t border-gray-200 pt-6">
-              <p className="text-sm font-semibold text-black mb-3">Consulta rápida (chassi, placa ou renavam):</p>
+              <p className="text-sm font-semibold text-black mb-3">Consulta rápida de veículo:</p>
+              
+              {/* Tipo de veículo e Estado */}
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="productVehicleType"
+                    checked={vehicleType === 'novo'} 
+                    onChange={() => setVehicleType('novo')} 
+                    className="w-4 h-4 accent-chekauto-yellow" 
+                  />
+                  <span className="text-sm font-medium">Novo (0KM)</span>
+                </label>
+                
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="productVehicleType"
+                    checked={vehicleType === 'usado'} 
+                    onChange={() => setVehicleType('usado')} 
+                    className="w-4 h-4 accent-chekauto-yellow" 
+                  />
+                  <span className="text-sm font-medium">Usado</span>
+                </label>
+                
+                <select 
+                  value={originState} 
+                  onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
+                  className="bg-white border border-gray-300 text-black px-3 py-1.5 rounded text-sm"
+                >
+                  <option value="SP">SP</option>
+                  <option value="outros">Outros Estados</option>
+                </select>
+              </div>
+              
+              {/* Input e botão de consulta */}
               <div className="flex gap-3">
                 <Input 
                   placeholder="Digite chassi, placa ou renavam" 
