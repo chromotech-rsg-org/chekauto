@@ -27,6 +27,7 @@ import TabelaCatMmv from "./pages/admin/TabelaCatMmv";
 import HistoricoSplits from "./pages/admin/HistoricoSplits";
 import TestesApiInfoSimples from "./pages/admin/TestesApiInfoSimples";
 import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
+import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
                 <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
                 <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
+                <Route path="/admin/config-infosimples" element={<ConfiguracoesInfoSimples />} />
                 <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
               </Route>
               

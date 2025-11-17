@@ -3,15 +3,46 @@ import { ConsultationModal } from './ConsultationModal';
 import { useNavigate } from 'react-router-dom';
 import heroBackground from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
+import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
+import { toast } from '@/hooks/use-toast';
 export const Hero: React.FC = () => {
   const [isNewVehicle, setIsNewVehicle] = useState(false);
   const [isUsedVehicle, setIsUsedVehicle] = useState(false);
   const [originState, setOriginState] = useState('');
   const [chassisNumber, setChassisNumber] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [vehicleData, setVehicleData] = useState<any>(null);
   const navigate = useNavigate();
-  const handleConsult = () => {
-    setModalOpen(true);
+  const { consultar, loading } = useVehicleConsultation();
+  
+  const handleConsult = async () => {
+    if (!chassisNumber || chassisNumber.trim().length < 3) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, informe um chassi, placa ou renavam válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Detectar tipo de consulta
+    const valorLimpo = chassisNumber.trim().toUpperCase();
+    let tipo: 'chassi' | 'placa' | 'renavam' = 'chassi';
+    
+    if (valorLimpo.length === 17) {
+      tipo = 'chassi';
+    } else if (valorLimpo.length >= 9 && valorLimpo.length <= 11 && /^\d+$/.test(valorLimpo)) {
+      tipo = 'renavam';
+    } else if (valorLimpo.length === 7) {
+      tipo = 'placa';
+    }
+
+    const resultado = await consultar(tipo, valorLimpo, 'base-sp', originState);
+    
+    if (resultado) {
+      setVehicleData(resultado);
+      setModalOpen(true);
+    }
   };
   return <section className="flex flex-col relative min-h-[600px] w-full pb-[11px] max-md:max-w-full">
       <img src={heroBackground} alt="Hero background" className="absolute h-full w-full object-cover inset-0" />
@@ -66,15 +97,19 @@ export const Hero: React.FC = () => {
             </div>
             
             <div className="flex gap-3 items-center">
-              <input type="text" placeholder="Digite o número do seu Chassi" value={chassisNumber} onChange={e => setChassisNumber(e.target.value)} className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" />
-              <button onClick={handleConsult} className="bg-brand-yellow text-black font-bold px-10 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors whitespace-nowrap uppercase bg-amber-500 hover:bg-amber-400">
-                Consultar
+              <input type="text" placeholder="Digite chassi, placa ou renavam" value={chassisNumber} onChange={e => setChassisNumber(e.target.value)} className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" />
+              <button 
+                onClick={handleConsult} 
+                disabled={loading}
+                className="bg-brand-yellow text-black font-bold px-10 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors whitespace-nowrap uppercase bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'CONSULTANDO...' : 'CONSULTAR'}
               </button>
             </div>
           </div>
         </div>
       </div>
       
-      <ConsultationModal open={modalOpen} onOpenChange={setModalOpen} />
+      <ConsultationModal open={modalOpen} onOpenChange={setModalOpen} vehicleData={vehicleData} />
     </section>;
 };
