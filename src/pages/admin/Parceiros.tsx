@@ -1,33 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
-import { mockParceiros } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import InputMask from "react-input-mask";
 import { toast } from "sonner";
-import { buscarCep } from "@/lib/cep";
 
 const exportFields = [
   { key: "id", label: "ID" },
   { key: "nome", label: "Nome" },
-  { key: "cpfCnpj", label: "CPF/CNPJ" },
-  { key: "percentual", label: "Percentual" },
-  { key: "walletId", label: "Wallet ID" },
-  { key: "status", label: "Status" },
-  { key: "dataCadastro", label: "Data Cadastro" }
+  { key: "cpf_cnpj", label: "CPF/CNPJ" },
+  { key: "email", label: "Email" },
+  { key: "telefone", label: "Telefone" },
+  { key: "percentual_split", label: "Percentual Split" },
+  { key: "ativo", label: "Status" },
+  { key: "criado_em", label: "Data Cadastro" }
 ];
 
 export default function Parceiros() {
-  const [parceiros, setParceiros] = useState(mockParceiros);
+  const [parceiros, setParceiros] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParceiro, setEditingParceiro] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,27 +36,43 @@ export default function Parceiros() {
 
   const [formData, setFormData] = useState({
     nome: "",
-    cpfCnpj: "",
-    cep: "",
-    rua: "",
-    numero: "",
-    complemento: "",
-    bairro: "",
-    cidade: "",
-    uf: "",
-    percentual: 0,
-    walletId: "",
-    status: "Ativo",
-    observacoes: ""
+    cpf_cnpj: "",
+    email: "",
+    telefone: "",
+    percentual_split: 0,
+    ativo: true
   });
+
+  useEffect(() => {
+    loadParceiros();
+  }, []);
+
+  const loadParceiros = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('parceiros')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (error) throw error;
+      setParceiros(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar parceiros:', error);
+      toast.error('Erro ao carregar parceiros');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredParceiros = parceiros.filter(
     (p) => {
       const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.cpfCnpj.includes(searchTerm);
+        (p.cpf_cnpj || '').includes(searchTerm);
       
-      const matchesDate = (!startDate || p.dataCadastro >= startDate) && 
-        (!endDate || p.dataCadastro <= endDate);
+      const dataCriacao = p.criado_em ? new Date(p.criado_em).toISOString().split('T')[0] : '';
+      const matchesDate = (!startDate || dataCriacao >= startDate) && 
+        (!endDate || dataCriacao <= endDate);
       
       return matchesSearch && matchesDate;
     }
@@ -65,64 +81,75 @@ export default function Parceiros() {
   const handleOpenModal = (parceiro?: any) => {
     if (parceiro) {
       setEditingParceiro(parceiro);
-      setFormData(parceiro);
+      setFormData({
+        nome: parceiro.nome,
+        cpf_cnpj: parceiro.cpf_cnpj,
+        email: parceiro.email || "",
+        telefone: parceiro.telefone || "",
+        percentual_split: parceiro.percentual_split || 0,
+        ativo: parceiro.ativo ?? true
+      });
     } else {
       setEditingParceiro(null);
       setFormData({
         nome: "",
-        cpfCnpj: "",
-        cep: "",
-        rua: "",
-        numero: "",
-        complemento: "",
-        bairro: "",
-        cidade: "",
-        uf: "",
-        percentual: 0,
-        walletId: "",
-        status: "Ativo",
-        observacoes: ""
+        cpf_cnpj: "",
+        email: "",
+        telefone: "",
+        percentual_split: 0,
+        ativo: true
       });
     }
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.nome || !formData.cpfCnpj) {
+  const handleSave = async () => {
+    if (!formData.nome || !formData.cpf_cnpj) {
       toast.error("Preencha os campos obrigatórios");
       return;
     }
 
-    if (editingParceiro) {
-      setParceiros(parceiros.map(p => p.id === editingParceiro.id ? { ...formData, id: editingParceiro.id, dataCadastro: editingParceiro.dataCadastro } : p));
-      toast.success("Parceiro atualizado com sucesso!");
-    } else {
-      const newParceiro = { ...formData, id: parceiros.length + 1, dataCadastro: new Date().toISOString().split('T')[0] };
-      setParceiros([...parceiros, newParceiro]);
-      toast.success("Parceiro cadastrado com sucesso!");
+    try {
+      if (editingParceiro) {
+        const { error } = await supabase
+          .from('parceiros')
+          .update(formData)
+          .eq('id', editingParceiro.id);
+
+        if (error) throw error;
+        toast.success("Parceiro atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from('parceiros')
+          .insert(formData);
+
+        if (error) throw error;
+        toast.success("Parceiro cadastrado com sucesso!");
+      }
+
+      setIsModalOpen(false);
+      loadParceiros();
+    } catch (error) {
+      console.error('Erro ao salvar parceiro:', error);
+      toast.error('Erro ao salvar parceiro');
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Deseja realmente excluir este parceiro?")) {
-      setParceiros(parceiros.filter(p => p.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm("Deseja realmente excluir este parceiro?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('parceiros')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       toast.success("Parceiro excluído com sucesso!");
-    }
-  };
-
-  const handleCepBlur = async () => {
-    if (!formData.cep) return;
-    
-    const data = await buscarCep(formData.cep);
-    if (data) {
-      setFormData({
-        ...formData,
-        rua: data.logradouro,
-        bairro: data.bairro,
-        cidade: data.localidade,
-        uf: data.uf
-      });
+      loadParceiros();
+    } catch (error) {
+      console.error('Erro ao excluir parceiro:', error);
+      toast.error('Erro ao excluir parceiro');
     }
   };
 
@@ -165,51 +192,65 @@ export default function Parceiros() {
           />
         </div>
 
-        <div className="bg-white rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CPF/CNPJ</TableHead>
-                <TableHead>Cidade/UF</TableHead>
-                <TableHead>Percentual</TableHead>
-                <TableHead>Wallet ID</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredParceiros.map((parceiro) => (
-                <TableRow key={parceiro.id}>
-                  <TableCell className="font-medium">{parceiro.nome}</TableCell>
-                  <TableCell className="font-mono text-sm">{parceiro.cpfCnpj}</TableCell>
-                  <TableCell>{parceiro.cidade}/{parceiro.uf}</TableCell>
-                  <TableCell className="font-semibold">{parceiro.percentual}%</TableCell>
-                  <TableCell className="font-mono text-xs">{parceiro.walletId}</TableCell>
-                  <TableCell>
-                    <Badge variant={parceiro.status === "Ativo" ? "default" : "secondary"}>
-                      {parceiro.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal(parceiro)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(parceiro.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Percentual Split</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filteredParceiros.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Nenhum parceiro encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredParceiros.map((parceiro) => (
+                    <TableRow key={parceiro.id}>
+                      <TableCell className="font-medium">{parceiro.nome}</TableCell>
+                      <TableCell className="font-mono text-sm">{parceiro.cpf_cnpj}</TableCell>
+                      <TableCell>{parceiro.email || '-'}</TableCell>
+                      <TableCell>{parceiro.telefone || '-'}</TableCell>
+                      <TableCell className="font-semibold">{parceiro.percentual_split}%</TableCell>
+                      <TableCell>
+                        <Badge variant={parceiro.ativo ? "default" : "secondary"}>
+                          {parceiro.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(parceiro)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(parceiro.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {/* Modal */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingParceiro ? "Editar Parceiro" : "Novo Parceiro"}</DialogTitle>
             </DialogHeader>
@@ -226,134 +267,59 @@ export default function Parceiros() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cpfCnpj">CPF/CNPJ *</Label>
+                  <Label htmlFor="cpf_cnpj">CPF/CNPJ *</Label>
                   <InputMask
-                    mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
-                    value={formData.cpfCnpj}
-                    onChange={(e) => setFormData({ ...formData, cpfCnpj: e.target.value })}
+                    mask={formData.cpf_cnpj.replace(/\D/g, '').length <= 11 ? "999.999.999-99" : "99.999.999/9999-99"}
+                    value={formData.cpf_cnpj}
+                    onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
                   >
                     {(inputProps: any) => <Input {...inputProps} placeholder="000.000.000-00" />}
                   </InputMask>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ativo">Ativo</SelectItem>
-                      <SelectItem value="Inativo">Inativo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="percentual">Percentual Split (%)</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="percentual"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.percentual}
-                    onChange={(e) => setFormData({ ...formData, percentual: Number(e.target.value) })}
-                    placeholder="0"
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@exemplo.com"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="walletId">Wallet ID Asaas</Label>
-                  <Input
-                    id="walletId"
-                    value={formData.walletId}
-                    onChange={(e) => setFormData({ ...formData, walletId: e.target.value })}
-                    placeholder="wallet_abc123..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cep">CEP</Label>
+                  <Label htmlFor="telefone">Telefone</Label>
                   <InputMask
-                    mask="99999-999"
-                    value={formData.cep}
-                    onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                    onBlur={handleCepBlur}
+                    mask="(99) 99999-9999"
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                   >
-                    {(inputProps: any) => <Input {...inputProps} placeholder="00000-000" />}
+                    {(inputProps: any) => <Input {...inputProps} placeholder="(00) 00000-0000" />}
                   </InputMask>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="rua">Rua</Label>
+                  <Label htmlFor="percentual_split">Percentual Split (%)</Label>
                   <Input
-                    id="rua"
-                    value={formData.rua}
-                    onChange={(e) => setFormData({ ...formData, rua: e.target.value })}
-                    placeholder="Nome da rua"
+                    id="percentual_split"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.percentual_split}
+                    onChange={(e) => setFormData({ ...formData, percentual_split: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="numero">Número</Label>
-                  <Input
-                    id="numero"
-                    value={formData.numero}
-                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                    placeholder="123"
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="ativo"
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="complemento">Complemento</Label>
-                  <Input
-                    id="complemento"
-                    value={formData.complemento}
-                    onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
-                    placeholder="Apto, sala, etc."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bairro">Bairro</Label>
-                  <Input
-                    id="bairro"
-                    value={formData.bairro}
-                    onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
-                    placeholder="Nome do bairro"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cidade">Cidade</Label>
-                  <Input
-                    id="cidade"
-                    value={formData.cidade}
-                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                    placeholder="Nome da cidade"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="uf">UF</Label>
-                  <Input
-                    id="uf"
-                    value={formData.uf}
-                    onChange={(e) => setFormData({ ...formData, uf: e.target.value.toUpperCase() })}
-                    placeholder="SP"
-                    maxLength={2}
-                  />
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="observacoes">Observações</Label>
-                  <Textarea
-                    id="observacoes"
-                    value={formData.observacoes}
-                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                    placeholder="Informações adicionais..."
-                    rows={3}
-                  />
+                  <Label htmlFor="ativo">Parceiro Ativo</Label>
                 </div>
               </div>
             </div>
@@ -361,8 +327,8 @@ export default function Parceiros() {
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" onClick={handleSave}>
-                {editingParceiro ? "Atualizar" : "Cadastrar"}
+              <Button onClick={handleSave} className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
+                Salvar
               </Button>
             </DialogFooter>
           </DialogContent>
