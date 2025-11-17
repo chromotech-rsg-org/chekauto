@@ -26,6 +26,13 @@ export default function AuthGuard() {
     };
   }, []);
 
-  if (checking) return null;
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-yellow"></div>
+      </div>
+    );
+  }
+  
   return authed ? <Outlet /> : <Navigate to="/login" replace />;
 }
