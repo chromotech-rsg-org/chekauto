@@ -30,6 +30,7 @@ import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
+import AuthGuard from "./components/admin/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -61,19 +62,21 @@ const App = () => (
               <Route path="/solicitacao/confirmacao" element={<Confirmation />} />
               
               {/* Admin Routes */}
-              <Route path="/admin/dashboard" element={<Dashboard />} />
-              <Route path="/admin/perfis" element={<Perfis />} />
-              <Route path="/admin/usuarios" element={<Usuarios />} />
-              <Route path="/admin/produtos" element={<Produtos />} />
-              <Route path="/admin/categorias" element={<Categorias />} />
-              <Route path="/admin/clientes" element={<Clientes />} />
-              <Route path="/admin/solicitacoes" element={<Solicitacoes />} />
-              <Route path="/admin/split-pagamento" element={<SplitPagamento />} />
-              <Route path="/admin/parceiros" element={<Parceiros />} />
-              <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
-              <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
-              <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
-              <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
+              <Route element={<AuthGuard />}>
+                <Route path="/admin/dashboard" element={<Dashboard />} />
+                <Route path="/admin/perfis" element={<Perfis />} />
+                <Route path="/admin/usuarios" element={<Usuarios />} />
+                <Route path="/admin/produtos" element={<Produtos />} />
+                <Route path="/admin/categorias" element={<Categorias />} />
+                <Route path="/admin/clientes" element={<Clientes />} />
+                <Route path="/admin/solicitacoes" element={<Solicitacoes />} />
+                <Route path="/admin/split-pagamento" element={<SplitPagamento />} />
+                <Route path="/admin/parceiros" element={<Parceiros />} />
+                <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
+                <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
+                <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
+                <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
+              </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
