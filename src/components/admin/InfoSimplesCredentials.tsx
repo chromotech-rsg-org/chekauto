@@ -13,6 +13,7 @@ export const InfoSimplesCredentialsComponent = () => {
   const { toast } = useToast();
   const [showPasswords, setShowPasswords] = useState(false);
   const [credentials, setCredentials] = useState<InfoSimplesCredentials>({
+    token: '',
     a3: '',
     a3_pin: '',
     login_cpf: '',

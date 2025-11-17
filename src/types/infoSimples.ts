@@ -1,4 +1,5 @@
 export interface InfoSimplesCredentials {
+  token?: string;
   a3: string;
   a3_pin: string;
   login_cpf: string;
