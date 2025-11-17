@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,24 +7,39 @@ import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { VehicleDataDisplay } from './VehicleDataDisplay';
+import { criarOuAtualizarCliente, associarClienteConsulta } from '@/services/clienteService';
+import { toast } from '@/hooks/use-toast';
+import { ResultadoConsulta } from '@/services/veiculoCacheService';
 
 interface ConsultationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  renave?: string;
+  vehicleData?: ResultadoConsulta | null;
 }
 
 export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   open,
   onOpenChange,
-  renave = "18283215412"
+  vehicleData
 }) => {
   const [step, setStep] = useState(1);
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [filterCategoria, setFilterCategoria] = useState("todas");
   const [searchProduto, setSearchProduto] = useState("");
+  const [clienteId, setClienteId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) {
+      setStep(1);
+      setNome("");
+      setWhatsapp("");
+      setClienteId(null);
+    }
+  }, [open]);
 
   const filteredProdutos = mockProdutos.filter((produto) => {
     const matchesCategoria = filterCategoria === "todas" || produto.categoria === filterCategoria;
@@ -32,26 +47,68 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     return matchesCategoria && matchesSearch;
   });
 
-  const handleConsultar = () => {
+  const handleConsultar = async () => {
     if (!nome || !whatsapp) {
-      alert("Por favor, preencha seu nome e WhatsApp");
+      toast({
+        title: 'Erro',
+        description: 'Por favor, preencha seu nome e WhatsApp',
+        variant: 'destructive',
+      });
       return;
     }
-    setStep(2);
+
+    setIsSubmitting(true);
+
+    try {
+      // Criar ou atualizar cliente
+      const resultado = await criarOuAtualizarCliente({
+        nome,
+        telefone: whatsapp,
+        status: 'lead',
+        primeira_consulta_id: vehicleData?.consultaId,
+      });
+
+      if (resultado) {
+        setClienteId(resultado.id);
+        
+        // Associar cliente à consulta
+        if (vehicleData?.consultaId) {
+          await associarClienteConsulta(resultado.id, vehicleData.consultaId);
+        }
+
+        // Salvar dados no localStorage para usar no checkout
+        localStorage.setItem('consultaData', JSON.stringify({
+          clienteId: resultado.id,
+          nome,
+          whatsapp,
+          vehicleData: vehicleData?.data,
+          consultaId: vehicleData?.consultaId,
+        }));
+
+        setStep(2);
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao salvar seus dados. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao consultar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao processar sua solicitação',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSelectProduto = (produtoId: number) => {
-    // Salvar dados da consulta (localStorage ou context)
-    localStorage.setItem('consultaData', JSON.stringify({ nome, whatsapp, renave }));
-    
     // Ir para checkout com produto selecionado
     navigate(`/solicitacao/veiculo?produto=${produtoId}`);
     onOpenChange(false);
-    
-    // Reset
-    setStep(1);
-    setNome("");
-    setWhatsapp("");
   };
 
   const handleBack = () => {
@@ -59,20 +116,28 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      onOpenChange(open);
-      if (!open) {
-        setStep(1);
-        setNome("");
-        setWhatsapp("");
-      }
-    }}>
-      <DialogContent className={`${step === 1 ? 'max-w-sm' : 'max-w-4xl'} bg-brand-yellow p-8 border-none rounded-2xl max-h-[90vh] overflow-y-auto`}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={`${step === 1 ? 'max-w-2xl' : 'max-w-4xl'} bg-brand-yellow p-8 border-none rounded-2xl max-h-[90vh] overflow-y-auto`}>
         {step === 1 ? (
           <div className="space-y-4">
-            <h2 className="text-black text-lg font-bold text-center">
-              RENAVE: {renave}
+            <h2 className="text-black text-xl font-bold text-center mb-4">
+              Dados do Veículo Encontrados
             </h2>
+
+            {/* Exibir dados do veículo */}
+            {vehicleData && (
+              <VehicleDataDisplay 
+                dados={vehicleData.data}
+                fromCache={vehicleData.fromCache}
+                ultimaAtualizacao={vehicleData.ultimaAtualizacao}
+                showFullDetails={false}
+              />
+            )}
+
+            <div className="border-t border-black/20 pt-4 mt-4">
+              <h3 className="text-black text-lg font-semibold mb-3 text-center">
+                Complete seus dados para continuar
+              </h3>
             
             <Input
               placeholder="Seu Nome"
@@ -87,12 +152,14 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               onChange={(e) => setWhatsapp(e.target.value)}
               className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
             />
+            </div>
             
             <button 
               onClick={handleConsultar}
-              className="w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-colors"
+              disabled={isSubmitting}
+              className="w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Consultar Agora
+              {isSubmitting ? 'Processando...' : 'Consultar Agora'}
             </button>
           </div>
         ) : (

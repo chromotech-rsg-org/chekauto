@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,14 +6,53 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 import truckBlue from '@/assets/truck-blue-sunset.png';
+import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
+import { VehicleDataDisplay } from '@/components/VehicleDataDisplay';
+import { Loader2 } from 'lucide-react';
 export default function ProductDetail() {
+  const [chassiInput, setChassiInput] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const { consultar, loading, resultado } = useVehicleConsultation();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
   const navigate = useNavigate();
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
+
+  const handleConsultaRapida = async () => {
+    if (!chassiInput || chassiInput.trim().length < 3) {
+      return;
+    }
+
+    const valorLimpo = chassiInput.trim().toUpperCase();
+    let tipo: 'chassi' | 'placa' | 'renavam' = 'chassi';
+    
+    if (valorLimpo.length === 17) {
+      tipo = 'chassi';
+    } else if (valorLimpo.length >= 9 && valorLimpo.length <= 11 && /^\d+$/.test(valorLimpo)) {
+      tipo = 'renavam';
+    } else if (valorLimpo.length === 7) {
+      tipo = 'placa';
+    }
+
+    const result = await consultar(tipo, valorLimpo);
+    if (result) {
+      setShowResults(true);
+    }
+  };
+
+  const handleContratarComVeiculo = () => {
+    if (resultado) {
+      localStorage.setItem('consultaData', JSON.stringify({
+        vehicleData: resultado.data,
+        consultaId: resultado.consultaId,
+        origem: 'produto_detail'
+      }));
+      navigate(`/solicitacao/veiculo?produto=${id}`);
+    }
+  };
   const produto = {
     nome: 'CARROCERIA SOBRE CHASSI TANQUE',
     categoria: 'Tanques',
@@ -107,13 +146,49 @@ export default function ProductDetail() {
             </Button>
 
             <div className="border-t border-gray-200 pt-6">
-              <p className="text-sm font-semibold text-black mb-3">Consulta rápida por chassi:</p>
+              <p className="text-sm font-semibold text-black mb-3">Consulta rápida (chassi, placa ou renavam):</p>
               <div className="flex gap-3">
-                <Input placeholder="Digite o número do chassi" className="flex-1" />
-                <Button className="bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 font-semibold px-8">
-                  Consultar
+                <Input 
+                  placeholder="Digite chassi, placa ou renavam" 
+                  className="flex-1"
+                  value={chassiInput}
+                  onChange={(e) => setChassiInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleConsultaRapida()}
+                />
+                <Button 
+                  onClick={handleConsultaRapida}
+                  disabled={loading}
+                  className="bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 font-semibold px-8"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Consultando
+                    </>
+                  ) : (
+                    'Consultar'
+                  )}
                 </Button>
               </div>
+
+              {/* Resultados da consulta */}
+              {showResults && resultado && (
+                <div className="mt-6 space-y-4">
+                  <VehicleDataDisplay 
+                    dados={resultado.data}
+                    fromCache={resultado.fromCache}
+                    ultimaAtualizacao={resultado.ultimaAtualizacao}
+                    showFullDetails={true}
+                  />
+                  
+                  <Button 
+                    onClick={handleContratarComVeiculo}
+                    className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-12 text-lg font-bold"
+                  >
+                    CONTRATAR COM ESTE VEÍCULO
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

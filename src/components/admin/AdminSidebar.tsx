@@ -35,6 +35,7 @@ const menuItems = [
   { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
   { title: "Testes API Info Simples", icon: TestTube2, path: "/admin/testes-api" },
+  { title: "Configurações InfoSimples", icon: TestTube2, path: "/admin/config-infosimples" },
   { title: "Configuração Asaas", icon: CreditCard, path: "/admin/config-asaas" }
 ];
 

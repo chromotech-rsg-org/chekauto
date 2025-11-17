@@ -77,7 +77,10 @@ export type Database = {
           endereco: Json | null
           id: string
           nome: string
+          primeira_consulta_id: string | null
+          status: string | null
           telefone: string | null
+          ultima_interacao: string | null
         }
         Insert: {
           atualizado_em?: string | null
@@ -87,7 +90,10 @@ export type Database = {
           endereco?: Json | null
           id?: string
           nome: string
+          primeira_consulta_id?: string | null
+          status?: string | null
           telefone?: string | null
+          ultima_interacao?: string | null
         }
         Update: {
           atualizado_em?: string | null
@@ -97,7 +103,90 @@ export type Database = {
           endereco?: Json | null
           id?: string
           nome?: string
+          primeira_consulta_id?: string | null
+          status?: string | null
           telefone?: string | null
+          ultima_interacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_primeira_consulta_id_fkey"
+            columns: ["primeira_consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_sistema: {
+        Row: {
+          atualizado_em: string | null
+          chave: string
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          valor: string
+        }
+        Insert: {
+          atualizado_em?: string | null
+          chave: string
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          valor: string
+        }
+        Update: {
+          atualizado_em?: string | null
+          chave?: string
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          valor?: string
+        }
+        Relationships: []
+      }
+      consultas_veiculos: {
+        Row: {
+          ano_modelo: string | null
+          atualizado_em: string | null
+          chassi: string | null
+          criado_em: string | null
+          dados_completos: Json
+          id: string
+          marca: string | null
+          modelo: string | null
+          placa: string | null
+          renavam: string | null
+          tipo_consulta: string
+          valor_consultado: string
+        }
+        Insert: {
+          ano_modelo?: string | null
+          atualizado_em?: string | null
+          chassi?: string | null
+          criado_em?: string | null
+          dados_completos: Json
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          placa?: string | null
+          renavam?: string | null
+          tipo_consulta: string
+          valor_consultado: string
+        }
+        Update: {
+          ano_modelo?: string | null
+          atualizado_em?: string | null
+          chassi?: string | null
+          criado_em?: string | null
+          dados_completos?: Json
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          placa?: string | null
+          renavam?: string | null
+          tipo_consulta?: string
+          valor_consultado?: string
         }
         Relationships: []
       }
@@ -363,9 +452,12 @@ export type Database = {
         Row: {
           atualizado_em: string | null
           cliente_id: string | null
+          consulta_veiculo_id: string | null
           criado_em: string | null
+          dados_exibidos_cliente: Json | null
           dados_veiculo: Json | null
           id: string
+          origem_consulta: string | null
           pagamento_id: string | null
           produto_id: string | null
           status: string | null
@@ -373,9 +465,12 @@ export type Database = {
         Insert: {
           atualizado_em?: string | null
           cliente_id?: string | null
+          consulta_veiculo_id?: string | null
           criado_em?: string | null
+          dados_exibidos_cliente?: Json | null
           dados_veiculo?: Json | null
           id?: string
+          origem_consulta?: string | null
           pagamento_id?: string | null
           produto_id?: string | null
           status?: string | null
@@ -383,9 +478,12 @@ export type Database = {
         Update: {
           atualizado_em?: string | null
           cliente_id?: string | null
+          consulta_veiculo_id?: string | null
           criado_em?: string | null
+          dados_exibidos_cliente?: Json | null
           dados_veiculo?: Json | null
           id?: string
+          origem_consulta?: string | null
           pagamento_id?: string | null
           produto_id?: string | null
           status?: string | null
@@ -396,6 +494,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_consulta_veiculo_id_fkey"
+            columns: ["consulta_veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "consultas_veiculos"
             referencedColumns: ["id"]
           },
           {
