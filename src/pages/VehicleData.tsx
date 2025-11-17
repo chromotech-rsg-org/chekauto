@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckVehicleData from '@/assets/truck-vehicle-data.png';
+import InputMask from 'react-input-mask';
 
 export default function VehicleData() {
   const navigate = useNavigate();
   const { vehicle, setVehicleData } = useCheckout();
+  const [dadosImportados, setDadosImportados] = useState(false);
   
   const [formData, setFormData] = useState({
     chassi: vehicle.chassi || '',
@@ -24,6 +27,28 @@ export default function VehicleData() {
     informacaoAdicional: vehicle.informacaoAdicional || '',
     notaFiscal: vehicle.notaFiscal || null
   });
+
+  // Pré-preencher dados da consulta se existirem
+  useEffect(() => {
+    try {
+      const consultaData = localStorage.getItem('consultaData');
+      if (consultaData) {
+        const dados = JSON.parse(consultaData);
+        
+        setFormData(prev => ({
+          ...prev,
+          chassi: dados.chassi || prev.chassi,
+          renavam: dados.renavam || prev.renavam,
+          placa: dados.placa || prev.placa,
+          ano: dados.ano_modelo || prev.ano,
+        }));
+        
+        setDadosImportados(true);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados da consulta:', error);
+    }
+  }, []);
   const steps = [{
     label: 'Dados do Veículo',
     completed: false,
@@ -79,19 +104,56 @@ export default function VehicleData() {
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Form */}
           <div className="bg-white rounded-lg p-8">
-            <h1 className="text-2xl font-bold text-black mb-1">Dados do Veículo</h1>
+            <div className="flex items-center justify-between mb-1">
+              <h1 className="text-2xl font-bold text-black">Dados do Veículo</h1>
+              {dadosImportados && (
+                <Badge variant="default" className="bg-green-500 text-white">
+                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                  Dados importados da consulta
+                </Badge>
+              )}
+            </div>
             <p className="text-gray-600 mb-6 text-sm">Preencha todas as informações corretamente</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <Input id="chassi" value={formData.chassi} onChange={e => setFormData(prev => ({
-                ...prev,
-                chassi: e.target.value
-              }))} placeholder="Número do Chassi:" className="bg-gray-100 border-0" required />
-                <Input id="renavam" value={formData.renavam} onChange={e => setFormData(prev => ({
-                ...prev,
-                renavam: e.target.value
-              }))} placeholder="Renavam:" className="bg-gray-100 border-0" required />
+                <InputMask
+                  mask="99999999999999999"
+                  value={formData.chassi}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
+                    ...prev,
+                    chassi: e.target.value
+                  }))}
+                >
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      id="chassi"
+                      placeholder="Número do Chassi:"
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                  )}
+                </InputMask>
+                
+                <InputMask
+                  mask="99999999999"
+                  value={formData.renavam}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
+                    ...prev,
+                    renavam: e.target.value
+                  }))}
+                >
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      id="renavam"
+                      placeholder="Renavam:"
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                  )}
+                </InputMask>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -99,10 +161,30 @@ export default function VehicleData() {
                 ...prev,
                 ano: e.target.value
               }))} placeholder="Ano do Veículo:" className="bg-gray-100 border-0" required />
-                <Input id="placa" value={formData.placa} onChange={e => setFormData(prev => ({
-                ...prev,
-                placa: e.target.value
-              }))} placeholder="Placa do Veículo:" className="bg-gray-100 border-0" required />
+                
+                <InputMask
+                  mask="aaa-9*99"
+                  formatChars={{
+                    '9': '[0-9]',
+                    'a': '[A-Za-z]',
+                    '*': '[0-9A-Ja-j]'
+                  }}
+                  value={formData.placa}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
+                    ...prev,
+                    placa: e.target.value.toUpperCase()
+                  }))}
+                >
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      id="placa"
+                      placeholder="Placa do Veículo:"
+                      className="bg-gray-100 border-0"
+                      required
+                    />
+                  )}
+                </InputMask>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

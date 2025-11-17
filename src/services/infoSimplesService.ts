@@ -22,6 +22,27 @@ export const clearCredentials = (): void => {
   localStorage.removeItem(CREDENTIALS_KEY);
 };
 
+// Buscar token do banco de dados
+export const buscarTokenInfoSimples = async (): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('configuracoes_sistema')
+      .select('valor')
+      .eq('chave', 'infosimples_api_token')
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar token do banco:', error);
+      return null;
+    }
+
+    return data?.valor || null;
+  } catch (error) {
+    console.error('Erro ao buscar token:', error);
+    return null;
+  }
+};
+
 
 export const consultarBaseEstadualSP = async (
   params: ConsultaBaseSpParams
@@ -31,8 +52,14 @@ export const consultarBaseEstadualSP = async (
   try {
     console.log('Iniciando consulta Base SP via Edge Function:', params);
 
+    // Buscar token do banco se não foi fornecido
+    let token = params.token;
+    if (!token) {
+      token = await buscarTokenInfoSimples() || undefined;
+    }
+
     const { data, error } = await supabase.functions.invoke('consulta-base-sp', {
-      body: params
+      body: { ...params, token }
     });
 
     const endTime = performance.now();
@@ -83,8 +110,14 @@ export const consultarCadastroBIN = async (
   try {
     console.log('Iniciando consulta BIN via Edge Function:', params);
 
+    // Buscar token do banco se não foi fornecido
+    let token = params.token;
+    if (!token) {
+      token = await buscarTokenInfoSimples() || undefined;
+    }
+
     const { data, error } = await supabase.functions.invoke('consulta-bin', {
-      body: params
+      body: { ...params, token }
     });
 
     const endTime = performance.now();
