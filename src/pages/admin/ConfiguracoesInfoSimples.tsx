@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save, Database, Clock, TrendingUp } from 'lucide-react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 export default function ConfiguracoesInfoSimples() {
   const [token, setToken] = useState('');
@@ -119,7 +120,8 @@ export default function ConfiguracoesInfoSimples() {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminLayout>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Configurações InfoSimples</h1>
         <p className="text-muted-foreground">
@@ -259,5 +261,6 @@ export default function ConfiguracoesInfoSimples() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

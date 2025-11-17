@@ -28,6 +28,7 @@ export default function Produtos() {
     descricao: "",
     categoria_id: "",
     preco: "",
+    foto_url: "",
     ativo: true,
   });
 
@@ -90,6 +91,7 @@ export default function Produtos() {
         descricao: produto.descricao || "",
         categoria_id: produto.categoria_id || "",
         preco: produto.preco?.toString() || "",
+        foto_url: produto.foto_url || "",
         ativo: produto.ativo ?? true,
       });
     } else {
@@ -99,6 +101,7 @@ export default function Produtos() {
         descricao: "",
         categoria_id: "",
         preco: "",
+        foto_url: "",
         ativo: true,
       });
     }
@@ -118,6 +121,7 @@ export default function Produtos() {
     try {
       const produtoData = {
         nome: formData.nome,
+        foto_url: formData.foto_url || null,
         descricao: formData.descricao,
         categoria_id: formData.categoria_id || null,
         preco: Number(formData.preco),
@@ -147,6 +151,7 @@ export default function Produtos() {
         descricao: "",
         categoria_id: "",
         preco: "",
+        foto_url: "",
         ativo: true,
       });
       loadProdutos();
@@ -245,6 +250,16 @@ export default function Produtos() {
                     </Select>
                   </div>
                   
+                  <div className="space-y-2">
+                    <Label htmlFor="foto_url">URL da Foto</Label>
+                    <Input 
+                      id="foto_url" 
+                      placeholder="https://exemplo.com/foto.jpg"
+                      value={formData.foto_url}
+                      onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
+                    />
+                  </div>
+
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="descricao">Descrição</Label>
                     <Textarea 
@@ -343,6 +358,16 @@ export default function Produtos() {
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {produto.descricao}
                         </p>
+                      )}
+                      
+                      {produto.foto_url && (
+                        <div className="mt-2">
+                          <img 
+                            src={produto.foto_url} 
+                            alt={produto.nome}
+                            className="w-full h-32 object-cover rounded"
+                          />
+                        </div>
                       )}
                       
                       <div className="pt-2 border-t">
