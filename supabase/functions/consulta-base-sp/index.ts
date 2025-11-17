@@ -19,50 +19,68 @@ serve(async (req) => {
     
     console.log('Consulta Base SP - Params:', { chassi, placa, renavam, hasToken: !!token });
 
-    // Get credentials from environment - use token if provided
-    const credentials = {
-      a3: token || Deno.env.get('INFOSIMPLES_A3'),
-      a3_pin: Deno.env.get('INFOSIMPLES_A3_PIN'),
-      login_cpf: Deno.env.get('INFOSIMPLES_LOGIN_CPF'),
-      login_senha: Deno.env.get('INFOSIMPLES_LOGIN_SENHA')
-    };
+    // Build request body - use token if provided, otherwise use credentials
+    let requestBody: any;
+    let authHeader: string | null = null;
 
-    if (!credentials.a3 || !credentials.a3_pin || !credentials.login_cpf || !credentials.login_senha) {
-      console.error('Credenciais não configuradas');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Credenciais não configuradas no servidor' 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    if (token) {
+      // If token is provided, send it in the request body
+      requestBody = {
+        token,
+        ...(chassi && { chassi }),
+        ...(placa && { placa }),
+        ...(renavam && { renavam })
+      };
+    } else {
+      // Use traditional credentials
+      const credentials = {
+        a3: Deno.env.get('INFOSIMPLES_A3'),
+        a3_pin: Deno.env.get('INFOSIMPLES_A3_PIN'),
+        login_cpf: Deno.env.get('INFOSIMPLES_LOGIN_CPF'),
+        login_senha: Deno.env.get('INFOSIMPLES_LOGIN_SENHA')
+      };
+
+      if (!credentials.a3 || !credentials.a3_pin || !credentials.login_cpf || !credentials.login_senha) {
+        console.error('Credenciais não configuradas');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Credenciais não configuradas no servidor' 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      requestBody = {
+        login_cpf: credentials.login_cpf,
+        login_senha: credentials.login_senha,
+        ...(chassi && { chassi }),
+        ...(placa && { placa }),
+        ...(renavam && { renavam })
+      };
+
+      // Build auth header only when using traditional credentials
+      authHeader = 'Basic ' + btoa(`${credentials.a3}:${credentials.a3_pin}`);
     }
-
-    // Build request body
-    const requestBody = {
-      login_cpf: credentials.login_cpf,
-      login_senha: credentials.login_senha,
-      ...(chassi && { chassi }),
-      ...(placa && { placa }),
-      ...(renavam && { renavam })
-    };
-
-    // Build auth header
-    const authHeader = 'Basic ' + btoa(`${credentials.a3}:${credentials.a3_pin}`);
 
     const startTime = performance.now();
 
     console.log('Chamando API Info Simples - Base SP');
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     const response = await fetch(`${BASE_URL}/base-sp`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader
-      },
+      headers,
       body: JSON.stringify(requestBody)
     });
 
