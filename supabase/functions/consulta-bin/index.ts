@@ -39,20 +39,20 @@ serve(async (req) => {
       );
     }
 
-    // Build request body with ALL required credentials
+    // Build request body with ALL fields in exact order
     const requestBody = {
       token: a3,
       a3: a3,
       a3_pin: a3_pin,
       login_cpf: login_cpf,
       login_senha: login_senha,
-      ...(chassi && { chassi }),
-      ...(placa && { placa }),
-      ...(renavam && { renavam }),
-      ...(uf && { uf })
+      chassi: chassi || "",
+      placa: placa || "",
+      renavam: renavam || "",
+      uf: uf || ""
     };
 
-    console.log('Request body keys:', Object.keys(requestBody));
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
     const startTime = performance.now();
 
