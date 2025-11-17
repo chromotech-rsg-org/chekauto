@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckSquare, Square } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 const permissoesDisponiveis = [
   { 
@@ -83,6 +84,9 @@ export default function Perfis() {
   const [perfis, setPerfis] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPerfil, setEditingPerfil] = useState<any>(null);
+  const [nomePerfil, setNomePerfil] = useState("");
+  const [permissoesSelecionadas, setPermissoesSelecionadas] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadPerfis();
@@ -100,8 +104,112 @@ export default function Perfis() {
       setPerfis(data || []);
     } catch (error) {
       console.error('Erro ao carregar perfis:', error);
+      toast.error('Erro ao carregar perfis');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenModal = (perfil?: any) => {
+    if (perfil) {
+      setEditingPerfil(perfil);
+      setNomePerfil(perfil.nome);
+      // Converter permissões do banco para formato de checkboxes
+      const perms: Record<string, boolean> = {};
+      Object.entries(perfil.permissoes).forEach(([modulo, acoes]: [string, any]) => {
+        Object.entries(acoes).forEach(([acao, valor]) => {
+          perms[`${modulo}-${acao}`] = valor === true;
+        });
+      });
+      setPermissoesSelecionadas(perms);
+    } else {
+      setEditingPerfil(null);
+      setNomePerfil("");
+      setPermissoesSelecionadas({});
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSelecionarTodos = () => {
+    const todasPermissoes: Record<string, boolean> = {};
+    permissoesDisponiveis.forEach((modulo) => {
+      modulo.acoes.forEach((acao) => {
+        todasPermissoes[`${modulo.id}-${acao.id}`] = true;
+      });
+    });
+    setPermissoesSelecionadas(todasPermissoes);
+    toast.success("Todas as permissões selecionadas");
+  };
+
+  const handleDesselecionarTodos = () => {
+    setPermissoesSelecionadas({});
+    toast.success("Todas as permissões desmarcadas");
+  };
+
+  const handleTogglePermissao = (key: string) => {
+    setPermissoesSelecionadas((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handleSalvar = async () => {
+    if (!nomePerfil.trim()) {
+      toast.error("Digite o nome do perfil");
+      return;
+    }
+
+    // Converter checkboxes para estrutura de permissões
+    const permissoesObj: any = {};
+    permissoesDisponiveis.forEach((modulo) => {
+      permissoesObj[modulo.id] = {};
+      modulo.acoes.forEach((acao) => {
+        const key = `${modulo.id}-${acao.id}`;
+        permissoesObj[modulo.id][acao.id] = permissoesSelecionadas[key] || false;
+      });
+    });
+
+    try {
+      if (editingPerfil) {
+        const { error } = await supabase
+          .from('perfis_permissoes')
+          .update({ nome: nomePerfil, permissoes: permissoesObj })
+          .eq('id', editingPerfil.id);
+
+        if (error) throw error;
+        toast.success("Perfil atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from('perfis_permissoes')
+          .insert({ nome: nomePerfil, permissoes: permissoesObj });
+
+        if (error) throw error;
+        toast.success("Perfil criado com sucesso!");
+      }
+
+      setIsModalOpen(false);
+      loadPerfis();
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast.error('Erro ao salvar perfil');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Deseja realmente excluir este perfil?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('perfis_permissoes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success("Perfil excluído com sucesso!");
+      loadPerfis();
+    } catch (error) {
+      console.error('Erro ao excluir perfil:', error);
+      toast.error('Erro ao excluir perfil');
     }
   };
 
@@ -114,57 +222,101 @@ export default function Perfis() {
             <p className="text-muted-foreground">Gerencie os perfis e permissões do sistema</p>
           </div>
           
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
-                <Plus className="mr-2 h-4 w-4" />
-                Criar Novo Perfil
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Perfil</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome do Perfil</Label>
-                  <Input id="nome" placeholder="Ex: Operador, Gerente..." />
-                </div>
+          <Button onClick={() => handleOpenModal()} className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Novo Perfil
+          </Button>
+        </div>
 
-                <div className="space-y-4">
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>{editingPerfil ? "Editar Perfil" : "Criar Novo Perfil"}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-y-auto space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome do Perfil *</Label>
+                <Input 
+                  id="nome" 
+                  placeholder="Ex: Operador, Gerente..." 
+                  value={nomePerfil}
+                  onChange={(e) => setNomePerfil(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <Label>Permissões</Label>
-                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
-                    {permissoesDisponiveis.map((modulo) => (
-                      <div key={modulo.id} className="border rounded-lg p-4 space-y-3">
-                        <h4 className="font-semibold">{modulo.label}</h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          {modulo.acoes.map((acao) => (
-                            <div key={`${modulo.id}-${acao.id}`} className="flex items-center space-x-2">
-                              <Checkbox id={`${modulo.id}-${acao.id}`} />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSelecionarTodos}
+                      className="text-xs"
+                    >
+                      <CheckSquare className="mr-1 h-3 w-3" />
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDesselecionarTodos}
+                      className="text-xs"
+                    >
+                      <Square className="mr-1 h-3 w-3" />
+                      Desselecionar Todos
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 pr-2">
+                  {permissoesDisponiveis.map((modulo) => (
+                    <div key={modulo.id} className="border rounded-lg p-4 space-y-3">
+                      <h4 className="font-semibold text-sm">{modulo.label}</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {modulo.acoes.map((acao) => {
+                          const key = `${modulo.id}-${acao.id}`;
+                          return (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={key} 
+                                checked={permissoesSelecionadas[key] || false}
+                                onCheckedChange={() => handleTogglePermissao(key)}
+                              />
                               <label
-                                htmlFor={`${modulo.id}-${acao.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                htmlFor={key}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                               >
                                 {acao.label}
                               </label>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" onClick={() => setIsModalOpen(false)}>
-                  Salvar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            </div>
+
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" 
+                onClick={handleSalvar}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="bg-white rounded-lg border">
         </div>
 
         <div className="bg-white rounded-lg border">
@@ -177,35 +329,35 @@ export default function Perfis() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {perfis.map((perfil) => (
-                <TableRow key={perfil.id}>
-                  <TableCell className="font-medium">{perfil.nome}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {perfil.permissoes.slice(0, 3).map((perm, idx) => (
-                        <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
-                          {perm}
-                        </span>
-                      ))}
-                      {perfil.permissoes.length > 3 && (
-                        <span className="text-xs bg-muted px-2 py-1 rounded">
-                          +{perfil.permissoes.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {perfis.map((perfil) => {
+                const totalPermissoes = (Object.values(perfil.permissoes || {}) as any[]).reduce((acc: number, modulo: any) => {
+                  if (typeof modulo === 'object' && modulo !== null) {
+                    return acc + (Object.values(modulo).filter((v) => v === true).length as number);
+                  }
+                  return acc;
+                }, 0) as number;
+
+                return (
+                  <TableRow key={perfil.id}>
+                    <TableCell className="font-medium">{perfil.nome}</TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {String(totalPermissoes)} permissão{totalPermissoes !== 1 ? 'ões' : ''} ativa{totalPermissoes !== 1 ? 's' : ''}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(perfil)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(perfil.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
