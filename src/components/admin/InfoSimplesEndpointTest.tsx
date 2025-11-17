@@ -35,6 +35,7 @@ export const InfoSimplesEndpointTest = ({ endpointType, title, description }: In
   const [placa, setPlaca] = useState('');
   const [renavam, setRenavam] = useState('');
   const [uf, setUf] = useState('');
+  const [token, setToken] = useState('');
 
   const handleExecutar = async () => {
     // Validações
@@ -73,13 +74,13 @@ export const InfoSimplesEndpointTest = ({ endpointType, title, description }: In
       
       if (endpointType === 'base-sp') {
         const params = consultaTipo === 'chassi' 
-          ? { chassi }
-          : { placa, renavam };
+          ? { chassi, token: token || undefined }
+          : { placa, renavam, token: token || undefined };
         response = await consultarBaseEstadualSP(params);
       } else {
         const params = consultaTipo === 'chassi'
-          ? { chassi, uf: uf || undefined }
-          : { placa, renavam, uf: uf || undefined };
+          ? { chassi, uf: uf || undefined, token: token || undefined }
+          : { placa, renavam, uf: uf || undefined, token: token || undefined };
         response = await consultarCadastroBIN(params);
       }
 
@@ -202,6 +203,17 @@ export const InfoSimplesEndpointTest = ({ endpointType, title, description }: In
                 </Select>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="token-input">Token (Opcional - substitui credenciais salvas)</Label>
+              <Input
+                id="token-input"
+                type="password"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Digite o token da API InfoSimples"
+              />
+            </div>
 
             <Button onClick={handleExecutar} disabled={loading} className="w-full">
               {loading ? (

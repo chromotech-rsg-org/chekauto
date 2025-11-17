@@ -9,6 +9,7 @@ export interface ConsultaBaseSpParams {
   chassi?: string;
   placa?: string;
   renavam?: string;
+  token?: string;
 }
 
 export interface ConsultaBinParams {
@@ -16,6 +17,7 @@ export interface ConsultaBinParams {
   placa?: string;
   renavam?: string;
   uf?: string;
+  token?: string;
 }
 
 export interface ApiResponse<T> {

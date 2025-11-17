@@ -15,13 +15,13 @@ serve(async (req) => {
   }
 
   try {
-    const { chassi, placa, renavam } = await req.json();
+    const { chassi, placa, renavam, token } = await req.json();
     
-    console.log('Consulta Base SP - Params:', { chassi, placa, renavam });
+    console.log('Consulta Base SP - Params:', { chassi, placa, renavam, hasToken: !!token });
 
-    // Get credentials from environment
+    // Get credentials from environment - use token if provided
     const credentials = {
-      a3: Deno.env.get('INFOSIMPLES_A3'),
+      a3: token || Deno.env.get('INFOSIMPLES_A3'),
       a3_pin: Deno.env.get('INFOSIMPLES_A3_PIN'),
       login_cpf: Deno.env.get('INFOSIMPLES_LOGIN_CPF'),
       login_senha: Deno.env.get('INFOSIMPLES_LOGIN_SENHA')
