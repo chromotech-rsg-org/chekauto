@@ -7,6 +7,8 @@ import truckBlue from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import logoYellowBlack from '@/assets/logo-chekauto-yellow-black.png';
 import logoIcon from '@/assets/logo-chekauto-icon.png';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
