@@ -19,8 +19,8 @@ serve(async (req) => {
     
     console.log('Consulta BIN - Params:', { chassi, placa, renavam, uf, hasToken: !!token });
 
-    // Get credentials - use token if provided, otherwise use environment variables
-    const a3 = token || Deno.env.get('INFOSIMPLES_A3');
+    // Get credentials from environment (a3 does NOT get overridden by token)
+    const a3 = Deno.env.get('INFOSIMPLES_A3');
     const a3_pin = Deno.env.get('INFOSIMPLES_A3_PIN');
     const login_cpf = Deno.env.get('INFOSIMPLES_LOGIN_CPF');
     const login_senha = Deno.env.get('INFOSIMPLES_LOGIN_SENHA');
@@ -41,11 +41,11 @@ serve(async (req) => {
 
     // Build request body with ALL fields in exact order
     const requestBody = {
-      token: a3,
-      a3: a3,
-      a3_pin: a3_pin,
-      login_cpf: login_cpf,
-      login_senha: login_senha,
+      token: token || "",
+      a3: a3 || "",
+      a3_pin: a3_pin || "",
+      login_cpf: login_cpf || "",
+      login_senha: login_senha || "",
       chassi: chassi || "",
       placa: placa || "",
       renavam: renavam || "",
