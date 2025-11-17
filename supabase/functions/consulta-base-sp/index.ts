@@ -19,68 +19,49 @@ serve(async (req) => {
     
     console.log('Consulta Base SP - Params:', { chassi, placa, renavam, hasToken: !!token });
 
-    // Build request body - use token if provided, otherwise use credentials
-    let requestBody: any;
-    let authHeader: string | null = null;
+    // Get credentials - use token if provided, otherwise use environment variables
+    const a3 = token || Deno.env.get('INFOSIMPLES_A3');
+    const a3_pin = Deno.env.get('INFOSIMPLES_A3_PIN');
+    const login_cpf = Deno.env.get('INFOSIMPLES_LOGIN_CPF');
+    const login_senha = Deno.env.get('INFOSIMPLES_LOGIN_SENHA');
 
-    if (token) {
-      // If token is provided, send it in the request body
-      requestBody = {
-        token,
-        ...(chassi && { chassi }),
-        ...(placa && { placa }),
-        ...(renavam && { renavam })
-      };
-    } else {
-      // Use traditional credentials
-      const credentials = {
-        a3: Deno.env.get('INFOSIMPLES_A3'),
-        a3_pin: Deno.env.get('INFOSIMPLES_A3_PIN'),
-        login_cpf: Deno.env.get('INFOSIMPLES_LOGIN_CPF'),
-        login_senha: Deno.env.get('INFOSIMPLES_LOGIN_SENHA')
-      };
-
-      if (!credentials.a3 || !credentials.a3_pin || !credentials.login_cpf || !credentials.login_senha) {
-        console.error('Credenciais não configuradas');
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Credenciais não configuradas no servidor' 
-          }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      requestBody = {
-        login_cpf: credentials.login_cpf,
-        login_senha: credentials.login_senha,
-        ...(chassi && { chassi }),
-        ...(placa && { placa }),
-        ...(renavam && { renavam })
-      };
-
-      // Build auth header only when using traditional credentials
-      authHeader = 'Basic ' + btoa(`${credentials.a3}:${credentials.a3_pin}`);
+    if (!a3 || !a3_pin || !login_cpf || !login_senha) {
+      console.error('Credenciais não configuradas');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Credenciais não configuradas no servidor' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
+
+    // Build request body with ALL required credentials
+    const requestBody = {
+      token: a3,
+      a3: a3,
+      a3_pin: a3_pin,
+      login_cpf: login_cpf,
+      login_senha: login_senha,
+      ...(chassi && { chassi }),
+      ...(placa && { placa }),
+      ...(renavam && { renavam })
+    };
+
+    console.log('Request body keys:', Object.keys(requestBody));
 
     const startTime = performance.now();
 
     console.log('Chamando API Info Simples - Base SP');
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    };
-
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
-    }
-
     const response = await fetch(`${BASE_URL}/base-sp`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(requestBody)
     });
 
