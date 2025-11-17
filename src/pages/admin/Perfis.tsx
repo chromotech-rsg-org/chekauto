@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { mockPerfis } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -80,8 +80,30 @@ const permissoesDisponiveis = [
 ];
 
 export default function Perfis() {
-  const [perfis] = useState(mockPerfis);
+  const [perfis, setPerfis] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    loadPerfis();
+  }, []);
+
+  const loadPerfis = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('perfis_permissoes')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (error) throw error;
+      setPerfis(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar perfis:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AdminLayout>

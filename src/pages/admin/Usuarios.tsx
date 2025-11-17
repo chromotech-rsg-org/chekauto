@@ -1,68 +1,159 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
-import { mockUsuarios, mockPerfis } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileUpload } from "@/components/admin/FileUpload";
-import { buscarCep } from "@/lib/cep";
-import InputMask from "react-input-mask";
+import { toast } from "sonner";
 
 const exportFields = [
   { key: "id", label: "ID" },
   { key: "nome", label: "Nome" },
   { key: "email", label: "Email" },
-  { key: "celular", label: "Celular" },
   { key: "perfil", label: "Perfil" },
-  { key: "dataCadastro", label: "Data Cadastro" }
+  { key: "criado_em", label: "Data Cadastro" }
 ];
 
 export default function Usuarios() {
-  const [usuarios] = useState(mockUsuarios);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [perfis, setPerfis] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUsuario, setEditingUsuario] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
-    cep: "",
-    rua: "",
-    numero: "",
-    bairro: "",
-    complemento: "",
-    cidade: "",
-    estado: ""
+    nome: "",
+    email: "",
+    perfil_id: ""
   });
+
+  useEffect(() => {
+    loadUsuarios();
+    loadPerfis();
+  }, []);
+
+  const loadUsuarios = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select(`
+          *,
+          perfil:perfis_permissoes(nome)
+        `)
+        .order('criado_em', { ascending: false});
+
+      if (error) throw error;
+      setUsuarios(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+      toast.error('Erro ao carregar usuários');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPerfis = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('perfis_permissoes')
+        .select('*')
+        .order('nome');
+
+      if (error) throw error;
+      setPerfis(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar perfis:', error);
+    }
+  };
 
   const filteredUsuarios = usuarios.filter(
     (usuario) => {
       const matchesSearch = usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesDate = (!startDate || usuario.dataCadastro >= startDate) && 
-        (!endDate || usuario.dataCadastro <= endDate);
+      const dataCriacao = usuario.criado_em ? new Date(usuario.criado_em).toISOString().split('T')[0] : '';
+      const matchesDate = (!startDate || dataCriacao >= startDate) && 
+        (!endDate || dataCriacao <= endDate);
       
       return matchesSearch && matchesDate;
     }
   );
 
-  const handleCepBlur = async () => {
-    if (!formData.cep) return;
-    
-    const data = await buscarCep(formData.cep);
-    if (data) {
+  const handleOpenModal = (usuario?: any) => {
+    if (usuario) {
+      setEditingUsuario(usuario);
       setFormData({
-        ...formData,
-        rua: data.logradouro,
-        bairro: data.bairro,
-        cidade: data.localidade,
-        estado: data.uf
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil_id: usuario.perfil_id || ""
       });
+    } else {
+      setEditingUsuario(null);
+      setFormData({
+        nome: "",
+        email: "",
+        perfil_id: ""
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.nome || !formData.email) {
+      toast.error("Preencha os campos obrigatórios");
+      return;
+    }
+
+    try {
+      if (editingUsuario) {
+        const { error } = await supabase
+          .from('usuarios')
+          .update(formData)
+          .eq('id', editingUsuario.id);
+
+        if (error) throw error;
+        toast.success("Usuário atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from('usuarios')
+          .insert(formData);
+
+        if (error) throw error;
+        toast.success("Usuário criado com sucesso!");
+      }
+
+      setIsModalOpen(false);
+      loadUsuarios();
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      toast.error('Erro ao salvar usuário');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Deseja realmente excluir este usuário?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success("Usuário excluído com sucesso!");
+      loadUsuarios();
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      toast.error('Erro ao excluir usuário');
     }
   };
 
@@ -75,148 +166,10 @@ export default function Usuarios() {
             <p className="text-muted-foreground">Gerencie os usuários do sistema</p>
           </div>
           
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
-                <Plus className="mr-2 h-4 w-4" />
-                Criar Novo Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Usuário</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <FileUpload label="Foto de Perfil" accept="image/*" />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="nome">Nome Completo *</Label>
-                    <Input id="nome" placeholder="Nome completo" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input id="email" type="email" placeholder="email@exemplo.com" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="celular">Celular</Label>
-                    <Input id="celular" placeholder="(11) 98765-4321" />
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <h4 className="font-semibold mb-3">Endereço</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cep">CEP</Label>
-                        <InputMask
-                          mask="99999-999"
-                          value={formData.cep}
-                          onChange={(e) => setFormData({...formData, cep: e.target.value})}
-                          onBlur={handleCepBlur}
-                        >
-                          {(inputProps: any) => (
-                            <Input {...inputProps} id="cep" placeholder="00000-000" />
-                          )}
-                        </InputMask>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="rua">Rua</Label>
-                        <Input 
-                          id="rua" 
-                          value={formData.rua}
-                          onChange={(e) => setFormData({...formData, rua: e.target.value})}
-                          placeholder="Nome da rua" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="numero">Número</Label>
-                        <Input 
-                          id="numero" 
-                          value={formData.numero}
-                          onChange={(e) => setFormData({...formData, numero: e.target.value})}
-                          placeholder="123" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="bairro">Bairro</Label>
-                        <Input 
-                          id="bairro" 
-                          value={formData.bairro}
-                          onChange={(e) => setFormData({...formData, bairro: e.target.value})}
-                          placeholder="Nome do bairro" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="complemento">Complemento</Label>
-                        <Input 
-                          id="complemento" 
-                          value={formData.complemento}
-                          onChange={(e) => setFormData({...formData, complemento: e.target.value})}
-                          placeholder="Apto, sala..." 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cidade">Cidade</Label>
-                        <Input 
-                          id="cidade" 
-                          value={formData.cidade}
-                          onChange={(e) => setFormData({...formData, cidade: e.target.value})}
-                          placeholder="Nome da cidade" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="estado">Estado</Label>
-                        <Input
-                          id="estado"
-                          value={formData.estado}
-                          onChange={(e) => setFormData({...formData, estado: e.target.value.toUpperCase()})}
-                          placeholder="SP"
-                          maxLength={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="perfil">Perfil *</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um perfil" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockPerfis.map((perfil) => (
-                          <SelectItem key={perfil.id} value={perfil.nome}>
-                            {perfil.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="senha">Senha *</Label>
-                    <Input id="senha" type="password" placeholder="••••••••" />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" onClick={() => setIsModalOpen(false)}>
-                  Salvar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => handleOpenModal()} className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Novo Usuário
+          </Button>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
@@ -243,43 +196,106 @@ export default function Usuarios() {
           />
         </div>
 
-        <div className="bg-white rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Celular</TableHead>
-                <TableHead>Perfil</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsuarios.map((usuario) => (
-                <TableRow key={usuario.id}>
-                  <TableCell className="font-medium">{usuario.nome}</TableCell>
-                  <TableCell>{usuario.email}</TableCell>
-                  <TableCell>{usuario.celular}</TableCell>
-                  <TableCell>
-                    <span className="text-xs bg-muted px-2 py-1 rounded">
-                      {usuario.perfil}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filteredUsuarios.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      Nenhum usuário encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUsuarios.map((usuario) => (
+                    <TableRow key={usuario.id}>
+                      <TableCell className="font-medium">{usuario.nome}</TableCell>
+                      <TableCell>{usuario.email}</TableCell>
+                      <TableCell>{usuario.perfil?.nome || '-'}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(usuario)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(usuario.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{editingUsuario ? "Editar Usuário" : "Criar Novo Usuário"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome Completo *</Label>
+                <Input 
+                  id="nome" 
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder="Nome completo" 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@exemplo.com" 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="perfil">Perfil de Usuário</Label>
+                <Select value={formData.perfil_id} onValueChange={(value) => setFormData({ ...formData, perfil_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um perfil" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {perfis.map((perfil) => (
+                      <SelectItem key={perfil.id} value={perfil.id}>
+                        {perfil.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
