@@ -20,6 +20,7 @@ import {
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -41,8 +42,20 @@ export const AdminSidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      // Limpa todo localStorage conforme solicitado
+      localStorage.clear();
+      if (error) {
+        // Mesmo em caso de erro, redireciona para login
+        navigate("/login");
+        return;
+      }
+      navigate("/login");
+    } catch {
+      navigate("/login");
+    }
   };
 
   const toggleSidebar = () => {

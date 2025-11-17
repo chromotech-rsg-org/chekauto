@@ -1,10 +1,17 @@
 import { AdminSidebar } from "./AdminSidebar";
+import { useEffect } from "react";
+import { clearNonSupabaseStorage } from "@/lib/localStorage";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
+  useEffect(() => {
+    // Limpa qualquer cache local da aplicação (preserva sessão do Supabase)
+    clearNonSupabaseStorage();
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full bg-gray-50">
       <AdminSidebar />

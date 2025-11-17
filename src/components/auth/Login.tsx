@@ -13,14 +13,16 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Login de teste: admin@chekauto.com / admin123
-    if (email === 'admin@chekauto.com' && password === 'admin123') {
-      // Redirecionar para o dashboard administrativo
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast.error(error.message || 'Falha no login');
+      return;
+    }
+    if (data.session) {
+      toast.success('Login realizado com sucesso');
       navigate('/admin/dashboard');
-    } else {
-      alert('Credenciais inválidas. Use: admin@chekauto.com / admin123');
     }
   };
 
