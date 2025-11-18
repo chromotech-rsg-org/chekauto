@@ -14,13 +14,13 @@ import {
   Handshake,
   Table2,
   Receipt,
-  TestTube2,
-  CreditCard
+  Settings,
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePermissions } from "@/contexts/PermissionsContext";
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -34,14 +34,13 @@ const menuItems = [
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
   { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
-  { title: "Testes API Info Simples", icon: TestTube2, path: "/admin/testes-api" },
-  { title: "Configurações InfoSimples", icon: TestTube2, path: "/admin/config-infosimples" },
-  { title: "Configuração Asaas", icon: CreditCard, path: "/admin/config-asaas" }
+  { title: "Configurações", icon: Settings, path: "/admin/configuracoes", requireDeveloper: true },
 ];
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { hasPermission } = usePermissions();
 
   const handleLogout = async () => {
     try {
@@ -100,24 +99,31 @@ export const AdminSidebar = () => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {menuItems.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-brand-yellow text-black font-semibold"
-                        : "text-white hover:bg-gray-900"
-                    }`
-                  }
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.title}</span>
-                </NavLink>
-              </li>
-            ))}
+            {menuItems.map((item) => {
+              // Se o item requer desenvolvedor, verifica permissão
+              if (item.requireDeveloper && !hasPermission('configuracoes', 'view')) {
+                return null;
+              }
+              
+              return (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-brand-yellow text-black font-semibold"
+                          : "text-white hover:bg-gray-900"
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
