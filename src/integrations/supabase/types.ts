@@ -360,6 +360,7 @@ export type Database = {
           categoria_id: string | null
           criado_em: string | null
           descricao: string | null
+          foto_url: string | null
           id: string
           nome: string
           preco: number
@@ -370,6 +371,7 @@ export type Database = {
           categoria_id?: string | null
           criado_em?: string | null
           descricao?: string | null
+          foto_url?: string | null
           id?: string
           nome: string
           preco: number
@@ -380,6 +382,7 @@ export type Database = {
           categoria_id?: string | null
           criado_em?: string | null
           descricao?: string | null
+          foto_url?: string | null
           id?: string
           nome?: string
           preco?: number
