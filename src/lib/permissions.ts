@@ -23,6 +23,7 @@ export type Permission = {
     create: boolean;
     edit: boolean;
     delete: boolean;
+    editDeveloper: boolean;
   };
   produtos: {
     view: boolean;
@@ -63,6 +64,9 @@ export type Permission = {
     delete: boolean;
     import: boolean;
   };
+  configuracoes: {
+    view: boolean;
+  };
 };
 
 export const defaultPermissions: Permission = {
@@ -79,7 +83,7 @@ export const defaultPermissions: Permission = {
     viewTable_clientesRecentes: false,
   },
   usuarios: { view: false, create: false, edit: false, delete: false },
-  perfis: { view: false, create: false, edit: false, delete: false },
+  perfis: { view: false, create: false, edit: false, delete: false, editDeveloper: false },
   produtos: { view: false, create: false, edit: false, delete: false },
   categorias: { view: false, create: false, edit: false, delete: false },
   clientes: { view: false, create: false, edit: false, delete: false },
@@ -87,6 +91,7 @@ export const defaultPermissions: Permission = {
   split: { view: false, configure: false },
   parceiros: { view: false, create: false, edit: false, delete: false },
   tabelaCatMmv: { view: false, create: false, edit: false, delete: false, import: false },
+  configuracoes: { view: false },
 };
 
 export const adminPermissions: Permission = {
@@ -103,7 +108,7 @@ export const adminPermissions: Permission = {
     viewTable_clientesRecentes: true,
   },
   usuarios: { view: true, create: true, edit: true, delete: true },
-  perfis: { view: true, create: true, edit: true, delete: true },
+  perfis: { view: true, create: true, edit: true, delete: true, editDeveloper: true },
   produtos: { view: true, create: true, edit: true, delete: true },
   categorias: { view: true, create: true, edit: true, delete: true },
   clientes: { view: true, create: true, edit: true, delete: true },
@@ -111,6 +116,7 @@ export const adminPermissions: Permission = {
   split: { view: true, configure: true },
   parceiros: { view: true, create: true, edit: true, delete: true },
   tabelaCatMmv: { view: true, create: true, edit: true, delete: true, import: true },
+  configuracoes: { view: true },
 };
 
 export function hasPermission(

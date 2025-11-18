@@ -37,7 +37,8 @@ const permissoesDisponiveis = [
     { id: "view", label: "Visualizar" },
     { id: "create", label: "Criar" },
     { id: "edit", label: "Editar" },
-    { id: "delete", label: "Excluir" }
+    { id: "delete", label: "Excluir" },
+    { id: "editDeveloper", label: "Editar Perfil Desenvolvedor" }
   ]},
   { id: "produtos", label: "Produtos", acoes: [
     { id: "view", label: "Visualizar" },
@@ -77,6 +78,9 @@ const permissoesDisponiveis = [
     { id: "edit", label: "Editar" },
     { id: "delete", label: "Excluir" },
     { id: "import", label: "Importar Excel" }
+  ]},
+  { id: "configuracoes", label: "Configurações do Sistema", acoes: [
+    { id: "view", label: "Acessar" }
   ]}
 ];
 

@@ -31,6 +31,7 @@ export default function Produtos() {
     foto_url: "",
     ativo: true,
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     loadProdutos();
@@ -250,14 +251,55 @@ export default function Produtos() {
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="foto_url">URL da Foto</Label>
-                    <Input 
-                      id="foto_url" 
-                      placeholder="https://exemplo.com/foto.jpg"
-                      value={formData.foto_url}
-                      onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
-                    />
+                  <div className="space-y-2 col-span-2">
+                    <Label>Foto do Produto</Label>
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-1">
+                        <Input 
+                          id="foto_url" 
+                          placeholder="URL da foto ou selecione um arquivo"
+                          value={formData.foto_url}
+                          onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('file-upload')?.click()}
+                        disabled={uploadingImage}
+                      >
+                        {uploadingImage ? 'Enviando...' : 'Selecionar Arquivo'}
+                      </Button>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // Simula upload - em produção você usaria Supabase Storage
+                          setUploadingImage(true);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData({ ...formData, foto_url: reader.result as string });
+                            setUploadingImage(false);
+                            toast.success('Imagem carregada com sucesso!');
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </div>
+                    {formData.foto_url && (
+                      <div className="mt-2">
+                        <img 
+                          src={formData.foto_url} 
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded border"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2 col-span-2">
