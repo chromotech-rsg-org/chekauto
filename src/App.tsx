@@ -28,6 +28,7 @@ import HistoricoSplits from "./pages/admin/HistoricoSplits";
 import TestesApiInfoSimples from "./pages/admin/TestesApiInfoSimples";
 import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
 import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
+import Configuracoes from "./pages/admin/Configuracoes";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
                 <Route path="/admin/config-infosimples" element={<ConfiguracoesInfoSimples />} />
                 <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
+                <Route path="/admin/configuracoes" element={<Configuracoes />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

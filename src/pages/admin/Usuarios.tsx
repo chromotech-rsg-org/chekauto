@@ -32,7 +32,8 @@ export default function Usuarios() {
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
-    perfil_id: ""
+    perfil_id: "",
+    senha: ""
   });
 
   useEffect(() => {
@@ -94,14 +95,16 @@ export default function Usuarios() {
       setFormData({
         nome: usuario.nome,
         email: usuario.email,
-        perfil_id: usuario.perfil_id || ""
+        perfil_id: usuario.perfil_id || "",
+        senha: ""
       });
     } else {
       setEditingUsuario(null);
       setFormData({
         nome: "",
         email: "",
-        perfil_id: ""
+        perfil_id: "",
+        senha: ""
       });
     }
     setIsModalOpen(true);
@@ -113,19 +116,45 @@ export default function Usuarios() {
       return;
     }
 
+    if (!editingUsuario && !formData.senha) {
+      toast.error("Senha é obrigatória para criar um novo usuário");
+      return;
+    }
+
     try {
       if (editingUsuario) {
+        // Se está editando, só atualiza dados básicos
+        const dataToUpdate: any = {
+          nome: formData.nome,
+          email: formData.email,
+          perfil_id: formData.perfil_id || null
+        };
+
         const { error } = await supabase
           .from('usuarios')
-          .update(formData)
+          .update(dataToUpdate)
           .eq('id', editingUsuario.id);
 
         if (error) throw error;
         toast.success("Usuário atualizado com sucesso!");
       } else {
+        // Criar usuário no Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.senha,
+        });
+
+        if (authError) throw authError;
+
+        // Criar registro na tabela usuarios
         const { error } = await supabase
           .from('usuarios')
-          .insert(formData);
+          .insert([{
+            nome: formData.nome,
+            email: formData.email,
+            perfil_id: formData.perfil_id || null,
+            auth_user_id: authData.user?.id
+          }]);
 
         if (error) throw error;
         toast.success("Usuário criado com sucesso!");
@@ -284,6 +313,24 @@ export default function Usuarios() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="senha">
+                  Senha {!editingUsuario && "*"}
+                </Label>
+                <Input 
+                  id="senha" 
+                  type="password" 
+                  value={formData.senha}
+                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                  placeholder={editingUsuario ? "Deixe em branco para manter a mesma" : "Mínimo 6 caracteres"}
+                />
+                {editingUsuario && (
+                  <p className="text-xs text-muted-foreground">
+                    Deixe em branco se não quiser alterar a senha
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>
