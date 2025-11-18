@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SplitPagamento() {
   const [splits, setSplits] = useState<any[]>([]);
@@ -21,7 +22,7 @@ export default function SplitPagamento() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSplit, setEditingSplit] = useState<any>(null);
   const [parceiroId, setParceiroId] = useState("");
-  const [produtoId, setProdutoId] = useState("");
+  const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
   const [percentual, setPercentual] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -29,6 +30,16 @@ export default function SplitPagamento() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Quando selecionar parceiro, preencher percentual automaticamente
+  useEffect(() => {
+    if (parceiroId && !editingSplit) {
+      const parceiro = parceiros.find(p => p.id === parceiroId);
+      if (parceiro?.percentual_split) {
+        setPercentual(parceiro.percentual_split.toString());
+      }
+    }
+  }, [parceiroId, parceiros, editingSplit]);
 
   const loadData = async () => {
     try {
@@ -56,49 +67,95 @@ export default function SplitPagamento() {
   const parceiroSelecionado = parceiros.find(p => p.id === parceiroId);
   const percentualChekAuto = percentual ? 100 - Number(percentual) : 0;
 
+  const toggleProduto = (produtoId: string) => {
+    setProdutosSelecionados(prev => 
+      prev.includes(produtoId) 
+        ? prev.filter(id => id !== produtoId)
+        : [...prev, produtoId]
+    );
+  };
+
   const openModal = (split?: any) => {
     if (split) {
       setEditingSplit(split);
       setParceiroId(split.parceiro_id);
-      setProdutoId(split.produto_id);
+      setProdutosSelecionados([split.produto_id]);
       setPercentual(split.percentual?.toString() || "");
     } else {
       setEditingSplit(null);
       setParceiroId("");
-      setProdutoId("");
+      setProdutosSelecionados([]);
       setPercentual("");
     }
     setIsModalOpen(true);
   };
 
+  const checkDuplicates = async (parceiroId: string, produtoIds: string[]) => {
+    // Busca splits existentes para este parceiro
+    const { data: existingSplits } = await supabase
+      .from('splits')
+      .select('produto_id')
+      .eq('parceiro_id', parceiroId);
+
+    if (!existingSplits) return [];
+
+    const existingProductIds = existingSplits.map(s => s.produto_id);
+    const duplicates = produtoIds.filter(id => existingProductIds.includes(id));
+    
+    return duplicates;
+  };
+
   const handleSave = async () => {
-    if (!parceiroId || !produtoId || !percentual) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!parceiroId || produtosSelecionados.length === 0 || !percentual) {
+      toast.error('Preencha todos os campos obrigatórios e selecione pelo menos um produto');
+      return;
+    }
+
+    const percentualNum = Number(percentual);
+    if (percentualNum < 0 || percentualNum > 100) {
+      toast.error('Percentual deve estar entre 0 e 100');
       return;
     }
 
     try {
-      const splitData = {
-        parceiro_id: parceiroId,
-        produto_id: produtoId,
-        percentual: Number(percentual)
-      };
-
       if (editingSplit) {
+        // Modo edição: apenas atualiza o split existente
         const { error } = await supabase
           .from('splits')
-          .update(splitData)
+          .update({ 
+            parceiro_id: parceiroId,
+            produto_id: produtosSelecionados[0],
+            percentual: percentualNum 
+          })
           .eq('id', editingSplit.id);
 
         if (error) throw error;
         toast.success('Split atualizado com sucesso!');
       } else {
+        // Modo criação: verifica duplicatas antes de inserir
+        const duplicates = await checkDuplicates(parceiroId, produtosSelecionados);
+        
+        if (duplicates.length > 0) {
+          const produtosNomes = duplicates
+            .map(id => produtos.find(p => p.id === id)?.nome)
+            .join(', ');
+          toast.error(`Split já existe para: ${produtosNomes}`);
+          return;
+        }
+
+        // Cria um split para cada produto selecionado
+        const splitsToInsert = produtosSelecionados.map(produtoId => ({
+          parceiro_id: parceiroId,
+          produto_id: produtoId,
+          percentual: percentualNum
+        }));
+
         const { error } = await supabase
           .from('splits')
-          .insert([splitData]);
+          .insert(splitsToInsert);
 
         if (error) throw error;
-        toast.success('Split criado com sucesso!');
+        toast.success(`${produtosSelecionados.length} split(s) criado(s) com sucesso!`);
       }
 
       setIsModalOpen(false);
@@ -160,11 +217,19 @@ export default function SplitPagamento() {
                 Criar Nova Configuração
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingSplit ? 'Editar' : 'Criar'} Configuração de Split</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {!editingSplit && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Selecione um ou mais produtos para criar splits. O sistema verifica automaticamente duplicatas de parceiro/produto.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <Card>
                   <CardContent className="pt-6 space-y-4">
                     <h4 className="font-semibold">Configuração de Split</h4>
@@ -172,58 +237,108 @@ export default function SplitPagamento() {
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <Label htmlFor="parceiro">Parceiro *</Label>
-                        <Select value={parceiroId} onValueChange={setParceiroId}>
+                        <Select 
+                          value={parceiroId} 
+                          onValueChange={setParceiroId}
+                          disabled={!!editingSplit}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um parceiro" />
                           </SelectTrigger>
                           <SelectContent>
                             {parceiros.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                {p.nome}
+                                {p.nome} {p.percentual_split ? `(${p.percentual_split}% padrão)` : ''}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                        {editingSplit && (
+                          <p className="text-xs text-muted-foreground">
+                            Não é possível alterar o parceiro ao editar
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="produto">Produto *</Label>
-                        <Select value={produtoId} onValueChange={setProdutoId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um produto" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {produtos.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label>Produtos * {!editingSplit && `(${produtosSelecionados.length} selecionado${produtosSelecionados.length !== 1 ? 's' : ''})`}</Label>
+                        {editingSplit ? (
+                          <Select 
+                            value={produtosSelecionados[0]} 
+                            onValueChange={(val) => setProdutosSelecionados([val])}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um produto" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {produtos.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="border rounded-lg p-3 max-h-60 overflow-y-auto space-y-2">
+                            {produtos.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Nenhum produto ativo disponível</p>
+                            ) : (
+                              produtos.map((produto) => (
+                                <div 
+                                  key={produto.id} 
+                                  className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded cursor-pointer"
+                                  onClick={() => toggleProduto(produto.id)}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={produtosSelecionados.includes(produto.id)}
+                                    onChange={() => toggleProduto(produto.id)}
+                                    className="h-4 w-4"
+                                  />
+                                  <Label className="cursor-pointer flex-1">{produto.nome}</Label>
+                                  <span className="text-xs text-muted-foreground">
+                                    R$ {Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="percentual">Percentual do Parceiro (%) *</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="percentual">Percentual do Parceiro (%) *</Label>
+                          {parceiroSelecionado?.percentual_split && (
+                            <span className="text-xs text-muted-foreground">
+                              Padrão: {parceiroSelecionado.percentual_split}%
+                            </span>
+                          )}
+                        </div>
                         <Input
                           id="percentual"
                           type="number"
                           min="0"
                           max="100"
+                          step="0.01"
                           placeholder="Ex: 15"
                           value={percentual}
                           onChange={(e) => setPercentual(e.target.value)}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Você pode ajustar o percentual padrão do parceiro
+                        </p>
                       </div>
 
                       {percentual && (
                         <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                           <div>
                             <p className="text-sm text-muted-foreground">Percentual Parceiro</p>
-                            <p className="text-2xl font-bold">{percentual}%</p>
+                            <p className="text-2xl font-bold text-primary">{percentual}%</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Percentual ChekAuto</p>
-                            <p className="text-2xl font-bold">{percentualChekAuto}%</p>
+                            <p className="text-2xl font-bold text-primary">{percentualChekAuto}%</p>
                           </div>
                         </div>
                       )}
@@ -240,7 +355,7 @@ export default function SplitPagamento() {
                   className="bg-brand-yellow hover:bg-brand-yellow/90 text-black"
                   onClick={handleSave}
                 >
-                  Salvar Configuração
+                  {editingSplit ? 'Atualizar' : `Criar ${produtosSelecionados.length} Split${produtosSelecionados.length !== 1 ? 's' : ''}`}
                 </Button>
               </DialogFooter>
             </DialogContent>
