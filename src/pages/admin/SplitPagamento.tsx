@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertCircle, CheckSquare, Square } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { ExportButton } from "@/components/admin/ExportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SplitPagamento() {
   const [splits, setSplits] = useState<any[]>([]);
@@ -73,6 +74,14 @@ export default function SplitPagamento() {
         ? prev.filter(id => id !== produtoId)
         : [...prev, produtoId]
     );
+  };
+
+  const selecionarTodosProdutos = () => {
+    setProdutosSelecionados(produtos.map(p => p.id));
+  };
+
+  const desmarcarTodosProdutos = () => {
+    setProdutosSelecionados([]);
   };
 
   const openModal = (split?: any) => {
@@ -261,7 +270,31 @@ export default function SplitPagamento() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Produtos * {!editingSplit && `(${produtosSelecionados.length} selecionado${produtosSelecionados.length !== 1 ? 's' : ''})`}</Label>
+                        <div className="flex items-center justify-between">
+                          <Label>Produtos * {!editingSplit && `(${produtosSelecionados.length} selecionado${produtosSelecionados.length !== 1 ? 's' : ''})`}</Label>
+                          {!editingSplit && produtos.length > 0 && (
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={selecionarTodosProdutos}
+                              >
+                                <CheckSquare className="h-3 w-3 mr-1" />
+                                Selecionar todos
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={desmarcarTodosProdutos}
+                              >
+                                <Square className="h-3 w-3 mr-1" />
+                                Desmarcar todos
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         {editingSplit ? (
                           <Select 
                             value={produtosSelecionados[0]} 
@@ -286,19 +319,22 @@ export default function SplitPagamento() {
                               produtos.map((produto) => (
                                 <div 
                                   key={produto.id} 
-                                  className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded cursor-pointer"
-                                  onClick={() => toggleProduto(produto.id)}
+                                  className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded"
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
+                                    id={`produto-${produto.id}`}
                                     checked={produtosSelecionados.includes(produto.id)}
-                                    onChange={() => toggleProduto(produto.id)}
-                                    className="h-4 w-4"
+                                    onCheckedChange={() => toggleProduto(produto.id)}
                                   />
-                                  <Label className="cursor-pointer flex-1">{produto.nome}</Label>
-                                  <span className="text-xs text-muted-foreground">
-                                    R$ {Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </span>
+                                  <Label 
+                                    htmlFor={`produto-${produto.id}`}
+                                    className="cursor-pointer flex-1 flex items-center justify-between"
+                                  >
+                                    <span>{produto.nome}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      R$ {Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </span>
+                                  </Label>
                                 </div>
                               ))
                             )}
