@@ -29,6 +29,7 @@ import TestesApiInfoSimples from "./pages/admin/TestesApiInfoSimples";
 import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
 import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
 import Configuracoes from "./pages/admin/Configuracoes";
+import LogsConsultas from "./pages/admin/LogsConsultas";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
@@ -80,6 +81,7 @@ const App = () => (
                 <Route path="/admin/config-infosimples" element={<ConfiguracoesInfoSimples />} />
                 <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
                 <Route path="/admin/configuracoes" element={<Configuracoes />} />
+                <Route path="/admin/logs-consultas" element={<LogsConsultas />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

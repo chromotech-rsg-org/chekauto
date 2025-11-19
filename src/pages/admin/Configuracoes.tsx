@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,17 +108,16 @@ const Configuracoes = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="infosimples" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="infosimples">API InfoSimples</TabsTrigger>
-            <TabsTrigger value="asaas">Gateway Asaas</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="infosimples" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Token da API InfoSimples</CardTitle>
-                <CardDescription>
+        <Accordion type="multiple" defaultValue={["infosimples"]} className="w-full">
+          <AccordionItem value="infosimples">
+            <AccordionTrigger className="text-lg font-semibold px-4">
+              API InfoSimples
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 px-4 pt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Token da API InfoSimples</CardTitle>
+                  <CardDescription>
                   Configure o token de acesso à API InfoSimples
                 </CardDescription>
               </CardHeader>
@@ -175,12 +174,18 @@ const Configuracoes = () => {
               title="Teste Cadastro BIN"
               description="Teste a consulta no cadastro BIN"
             />
-          </TabsContent>
+          </AccordionContent>
+        </AccordionItem>
 
-          <TabsContent value="asaas" className="space-y-6 mt-6">
+        <AccordionItem value="asaas">
+          <AccordionTrigger className="text-lg font-semibold px-4">
+            Gateway Asaas
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 px-4 pt-4">
             <AsaasCredentials />
-          </TabsContent>
-        </Tabs>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       </div>
     </AdminLayout>
   );

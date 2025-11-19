@@ -4,7 +4,7 @@ import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, Eye, EyeOff } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -33,8 +33,11 @@ export default function Usuarios() {
     nome: "",
     email: "",
     perfil_id: "",
-    senha: ""
+    senha: "",
+    confirmarSenha: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     loadUsuarios();
@@ -96,7 +99,8 @@ export default function Usuarios() {
         nome: usuario.nome,
         email: usuario.email,
         perfil_id: usuario.perfil_id || "",
-        senha: ""
+        senha: "",
+        confirmarSenha: ""
       });
     } else {
       setEditingUsuario(null);
@@ -104,7 +108,8 @@ export default function Usuarios() {
         nome: "",
         email: "",
         perfil_id: "",
-        senha: ""
+        senha: "",
+        confirmarSenha: ""
       });
     }
     setIsModalOpen(true);
@@ -121,9 +126,24 @@ export default function Usuarios() {
       return;
     }
 
+    if (!editingUsuario && formData.senha !== formData.confirmarSenha) {
+      toast.error("As senhas não conferem");
+      return;
+    }
+
+    if (editingUsuario && formData.senha && formData.senha !== formData.confirmarSenha) {
+      toast.error("As senhas não conferem");
+      return;
+    }
+
+    if (formData.senha && formData.senha.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
     try {
       if (editingUsuario) {
-        // Se está editando, só atualiza dados básicos
+        // Atualiza dados básicos
         const dataToUpdate: any = {
           nome: formData.nome,
           email: formData.email,
@@ -136,6 +156,21 @@ export default function Usuarios() {
           .eq('id', editingUsuario.id);
 
         if (error) throw error;
+
+        // Se forneceu nova senha, atualiza no Supabase Auth
+        if (formData.senha && editingUsuario.auth_user_id) {
+          const { error: authError } = await supabase.auth.admin.updateUserById(
+            editingUsuario.auth_user_id,
+            { password: formData.senha }
+          );
+          if (authError) {
+            console.error("Erro ao atualizar senha:", authError);
+            toast.error("Usuário atualizado, mas erro ao atualizar senha");
+            loadUsuarios();
+            return;
+          }
+        }
+
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Criar usuário no Supabase Auth
@@ -319,18 +354,51 @@ export default function Usuarios() {
                 <Label htmlFor="senha">
                   Senha {!editingUsuario && "*"}
                 </Label>
-                <Input 
-                  id="senha" 
-                  type="password" 
-                  value={formData.senha}
-                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                  placeholder={editingUsuario ? "Deixe em branco para manter a mesma" : "Mínimo 6 caracteres"}
-                />
+                <div className="relative">
+                  <Input 
+                    id="senha" 
+                    type={showPassword ? "text" : "password"}
+                    value={formData.senha}
+                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    placeholder={editingUsuario ? "Deixe em branco para manter a mesma" : "Mínimo 6 caracteres"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {editingUsuario && (
                   <p className="text-xs text-muted-foreground">
                     Deixe em branco se não quiser alterar a senha
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmarSenha">
+                  Confirmar Senha {!editingUsuario && "*"}
+                </Label>
+                <div className="relative">
+                  <Input 
+                    id="confirmarSenha" 
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmarSenha}
+                    onChange={(e) => setFormData({ ...formData, confirmarSenha: e.target.value })}
+                    placeholder={editingUsuario ? "Confirme a nova senha" : "Confirme a senha"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
             <DialogFooter>

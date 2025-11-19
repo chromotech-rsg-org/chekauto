@@ -34,6 +34,7 @@ const menuItems = [
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
   { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
+  { title: "Logs InfoSimples", icon: Receipt, path: "/admin/logs-consultas" },
   { title: "Configurações", icon: Settings, path: "/admin/configuracoes", requireDeveloper: true },
 ];
 
