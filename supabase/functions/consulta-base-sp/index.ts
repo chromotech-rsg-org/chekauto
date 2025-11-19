@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,13 +10,26 @@ const corsHeaders = {
 const BASE_URL = 'https://api.infosimples.com/api/v2/consultas/ecrvsp/veiculos';
 
 serve(async (req) => {
+  const startTime = performance.now();
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let logData: any = {
+    tipo_consulta: 'base-sp',
+    parametros: {},
+    resposta: {},
+    sucesso: false,
+    tempo_resposta: 0,
+    erro: null
+  };
+
   try {
     const { chassi, placa, renavam, uf, token } = await req.json();
+    
+    logData.parametros = { chassi, placa, renavam, uf };
     
     console.log('Consulta Base SP - Params:', { chassi, placa, renavam, uf, hasToken: !!token });
 
@@ -27,6 +41,9 @@ serve(async (req) => {
 
     if (!a3 || !a3_pin || !login_cpf || !login_senha) {
       console.error('Credenciais não configuradas');
+      logData.erro = 'Credenciais não configuradas no servidor';
+      await saveLog(logData);
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -54,8 +71,6 @@ serve(async (req) => {
 
     console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-    const startTime = performance.now();
-
     console.log('Chamando API Info Simples - Base SP');
 
     const response = await fetch(`${BASE_URL}/base-sp`, {
@@ -68,6 +83,7 @@ serve(async (req) => {
 
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
+    logData.tempo_resposta = responseTime;
 
     console.log('Response status:', response.status);
 
@@ -82,9 +98,13 @@ serve(async (req) => {
       data = { error: 'Resposta inválida da API', details: text };
     }
 
-    console.log('Response data:', JSON.stringify(data).substring(0, 200));
+    logData.resposta = data;
 
     if (!response.ok) {
+      logData.sucesso = false;
+      logData.erro = data.message || data.error || `Erro HTTP ${response.status}`;
+      await saveLog(logData);
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -99,6 +119,9 @@ serve(async (req) => {
         }
       );
     }
+
+    logData.sucesso = true;
+    await saveLog(logData);
 
     return new Response(
       JSON.stringify({
@@ -116,6 +139,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na edge function:', error);
     
+    logData.sucesso = false;
+    logData.erro = error instanceof Error ? error.message : 'Erro ao processar requisição';
+    logData.tempo_resposta = Math.round(performance.now() - startTime);
+    await saveLog(logData);
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -128,3 +156,21 @@ serve(async (req) => {
     );
   }
 });
+
+async function saveLog(logData: any) {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { error } = await supabase
+      .from('logs_consultas_infosimples')
+      .insert(logData);
+    
+    if (error) {
+      console.error('Erro ao salvar log:', error);
+    }
+  } catch (err) {
+    console.error('Erro ao conectar ao Supabase para salvar log:', err);
+  }
+}

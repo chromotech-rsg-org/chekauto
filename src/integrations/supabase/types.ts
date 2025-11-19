@@ -242,6 +242,39 @@ export type Database = {
           },
         ]
       }
+      logs_consultas_infosimples: {
+        Row: {
+          criado_em: string | null
+          erro: string | null
+          id: string
+          parametros: Json
+          resposta: Json
+          sucesso: boolean
+          tempo_resposta: number | null
+          tipo_consulta: string
+        }
+        Insert: {
+          criado_em?: string | null
+          erro?: string | null
+          id?: string
+          parametros: Json
+          resposta: Json
+          sucesso: boolean
+          tempo_resposta?: number | null
+          tipo_consulta: string
+        }
+        Update: {
+          criado_em?: string | null
+          erro?: string | null
+          id?: string
+          parametros?: Json
+          resposta?: Json
+          sucesso?: boolean
+          tempo_resposta?: number | null
+          tipo_consulta?: string
+        }
+        Relationships: []
+      }
       pagamentos: {
         Row: {
           asaas_payment_id: string
@@ -352,6 +385,152 @@ export type Database = {
           permissoes?: Json
         }
         Relationships: []
+      }
+      produto_aplicacoes: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          descricao: string
+          id: string
+          ordem: number | null
+          produto_id: string
+          titulo: string
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao: string
+          id?: string
+          ordem?: number | null
+          produto_id: string
+          titulo: string
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string
+          id?: string
+          ordem?: number | null
+          produto_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_aplicacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_caracteristicas: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          descricao: string
+          id: string
+          ordem: number | null
+          produto_id: string
+          titulo: string
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao: string
+          id?: string
+          ordem?: number | null
+          produto_id: string
+          titulo: string
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string
+          id?: string
+          ordem?: number | null
+          produto_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_caracteristicas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_faq: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          id: string
+          ordem: number | null
+          pergunta: string
+          produto_id: string
+          resposta: string
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          ordem?: number | null
+          pergunta: string
+          produto_id: string
+          resposta: string
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          ordem?: number | null
+          pergunta?: string
+          produto_id?: string
+          resposta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_faq_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_galeria: {
+        Row: {
+          criado_em: string | null
+          foto_url: string
+          id: string
+          ordem: number | null
+          produto_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          foto_url: string
+          id?: string
+          ordem?: number | null
+          produto_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          foto_url?: string
+          id?: string
+          ordem?: number | null
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_galeria_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtos: {
         Row: {
