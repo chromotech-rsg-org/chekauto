@@ -4,7 +4,7 @@ import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search, Loader2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -221,6 +221,37 @@ export default function Usuarios() {
     }
   };
 
+  const handleFixAuthUser = async (usuario: any) => {
+    const senha = prompt(
+      `Digite uma senha temporária para o usuário ${usuario.email}:\n\n(Mínimo 6 caracteres)`
+    );
+    
+    if (!senha) return;
+    
+    if (senha.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-user-auth', {
+        body: {
+          userId: usuario.id,
+          email: usuario.email,
+          password: senha,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Usuário corrigido! Agora ele pode fazer login.");
+      loadUsuarios();
+    } catch (error: any) {
+      console.error('Erro ao corrigir usuário:', error);
+      toast.error(error.message || 'Erro ao corrigir usuário');
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -285,11 +316,30 @@ export default function Usuarios() {
                 ) : (
                   filteredUsuarios.map((usuario) => (
                     <TableRow key={usuario.id}>
-                      <TableCell className="font-medium">{usuario.nome}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {usuario.nome}
+                          {!usuario.auth_user_id && (
+                            <span title="Sem acesso ao sistema">
+                              <AlertCircle className="h-4 w-4 text-destructive" />
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{usuario.email}</TableCell>
                       <TableCell>{usuario.perfil?.nome || '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {!usuario.auth_user_id && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleFixAuthUser(usuario)}
+                              className="text-xs"
+                            >
+                              Corrigir Acesso
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => handleOpenModal(usuario)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
