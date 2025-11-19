@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import logoIcon from '@/assets/logo-chekauto-icon.png';
@@ -23,14 +24,25 @@ export default function ForgotPassword() {
 
     setIsLoading(true);
 
-    // Simula envio de email
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Email de recuperação enviado! Verifique sua caixa de entrada.');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
-    }, 1500);
+    } catch (error: any) {
+      console.error('Erro ao enviar email de recuperação:', error);
+      toast.error(error.message || 'Erro ao enviar email de recuperação');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
