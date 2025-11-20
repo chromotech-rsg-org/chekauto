@@ -27,11 +27,26 @@ serve(async (req) => {
 
     console.log(`Corrigindo usuário: ${email} (ID: ${userId})`);
 
-    // 1. Criar usuário no Supabase Auth
+    // Buscar o nome do usuário na tabela usuarios
+    const { data: usuarioData, error: usuarioError } = await supabaseAdmin
+      .from("usuarios")
+      .select("nome")
+      .eq("id", userId)
+      .single();
+
+    if (usuarioError) {
+      console.error("Erro ao buscar usuário:", usuarioError);
+      throw new Error("Usuário não encontrado");
+    }
+
+    // 1. Criar usuário no Supabase Auth com user_metadata
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
-      email_confirm: true, // Auto-confirmar email
+      email_confirm: true,
+      user_metadata: {
+        username: email.split('@')[0] // Usar parte antes do @ como username
+      }
     });
 
     if (authError) {
