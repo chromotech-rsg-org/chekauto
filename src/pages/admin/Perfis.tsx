@@ -93,7 +93,7 @@ export default function Perfis() {
   const [nomePerfil, setNomePerfil] = useState("");
   const [isDesenvolvedor, setIsDesenvolvedor] = useState(false);
   const [permissoesSelecionadas, setPermissoesSelecionadas] = useState<Record<string, boolean>>({});
-  const { hasPermission } = usePermissions();
+  const { hasPermission, isDesenvolvedor: userIsDesenvolvedor } = usePermissions();
 
   useEffect(() => {
     loadPerfis();
@@ -262,8 +262,8 @@ export default function Perfis() {
                 />
               </div>
 
-              {/* Checkbox Desenvolvedor - apenas visível para quem tem permissão editDeveloper */}
-              {hasPermission('perfis', 'editDeveloper') && (
+              {/* Checkbox Desenvolvedor - apenas visível para desenvolvedores */}
+              {userIsDesenvolvedor && (
                 <div className="flex items-center space-x-2 p-3 border rounded-lg bg-amber-50 border-amber-200">
                   <Checkbox 
                     id="desenvolvedor" 
@@ -382,7 +382,7 @@ export default function Perfis() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {perfil.nome}
-                        {perfil.is_desenvolvedor && hasPermission('perfis', 'editDeveloper') && (
+                        {perfil.is_desenvolvedor && userIsDesenvolvedor && (
                           <div title="Perfil de Desenvolvedor">
                             <Shield className="h-4 w-4 text-amber-600" />
                           </div>
