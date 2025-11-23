@@ -367,6 +367,7 @@ export type Database = {
           atualizado_em: string | null
           criado_em: string | null
           id: string
+          is_desenvolvedor: boolean | null
           nome: string
           permissoes: Json
         }
@@ -374,6 +375,7 @@ export type Database = {
           atualizado_em?: string | null
           criado_em?: string | null
           id?: string
+          is_desenvolvedor?: boolean | null
           nome: string
           permissoes?: Json
         }
@@ -381,6 +383,7 @@ export type Database = {
           atualizado_em?: string | null
           criado_em?: string | null
           id?: string
+          is_desenvolvedor?: boolean | null
           nome?: string
           permissoes?: Json
         }
