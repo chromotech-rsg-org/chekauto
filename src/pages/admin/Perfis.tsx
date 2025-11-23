@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, CheckSquare, Square } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckSquare, Square, Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { usePermissions } from "@/contexts/PermissionsContext";
 
 const permissoesDisponiveis = [
   { 
@@ -90,7 +91,9 @@ export default function Perfis() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPerfil, setEditingPerfil] = useState<any>(null);
   const [nomePerfil, setNomePerfil] = useState("");
+  const [isDesenvolvedor, setIsDesenvolvedor] = useState(false);
   const [permissoesSelecionadas, setPermissoesSelecionadas] = useState<Record<string, boolean>>({});
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     loadPerfis();
@@ -118,6 +121,7 @@ export default function Perfis() {
     if (perfil) {
       setEditingPerfil(perfil);
       setNomePerfil(perfil.nome);
+      setIsDesenvolvedor(perfil.is_desenvolvedor || false);
       // Converter permissões do banco para formato de checkboxes
       const perms: Record<string, boolean> = {};
       Object.entries(perfil.permissoes).forEach(([modulo, acoes]: [string, any]) => {
@@ -129,6 +133,7 @@ export default function Perfis() {
     } else {
       setEditingPerfil(null);
       setNomePerfil("");
+      setIsDesenvolvedor(false);
       setPermissoesSelecionadas({});
     }
     setIsModalOpen(true);
@@ -177,7 +182,11 @@ export default function Perfis() {
       if (editingPerfil) {
         const { error } = await supabase
           .from('perfis_permissoes')
-          .update({ nome: nomePerfil, permissoes: permissoesObj })
+          .update({ 
+            nome: nomePerfil, 
+            permissoes: permissoesObj,
+            is_desenvolvedor: isDesenvolvedor 
+          })
           .eq('id', editingPerfil.id);
 
         if (error) throw error;
@@ -185,7 +194,11 @@ export default function Perfis() {
       } else {
         const { error } = await supabase
           .from('perfis_permissoes')
-          .insert({ nome: nomePerfil, permissoes: permissoesObj });
+          .insert({ 
+            nome: nomePerfil, 
+            permissoes: permissoesObj,
+            is_desenvolvedor: isDesenvolvedor 
+          });
 
         if (error) throw error;
         toast.success("Perfil criado com sucesso!");
@@ -248,6 +261,29 @@ export default function Perfis() {
                   onChange={(e) => setNomePerfil(e.target.value)}
                 />
               </div>
+
+              {/* Checkbox Desenvolvedor - apenas visível para quem tem permissão editDeveloper */}
+              {hasPermission('perfis', 'editDeveloper') && (
+                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-amber-50 border-amber-200">
+                  <Checkbox 
+                    id="desenvolvedor" 
+                    checked={isDesenvolvedor}
+                    onCheckedChange={(checked) => setIsDesenvolvedor(checked as boolean)}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-amber-600" />
+                    <label
+                      htmlFor="desenvolvedor"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      Perfil de Desenvolvedor
+                      <p className="text-xs text-muted-foreground font-normal mt-1">
+                        Permite acesso às configurações avançadas do sistema
+                      </p>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -343,7 +379,16 @@ export default function Perfis() {
 
                 return (
                   <TableRow key={perfil.id}>
-                    <TableCell className="font-medium">{perfil.nome}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {perfil.nome}
+                        {perfil.is_desenvolvedor && hasPermission('perfis', 'editDeveloper') && (
+                          <div title="Perfil de Desenvolvedor">
+                            <Shield className="h-4 w-4 text-amber-600" />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
                         {String(totalPermissoes)} permissão{totalPermissoes !== 1 ? 'ões' : ''} ativa{totalPermissoes !== 1 ? 's' : ''}
