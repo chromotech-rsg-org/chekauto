@@ -57,7 +57,7 @@ export const AdminSidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const { hasPermission } = usePermissions();
+  const { hasPermission, isDesenvolvedor } = usePermissions();
 
   const handleLogout = async () => {
     try {
@@ -148,8 +148,8 @@ export const AdminSidebar = () => {
                 <CollapsibleContent>
                   <ul className="mt-1 space-y-1">
                     {configMenuItems.map((item) => {
-                      // Se o item requer desenvolvedor, verifica permissão
-                      if (item.requireDeveloper && !hasPermission('perfis', 'editDeveloper')) {
+                      // Se o item requer desenvolvedor, verifica se é desenvolvedor
+                      if (item.requireDeveloper && !isDesenvolvedor) {
                         return null;
                       }
                       
