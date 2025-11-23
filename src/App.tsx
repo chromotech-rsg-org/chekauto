@@ -30,6 +30,8 @@ import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
 import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
 import Configuracoes from "./pages/admin/Configuracoes";
 import LogsConsultas from "./pages/admin/LogsConsultas";
+import Personalizacao from "./pages/admin/Personalizacao";
+import IntegracaoMotv from "./pages/admin/IntegracaoMotv";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
@@ -77,11 +79,15 @@ const App = () => (
                 <Route path="/admin/parceiros" element={<Parceiros />} />
                 <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
                 <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
-                <Route path="/admin/testes-api" element={<TestesApiInfoSimples />} />
-                <Route path="/admin/config-infosimples" element={<ConfiguracoesInfoSimples />} />
-                <Route path="/admin/config-asaas" element={<ConfiguracaoAsaas />} />
-                <Route path="/admin/configuracoes" element={<Configuracoes />} />
                 <Route path="/admin/logs-consultas" element={<LogsConsultas />} />
+                
+                {/* Configurações */}
+                <Route path="/admin/configuracoes" element={<Configuracoes />} />
+                <Route path="/admin/personalizacao" element={<Personalizacao />} />
+                <Route path="/admin/integracao-motv" element={<IntegracaoMotv />} />
+                <Route path="/admin/configuracao-asaas" element={<ConfiguracaoAsaas />} />
+                <Route path="/admin/configuracoes-infosimples" element={<ConfiguracoesInfoSimples />} />
+                <Route path="/admin/testes-api-infosimples" element={<TestesApiInfoSimples />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

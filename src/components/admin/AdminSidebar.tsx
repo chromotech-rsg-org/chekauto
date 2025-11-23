@@ -15,12 +15,19 @@ import {
   Table2,
   Receipt,
   Settings,
+  Palette,
+  Monitor,
+  CreditCard,
+  Database,
+  TestTubes,
+  ChevronDown,
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -34,13 +41,22 @@ const menuItems = [
   { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
   { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
   { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
-  { title: "Logs InfoSimples", icon: Receipt, path: "/admin/logs-consultas" },
-  { title: "Configurações", icon: Settings, path: "/admin/configuracoes", requireDeveloper: true },
+  { title: "Logs InfoSimples", icon: Database, path: "/admin/logs-consultas" },
+];
+
+const configMenuItems = [
+  { title: "Pacotes", icon: Package, path: "/admin/configuracoes" },
+  { title: "Personalização", icon: Palette, path: "/admin/personalizacao" },
+  { title: "Integração MOTV", icon: Monitor, path: "/admin/integracao-motv" },
+  { title: "Integração Asaas", icon: CreditCard, path: "/admin/configuracao-asaas", requireDeveloper: true },
+  { title: "Config. InfoSimples", icon: Settings, path: "/admin/configuracoes-infosimples", requireDeveloper: true },
+  { title: "Testes API InfoSimples", icon: TestTubes, path: "/admin/testes-api-infosimples", requireDeveloper: true },
 ];
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { hasPermission } = usePermissions();
 
   const handleLogout = async () => {
@@ -100,31 +116,66 @@ export const AdminSidebar = () => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {menuItems.map((item) => {
-              // Se o item requer desenvolvedor, verifica permissão
-              if (item.requireDeveloper && !hasPermission('configuracoes', 'view')) {
-                return null;
-              }
-              
-              return (
-                <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    onClick={() => setIsOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                        isActive
-                          ? "bg-brand-yellow text-black font-semibold"
-                          : "text-white hover:bg-gray-900"
-                      }`
-                    }
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </li>
-              );
-            })}
+            {menuItems.map((item) => (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-brand-yellow text-black font-semibold"
+                        : "text-white hover:bg-gray-900"
+                    }`
+                  }
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </NavLink>
+              </li>
+            ))}
+
+            {/* Menu Configurações Expansível */}
+            <li>
+              <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-gray-900 transition-colors w-full">
+                  <Settings className="h-5 w-5" />
+                  <span className="flex-1 text-left">Configurações</span>
+                  <ChevronDown 
+                    className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} 
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <ul className="mt-1 space-y-1">
+                    {configMenuItems.map((item) => {
+                      // Se o item requer desenvolvedor, verifica permissão
+                      if (item.requireDeveloper && !hasPermission('perfis', 'editDeveloper')) {
+                        return null;
+                      }
+                      
+                      return (
+                        <li key={item.path}>
+                          <NavLink
+                            to={item.path}
+                            onClick={() => setIsOpen(false)}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 px-4 py-2.5 pl-12 rounded-lg transition-colors ${
+                                isActive
+                                  ? "bg-brand-yellow text-black font-semibold"
+                                  : "text-white hover:bg-gray-900"
+                              }`
+                            }
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span className="text-sm">{item.title}</span>
+                          </NavLink>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </li>
           </ul>
         </nav>
 
