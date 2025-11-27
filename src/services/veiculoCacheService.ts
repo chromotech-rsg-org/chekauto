@@ -16,11 +16,21 @@ export interface VeiculoConsulta {
   atualizado_em: string;
 }
 
+export interface LogConsulta {
+  id: string;
+  tipo_consulta: string;
+  tempo_resposta: number | null;
+  sucesso: boolean;
+  criado_em: string;
+  parametros: any;
+}
+
 export interface ResultadoConsulta {
   fromCache: boolean;
   data: any;
   ultimaAtualizacao?: string;
   consultaId: string;
+  logConsulta?: LogConsulta;
 }
 
 /**
@@ -65,6 +75,46 @@ export const buscarTokenInfoSimples = async (): Promise<string | null> => {
     return data?.valor || null;
   } catch (error) {
     console.error('Erro ao buscar token:', error);
+    return null;
+  }
+};
+
+/**
+ * Busca o log mais recente da consulta por chassi, placa ou renavam
+ */
+export const buscarLogConsulta = async (
+  tipo: 'chassi' | 'placa' | 'renavam',
+  valor: string
+): Promise<LogConsulta | null> => {
+  try {
+    const valorNormalizado = valor.trim().toUpperCase();
+    
+    const { data, error } = await supabase
+      .from('logs_consultas_infosimples')
+      .select('id, tipo_consulta, tempo_resposta, sucesso, criado_em, parametros')
+      .eq('tipo_consulta', tipo === 'chassi' ? 'base-sp' : tipo === 'placa' ? 'base-sp' : 'base-sp')
+      .order('criado_em', { ascending: false })
+      .limit(10);
+
+    if (error || !data || data.length === 0) {
+      return null;
+    }
+
+    // Procurar o log que corresponde ao valor consultado
+    const logEncontrado = data.find(log => {
+      const params = log.parametros as Record<string, any> || {};
+      const chassiParam = (params.chassi || params.Chassi || '') as string;
+      const placaParam = (params.placa || params.Placa || '') as string;
+      const renavamParam = (params.renavam || params.Renavam || '') as string;
+      
+      return chassiParam === valorNormalizado || 
+             placaParam === valorNormalizado || 
+             renavamParam === valorNormalizado;
+    });
+
+    return logEncontrado as LogConsulta | null;
+  } catch (error) {
+    console.error('Erro ao buscar log da consulta:', error);
     return null;
   }
 };
@@ -271,20 +321,25 @@ export const buscarOuConsultarVeiculo = async (
         if (resultado.success && resultado.data) {
           // Atualizar cache
           await atualizarConsultaVeiculo(consultaCache.id, resultado.data);
+          const logConsulta = await buscarLogConsulta(tipo, valor);
 
           return {
             fromCache: false,
             data: resultado.data,
             consultaId: consultaCache.id,
+            logConsulta: logConsulta || undefined,
           };
         } else {
           // Erro na API - retornar cache antigo mesmo expirado
           console.warn('Erro na API - usando cache expirado');
+          const logConsulta = await buscarLogConsulta(tipo, valor);
+          
           return {
             fromCache: true,
             data: consultaCache.dados_completos,
             ultimaAtualizacao: consultaCache.atualizado_em,
             consultaId: consultaCache.id,
+            logConsulta: logConsulta || undefined,
           };
         }
       }
@@ -304,11 +359,13 @@ export const buscarOuConsultarVeiculo = async (
       if (resultado.success && resultado.data) {
         // Salvar no cache
         const consultaId = await salvarConsultaVeiculo(tipo, valor, resultado.data);
+        const logConsulta = await buscarLogConsulta(tipo, valor);
 
         return {
           fromCache: false,
           data: resultado.data,
           consultaId: consultaId || '',
+          logConsulta: logConsulta || undefined,
         };
       } else {
         throw new Error(resultado.error || 'Erro ao consultar API');

@@ -131,6 +131,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 fromCache={vehicleData.fromCache}
                 ultimaAtualizacao={vehicleData.ultimaAtualizacao}
                 showFullDetails={false}
+                logConsulta={vehicleData.logConsulta}
               />
             )}
 
