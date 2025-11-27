@@ -143,14 +143,19 @@ export default function ProductDetail() {
         marca: resultado.data.marca || '',
         modelo: resultado.data.modelo || '',
         cor: resultado.data.cor || '',
+        estado: '',
+        cidade: '',
+        informacaoAdicional: '',
+        notaFiscal: null,
       });
 
       // Salvar dados do produto
       setProductData({
         id: produto.id,
-        nome: produto.nome,
-        preco: produto.preco,
-        foto_url: produto.foto_url,
+        name: produto.nome,
+        price: produto.preco,
+        description: produto.descricao || '',
+        image: produto.foto_url || '',
       });
 
       navigate('/solicitacao/veiculo');
@@ -278,9 +283,10 @@ export default function ProductDetail() {
                 if (produto) {
                   setProductData({
                     id: produto.id,
-                    nome: produto.nome,
-                    preco: produto.preco,
-                    foto_url: produto.foto_url,
+                    name: produto.nome,
+                    price: produto.preco,
+                    description: produto.descricao || '',
+                    image: produto.foto_url || '',
                   });
                 }
                 navigate('/solicitacao/veiculo');
