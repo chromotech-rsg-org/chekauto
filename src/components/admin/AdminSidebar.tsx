@@ -30,18 +30,18 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
-  { title: "Usuários", icon: Users, path: "/admin/usuarios" },
-  { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis" },
-  { title: "Produtos", icon: Package, path: "/admin/produtos" },
-  { title: "Categorias", icon: FolderTree, path: "/admin/categorias" },
-  { title: "Clientes", icon: UserCircle, path: "/admin/clientes" },
-  { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes" },
-  { title: "Parceiros", icon: Handshake, path: "/admin/parceiros" },
-  { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento" },
-  { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits" },
-  { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv" },
-  { title: "Logs InfoSimples", icon: Database, path: "/admin/logs-consultas" },
+  { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard", devOnly: false },
+  { title: "Usuários", icon: Users, path: "/admin/usuarios", devOnly: true },
+  { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis", devOnly: true },
+  { title: "Produtos", icon: Package, path: "/admin/produtos", devOnly: false },
+  { title: "Categorias", icon: FolderTree, path: "/admin/categorias", devOnly: false },
+  { title: "Clientes", icon: UserCircle, path: "/admin/clientes", devOnly: false },
+  { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes", devOnly: false },
+  { title: "Parceiros", icon: Handshake, path: "/admin/parceiros", devOnly: false },
+  { title: "Split de Pagamento", icon: DollarSign, path: "/admin/split-pagamento", devOnly: false },
+  { title: "Histórico de Splits", icon: Receipt, path: "/admin/historico-splits", devOnly: false },
+  { title: "Tabela CAT MMV", icon: Table2, path: "/admin/tabela-cat-mmv", devOnly: false },
+  { title: "Logs InfoSimples", icon: Database, path: "/admin/logs-consultas", devOnly: false },
 ];
 
 const configMenuItems = [
@@ -113,24 +113,26 @@ export const AdminSidebar = () => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {menuItems.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-brand-yellow text-black font-semibold"
-                        : "text-white hover:bg-gray-900"
-                    }`
-                  }
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.title}</span>
-                </NavLink>
-              </li>
-            ))}
+            {menuItems
+              .filter((item) => !item.devOnly || isDesenvolvedor)
+              .map((item) => (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-brand-yellow text-black font-semibold"
+                          : "text-white hover:bg-gray-900"
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </li>
+              ))}
 
             {/* Menu Configurações Expansível - Apenas para Desenvolvedores */}
             {isDesenvolvedor && (
