@@ -22,40 +22,66 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadUserPermissions = async () => {
     try {
       // Buscar usuário autenticado
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Erro ao buscar usuário:', authError);
+        setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
+        return;
+      }
+
       if (!user) {
         setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
         return;
       }
 
       // Buscar usuário na tabela usuarios
-      const { data: usuario } = await supabase
+      const { data: usuario, error: usuarioError } = await supabase
         .from('usuarios')
         .select('perfil_id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (usuarioError) {
+        console.error('Erro ao buscar dados do usuário:', usuarioError);
+        setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
+        return;
+      }
 
       if (!usuario?.perfil_id) {
         setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
         return;
       }
 
       // Buscar perfil e suas permissões
-      const { data: perfil } = await supabase
+      const { data: perfil, error: perfilError } = await supabase
         .from('perfis_permissoes')
         .select('permissoes, is_desenvolvedor')
         .eq('id', usuario.perfil_id)
-        .single();
+        .maybeSingle();
+
+      if (perfilError) {
+        console.error('Erro ao buscar perfil:', perfilError);
+        setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
+        return;
+      }
 
       if (perfil) {
         setPermissions(perfil.permissoes as Permission);
         setIsDesenvolvedor(perfil.is_desenvolvedor || false);
       } else {
         setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
       }
     } catch (error) {
       console.error('Erro ao carregar permissões:', error);
       setPermissions(defaultPermissions);
+      setIsDesenvolvedor(false);
     }
   };
 
