@@ -138,20 +138,35 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               <h3 className="text-black text-lg font-semibold mb-3 text-center">
                 Complete seus dados para continuar
               </h3>
-            
-            <Input
-              placeholder="Seu Nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
-            />
-            
-            <Input
-              placeholder="WhatsApp"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-              className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
-            />
+              
+              <div className="space-y-3">
+                <Input
+                  placeholder="Seu Nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
+                />
+                
+                <Input
+                  placeholder="WhatsApp (00) 00000-0000"
+                  value={whatsapp}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    let formatted = value;
+                    if (value.length <= 11) {
+                      formatted = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+                      if (value.length <= 6) {
+                        formatted = value.replace(/^(\d{2})(\d+)/, '($1) $2');
+                      } else if (value.length <= 10) {
+                        formatted = value.replace(/^(\d{2})(\d{5})(\d+)/, '($1) $2-$3');
+                      }
+                    }
+                    setWhatsapp(formatted);
+                  }}
+                  maxLength={15}
+                  className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
+                />
+              </div>
             </div>
             
             <button 

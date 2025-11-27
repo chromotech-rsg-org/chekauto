@@ -67,45 +67,59 @@ const extrairValor = (obj: any, ...caminhos: string[]): string => {
  * Mapeia a resposta da API para o formato estruturado
  */
 export const mapearDadosVeiculo = (apiResponse: any): DadosVeiculoMapeados => {
-  const data = apiResponse?.data || apiResponse;
+  // A API base-sp retorna estrutura: { code: 200, data: [{ crv: {...}, debitos: {...}, veiculo: {...} }] }
+  let data = apiResponse?.data || apiResponse;
+  
+  // Se data é um array, pegar o primeiro item
+  if (Array.isArray(data) && data.length > 0) {
+    data = data[0];
+  }
+  
+  // Extrair subseções da resposta base-sp
+  const veiculo = data?.veiculo || {};
+  const crv = data?.crv || {};
+  const debitos = data?.debitos || {};
+  
+  // Para compatibilidade, mesclar tudo em um único objeto
+  const merged = { ...data, ...veiculo, ...crv, ...debitos };
 
   return {
     identificacao: {
-      placa: extrairValor(data, 'placa', 'Placa'),
-      chassi: extrairValor(data, 'chassi', 'Chassi'),
-      renavam: extrairValor(data, 'renavam', 'Renavam'),
-      uf: extrairValor(data, 'uf', 'UF', 'uf_placa'),
+      placa: extrairValor(merged, 'placa', 'Placa'),
+      chassi: extrairValor(merged, 'chassi', 'Chassi'),
+      renavam: extrairValor(merged, 'renavam', 'Renavam'),
+      uf: extrairValor(merged, 'uf', 'UF', 'uf_placa'),
     },
     
     especificacoes: {
-      modelo: extrairValor(data, 'modelo', 'Modelo'),
-      marca: extrairValor(data, 'marca', 'Marca'),
-      anoFabricacao: extrairValor(data, 'ano_fabricacao', 'AnoFabricacao', 'ano_fab'),
-      anoModelo: extrairValor(data, 'ano_modelo', 'AnoModelo', 'ano'),
-      cor: extrairValor(data, 'cor', 'Cor'),
-      tipo: extrairValor(data, 'tipo', 'Tipo', 'tipo_veiculo'),
-      especie: extrairValor(data, 'especie', 'Especie'),
-      categoria: extrairValor(data, 'categoria', 'Categoria'),
+      modelo: extrairValor(merged, 'modelo', 'Modelo'),
+      marca: extrairValor(merged, 'marca', 'Marca'),
+      anoFabricacao: extrairValor(merged, 'ano_fabricacao', 'AnoFabricacao', 'ano_fab'),
+      anoModelo: extrairValor(merged, 'ano_modelo', 'AnoModelo', 'ano'),
+      cor: extrairValor(merged, 'cor', 'Cor'),
+      tipo: extrairValor(merged, 'tipo', 'Tipo', 'tipo_veiculo'),
+      especie: extrairValor(merged, 'especie', 'Especie'),
+      categoria: extrairValor(merged, 'categoria', 'Categoria'),
     },
     
     motorizacao: {
-      combustivel: extrairValor(data, 'combustivel', 'Combustivel', 'tipo_combustivel'),
-      potencia: extrairValor(data, 'potencia', 'Potencia'),
-      cilindradas: extrairValor(data, 'cilindradas', 'Cilindradas'),
-      capacidadePassageiros: extrairValor(data, 'capacidade_passageiros', 'CapacidadePassageiros', 'lotacao'),
-      capacidadeCarga: extrairValor(data, 'capacidade_carga', 'CapacidadeCarga', 'pbt'),
+      combustivel: extrairValor(merged, 'combustivel', 'Combustivel', 'tipo_combustivel'),
+      potencia: extrairValor(merged, 'potencia', 'Potencia'),
+      cilindradas: extrairValor(merged, 'cilindradas', 'Cilindradas'),
+      capacidadePassageiros: extrairValor(merged, 'capacidade_passageiros', 'CapacidadePassageiros', 'lotacao'),
+      capacidadeCarga: extrairValor(merged, 'capacidade_carga', 'CapacidadeCarga', 'pbt'),
     },
     
     registro: {
-      situacao: extrairValor(data, 'situacao', 'Situacao', 'situacao_veiculo'),
-      dataEmissaoCRV: extrairValor(data, 'data_emissao_crv', 'DataEmissaoCRV'),
-      municipio: extrairValor(data, 'municipio', 'Municipio'),
-      uf: extrairValor(data, 'uf', 'UF'),
+      situacao: extrairValor(merged, 'situacao', 'Situacao', 'situacao_veiculo'),
+      dataEmissaoCRV: extrairValor(merged, 'data_emissao_crv', 'DataEmissaoCRV', 'exercicio', 'licenciamento'),
+      municipio: extrairValor(merged, 'municipio', 'Municipio'),
+      uf: extrairValor(merged, 'uf', 'UF'),
     },
     
     informacoes: {
-      restricoes: extrairRestricoes(data),
-      observacoes: extrairObservacoes(data),
+      restricoes: extrairRestricoes(merged),
+      observacoes: extrairObservacoes(merged),
     },
     
     dadosOriginais: data,
