@@ -64,11 +64,14 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         cpf_cnpj: cpfNumeros,
         telefone: whatsapp,
         status: 'lead',
-        primeira_consulta_id: vehicleData?.consultaId || undefined,
       });
 
+      if (!resultado) {
+        throw new Error('Erro ao criar cliente');
+      }
+
       // Associar cliente à consulta
-      if (vehicleData?.consultaId) {
+      if (vehicleData?.consultaId && resultado.id) {
         await associarClienteConsulta(resultado.id, vehicleData.consultaId);
       }
 

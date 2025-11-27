@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,8 @@ export default function Clientes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [editingCliente, setEditingCliente] = useState<any>(null);
   const [formData, setFormData] = useState({
     nome: "",
     cpf_cnpj: "",
@@ -76,13 +78,13 @@ export default function Clientes() {
       };
 
       const resultado = await criarOuAtualizarCliente({
+        id: editingCliente?.id,
         nome: data.nome,
         cpf_cnpj: data.cpf_cnpj.replace(/\D/g, ''),
         email: data.email,
         telefone: data.telefone,
         status: data.status,
-        endereco: endereco,
-        primeira_consulta_id: undefined
+        endereco: endereco
       });
 
       if (!resultado) {
@@ -95,9 +97,10 @@ export default function Clientes() {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast({
         title: 'Sucesso',
-        description: 'Cliente salvo com sucesso',
+        description: editingCliente ? 'Cliente atualizado com sucesso' : 'Cliente criado com sucesso',
       });
       setIsModalOpen(false);
+      setEditingCliente(null);
       resetForm();
     },
     onError: (error: any) => {
@@ -159,7 +162,9 @@ export default function Clientes() {
       const matchesDate = (!startDate || clienteDate >= startDate) && 
         (!endDate || clienteDate <= endDate);
       
-      return matchesSearch && matchesDate;
+      const matchesStatus = statusFilter === "all" || cliente.status === statusFilter;
+      
+      return matchesSearch && matchesDate && matchesStatus;
     }
   );
 
@@ -187,7 +192,10 @@ export default function Clientes() {
           
           <Dialog open={isModalOpen} onOpenChange={(open) => {
             setIsModalOpen(open);
-            if (!open) resetForm();
+            if (!open) {
+              resetForm();
+              setEditingCliente(null);
+            }
           }}>
             <DialogTrigger asChild>
               <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
@@ -197,7 +205,7 @@ export default function Clientes() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Criar Novo Cliente</DialogTitle>
+                <DialogTitle>{editingCliente ? 'Editar Cliente' : 'Criar Novo Cliente'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -353,6 +361,18 @@ export default function Clientes() {
               className="pl-9"
             />
           </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="lead">Lead</SelectItem>
+              <SelectItem value="cliente_ativo">Cliente Ativo</SelectItem>
+            </SelectContent>
+          </Select>
+          
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}
@@ -404,11 +424,27 @@ export default function Clientes() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            setEditingCliente(cliente);
+                            setFormData({
+                              nome: cliente.nome,
+                              cpf_cnpj: cliente.cpf_cnpj,
+                              email: cliente.email || "",
+                              telefone: cliente.telefone || "",
+                              status: cliente.status,
+                              cep: cliente.endereco?.cep || "",
+                              rua: cliente.endereco?.rua || "",
+                              numero: cliente.endereco?.numero || "",
+                              bairro: cliente.endereco?.bairro || "",
+                              complemento: cliente.endereco?.complemento || ""
+                            });
+                            setIsModalOpen(true);
+                          }}
+                        >
                           <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </TableCell>
