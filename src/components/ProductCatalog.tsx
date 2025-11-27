@@ -140,7 +140,7 @@ export const ProductCatalog: React.FC = () => {
     )
   })).filter(section => section.products.length > 0);
 
-  return <section id="implementations" className="bg-[rgba(233,233,233,1)] flex w-full flex-col items-center pb-[95px] px-20 max-md:max-w-full max-md:px-5">
+  return <section id="produtos" className="bg-[rgba(233,233,233,1)] flex w-full flex-col items-center pb-[95px] px-20 max-md:max-w-full max-md:px-5">
       <div className="bg-white z-10 flex mt-[-200px] w-full max-w-[1274px] flex-col items-stretch pt-[94px] pb-[166px] px-[71px] rounded-[20px_20px_0px_0px] max-md:max-w-full max-md:pb-[100px] max-md:px-5">
         <nav className="flex items-center gap-[40px_65px] text-sm text-black font-medium text-center leading-none max-md:max-w-full">
           <img src={logoBlack} alt="CHEKAUTO Logo" className="h-[40px] object-contain" />
