@@ -12,40 +12,50 @@ export interface ClienteData {
 }
 
 /**
- * Cria ou atualiza um cliente
+ * Cria ou atualiza um cliente usando upsert
  */
 export const criarOuAtualizarCliente = async (
   dados: ClienteData
 ): Promise<{ id: string; isNew: boolean } | null> => {
   try {
-    // Se tem CPF, buscar cliente existente
-    if (dados.cpf_cnpj) {
-      const { data: clienteExistente } = await supabase
-        .from('clientes')
-        .select('id, status')
-        .eq('cpf_cnpj', dados.cpf_cnpj)
-        .maybeSingle();
+    if (!dados.cpf_cnpj) {
+      console.error('CPF/CNPJ é obrigatório');
+      return null;
+    }
 
-      if (clienteExistente) {
-        // Cliente existe - atualizar última interação
-        const { error } = await supabase
-          .from('clientes')
-          .update({
-            nome: dados.nome,
-            telefone: dados.telefone,
-            email: dados.email,
-            endereco: dados.endereco,
-            ultima_interacao: new Date().toISOString(),
-          })
-          .eq('id', clienteExistente.id);
+    // Primeiro, buscar se já existe
+    const { data: clienteExistente } = await supabase
+      .from('clientes')
+      .select('id, status, primeira_consulta_id')
+      .eq('cpf_cnpj', dados.cpf_cnpj)
+      .maybeSingle();
 
-        if (error) {
-          console.error('Erro ao atualizar cliente:', error);
-          return null;
-        }
+    if (clienteExistente) {
+      // Cliente existe - atualizar
+      const updateData: any = {
+        nome: dados.nome,
+        telefone: dados.telefone,
+        email: dados.email,
+        endereco: dados.endereco,
+        ultima_interacao: new Date().toISOString(),
+      };
 
-        return { id: clienteExistente.id, isNew: false };
+      // Só atualiza primeira_consulta_id se ainda não tiver
+      if (!clienteExistente.primeira_consulta_id && dados.primeira_consulta_id) {
+        updateData.primeira_consulta_id = dados.primeira_consulta_id;
       }
+
+      const { error } = await supabase
+        .from('clientes')
+        .update(updateData)
+        .eq('id', clienteExistente.id);
+
+      if (error) {
+        console.error('Erro ao atualizar cliente:', error);
+        return null;
+      }
+
+      return { id: clienteExistente.id, isNew: false };
     }
 
     // Cliente não existe - criar novo
@@ -53,7 +63,7 @@ export const criarOuAtualizarCliente = async (
       .from('clientes')
       .insert({
         nome: dados.nome,
-        cpf_cnpj: dados.cpf_cnpj || '',
+        cpf_cnpj: dados.cpf_cnpj,
         telefone: dados.telefone,
         email: dados.email,
         endereco: dados.endereco,
