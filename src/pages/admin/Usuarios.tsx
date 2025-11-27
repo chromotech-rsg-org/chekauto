@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { usePermissions } from "@/contexts/PermissionsContext";
 
 const exportFields = [
   { key: "id", label: "ID" },
@@ -21,6 +22,7 @@ const exportFields = [
 ];
 
 export default function Usuarios() {
+  const { isDesenvolvedor } = usePermissions();
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [perfis, setPerfis] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +53,18 @@ export default function Usuarios() {
         .from('usuarios')
         .select(`
           *,
-          perfil:perfis_permissoes(nome)
+          perfil:perfis_permissoes(nome, is_desenvolvedor)
         `)
         .order('criado_em', { ascending: false});
 
       if (error) throw error;
-      setUsuarios(data || []);
+      
+      // Filtrar usuários desenvolvedores se o usuário atual não for desenvolvedor
+      const filteredData = isDesenvolvedor 
+        ? data 
+        : data?.filter(usuario => !usuario.perfil?.is_desenvolvedor);
+      
+      setUsuarios(filteredData || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar usuários');
@@ -73,7 +81,13 @@ export default function Usuarios() {
         .order('nome');
 
       if (error) throw error;
-      setPerfis(data || []);
+      
+      // Filtrar perfis desenvolvedores se o usuário atual não for desenvolvedor
+      const filteredData = isDesenvolvedor 
+        ? data 
+        : data?.filter(perfil => !perfil.is_desenvolvedor);
+      
+      setPerfis(filteredData || []);
     } catch (error) {
       console.error('Erro ao carregar perfis:', error);
     }

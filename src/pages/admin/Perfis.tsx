@@ -108,7 +108,13 @@ export default function Perfis() {
         .order('criado_em', { ascending: false });
 
       if (error) throw error;
-      setPerfis(data || []);
+      
+      // Filtrar perfis desenvolvedores se o usuário atual não for desenvolvedor
+      const filteredData = userIsDesenvolvedor 
+        ? data 
+        : data?.filter(perfil => !perfil.is_desenvolvedor);
+      
+      setPerfis(filteredData || []);
     } catch (error) {
       console.error('Erro ao carregar perfis:', error);
       toast.error('Erro ao carregar perfis');
