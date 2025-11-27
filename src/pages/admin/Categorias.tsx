@@ -29,6 +29,7 @@ export default function Categorias() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
+    codigo: "",
     nome: "",
     descricao: "",
   });
@@ -68,19 +69,24 @@ export default function Categorias() {
     if (categoria) {
       setEditingCategoria(categoria);
       setFormData({
+        codigo: categoria.codigo || "",
         nome: categoria.nome,
-        descricao: categoria.descricao,
+        descricao: categoria.descricao || "",
       });
     } else {
       setEditingCategoria(null);
-      setFormData({ nome: "", descricao: "" });
+      setFormData({ codigo: "", nome: "", descricao: "" });
     }
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!formData.nome.trim()) {
-      toast.error("Nome da categoria é obrigatório");
+      toast.error("Nome do tipo é obrigatório");
+      return;
+    }
+    if (!formData.codigo.trim()) {
+      toast.error("Código do tipo é obrigatório");
       return;
     }
 
@@ -90,32 +96,34 @@ export default function Categorias() {
         const { error } = await supabase
           .from('categorias')
           .update({
+            codigo: formData.codigo,
             nome: formData.nome,
             descricao: formData.descricao,
           })
           .eq('id', editingCategoria.id);
 
         if (error) throw error;
-        toast.success("Categoria atualizada com sucesso!");
+        toast.success("Tipo de carroceria atualizado com sucesso!");
       } else {
         // Criar
         const { error } = await supabase
           .from('categorias')
           .insert({
+            codigo: formData.codigo,
             nome: formData.nome,
             descricao: formData.descricao,
           });
 
         if (error) throw error;
-        toast.success("Categoria criada com sucesso!");
+        toast.success("Tipo de carroceria criado com sucesso!");
       }
 
       setIsModalOpen(false);
-      setFormData({ nome: "", descricao: "" });
+      setFormData({ codigo: "", nome: "", descricao: "" });
       loadCategorias();
     } catch (error) {
-      console.error('Erro ao salvar categoria:', error);
-      toast.error('Erro ao salvar categoria');
+      console.error('Erro ao salvar tipo:', error);
+      toast.error('Erro ao salvar tipo de carroceria');
     }
   };
 
@@ -124,16 +132,16 @@ export default function Categorias() {
     
     // Verificar se tem produtos associados
     const { count } = await supabase
-      .from('produtos')
+      .from('produto_tipos')
       .select('*', { count: 'exact', head: true })
-      .eq('categoria_id', id);
+      .eq('tipo_id', id);
 
     if (count && count > 0) {
-      toast.error(`Não é possível excluir. Esta categoria tem ${count} produto(s) associado(s).`);
+      toast.error(`Não é possível excluir. Este tipo tem ${count} produto(s) associado(s).`);
       return;
     }
 
-    if (confirm("Tem certeza que deseja excluir esta categoria?")) {
+    if (confirm("Tem certeza que deseja excluir este tipo de carroceria?")) {
       try {
         const { error } = await supabase
           .from('categorias')
@@ -141,7 +149,7 @@ export default function Categorias() {
           .eq('id', id);
 
         if (error) throw error;
-        toast.success("Categoria excluída com sucesso!");
+        toast.success("Tipo de carroceria excluído com sucesso!");
         loadCategorias();
       } catch (error) {
         console.error('Erro ao excluir categoria:', error);
@@ -155,34 +163,44 @@ export default function Categorias() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Categorias de Produtos</h1>
-            <p className="text-muted-foreground">Gerencie as categorias do catálogo</p>
+            <h1 className="text-3xl font-bold">Tipos de Carroceria</h1>
+            <p className="text-muted-foreground">Gerencie os tipos de carroceria para filtrar produtos</p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button 
+                <Button 
                 className="bg-brand-yellow hover:bg-brand-yellow/90 text-black"
                 onClick={() => handleOpenModal()}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Nova Categoria
+                Novo Tipo
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {editingCategoria ? "Editar Categoria" : "Nova Categoria"}
+                  {editingCategoria ? "Editar Tipo de Carroceria" : "Novo Tipo de Carroceria"}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome da Categoria *</Label>
+                  <Label htmlFor="codigo">Código *</Label>
+                  <Input
+                    id="codigo"
+                    value={formData.codigo}
+                    onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                    placeholder="Ex: 14"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome *</Label>
                   <Input
                     id="nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Ex: Tanques, Baús, Reboques..."
+                    placeholder="Ex: CAMINHÃO"
                   />
                 </div>
 
@@ -192,7 +210,7 @@ export default function Categorias() {
                     id="descricao"
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Descreva a categoria..."
+                    placeholder="Descrição do tipo de carroceria..."
                     rows={4}
                   />
                 </div>
@@ -216,7 +234,7 @@ export default function Categorias() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar categoria..."
+              placeholder="Buscar tipo de carroceria..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -240,7 +258,7 @@ export default function Categorias() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead className="text-center">Produtos</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -249,7 +267,11 @@ export default function Categorias() {
             <TableBody>
               {filteredCategorias.map((categoria) => (
                 <TableRow key={categoria.id}>
-                  <TableCell className="font-medium">{categoria.nome}</TableCell>
+                  <TableCell className="font-medium">
+                    {categoria.codigo && categoria.nome 
+                      ? `${categoria.codigo} - ${categoria.nome}` 
+                      : categoria.nome}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {categoria.descricao}
                   </TableCell>
@@ -282,7 +304,7 @@ export default function Categorias() {
               {filteredCategorias.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    {loading ? 'Carregando...' : 'Nenhuma categoria encontrada'}
+                    {loading ? 'Carregando...' : 'Nenhum tipo de carroceria encontrado'}
                   </TableCell>
                 </TableRow>
               )}

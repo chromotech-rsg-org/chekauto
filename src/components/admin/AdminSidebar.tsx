@@ -34,7 +34,7 @@ const menuItems = [
   { title: "Usuários", icon: Users, path: "/admin/usuarios", devOnly: true },
   { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis", devOnly: true },
   { title: "Produtos", icon: Package, path: "/admin/produtos", devOnly: false },
-  { title: "Categorias", icon: FolderTree, path: "/admin/categorias", devOnly: false },
+  { title: "Tipos de Carroceria", icon: FolderTree, path: "/admin/categorias", devOnly: false },
   { title: "Clientes", icon: UserCircle, path: "/admin/clientes", devOnly: false },
   { title: "Solicitações", icon: FileText, path: "/admin/solicitacoes", devOnly: false },
   { title: "Parceiros", icon: Handshake, path: "/admin/parceiros", devOnly: false },
