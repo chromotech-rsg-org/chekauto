@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Truck, Calendar, Hash, Palette, Fuel, CheckCircle, Clock } from 'lucide-react';
+import { Truck, Calendar, Hash, Palette, Fuel, CheckCircle, Clock, Activity, Zap } from 'lucide-react';
 import { mapearDadosVeiculo, formatarDadosResumo, DadosVeiculoMapeados } from '@/lib/infoSimplesDataMapper';
+import { LogConsulta } from '@/services/veiculoCacheService';
 
 interface VehicleDataDisplayProps {
   dados: any;
@@ -11,6 +12,7 @@ interface VehicleDataDisplayProps {
   ultimaAtualizacao?: string;
   showFullDetails?: boolean;
   className?: string;
+  logConsulta?: LogConsulta;
 }
 
 export const VehicleDataDisplay: React.FC<VehicleDataDisplayProps> = ({
@@ -19,14 +21,15 @@ export const VehicleDataDisplay: React.FC<VehicleDataDisplayProps> = ({
   ultimaAtualizacao,
   showFullDetails = false,
   className = '',
+  logConsulta,
 }) => {
   const dadosMapeados: DadosVeiculoMapeados = mapearDadosVeiculo(dados);
   const resumo = formatarDadosResumo(dadosMapeados);
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Badge de status */}
-      <div className="flex items-center gap-2">
+      {/* Badge de status e informações do log */}
+      <div className="flex items-center gap-2 flex-wrap">
         {fromCache ? (
           <Badge variant="outline" className="gap-1">
             <Clock className="h-3 w-3" />
@@ -37,6 +40,27 @@ export const VehicleDataDisplay: React.FC<VehicleDataDisplayProps> = ({
             <CheckCircle className="h-3 w-3" />
             Dados atualizados
           </Badge>
+        )}
+        
+        {logConsulta && (
+          <>
+            <Badge variant="secondary" className="gap-1">
+              <Activity className="h-3 w-3" />
+              {logConsulta.tipo_consulta}
+            </Badge>
+            {logConsulta.tempo_resposta && (
+              <Badge variant="outline" className="gap-1">
+                <Zap className="h-3 w-3" />
+                {logConsulta.tempo_resposta}ms
+              </Badge>
+            )}
+            {logConsulta.sucesso && (
+              <Badge className="gap-1 bg-green-600">
+                <CheckCircle className="h-3 w-3" />
+                Sucesso
+              </Badge>
+            )}
+          </>
         )}
       </div>
 
