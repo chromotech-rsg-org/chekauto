@@ -312,7 +312,12 @@ export const buscarOuConsultarVeiculo = async (
         
         const params: any = { token: token || undefined };
         params[tipo] = valor;
-        if (uf) params.uf = uf;
+        // Para base-sp, sempre usar UF=SP se não especificado
+        if (endpoint === 'base-sp') {
+          params.uf = uf || 'SP';
+        } else if (uf) {
+          params.uf = uf;
+        }
 
         const resultado = endpoint === 'base-sp'
           ? await consultarBaseEstadualSP(params)
@@ -350,7 +355,12 @@ export const buscarOuConsultarVeiculo = async (
       
       const params: any = { token: token || undefined };
       params[tipo] = valor;
-      if (uf) params.uf = uf;
+      // Para base-sp, sempre usar UF=SP se não especificado
+      if (endpoint === 'base-sp') {
+        params.uf = uf || 'SP';
+      } else if (uf) {
+        params.uf = uf;
+      }
 
       const resultado = endpoint === 'base-sp'
         ? await consultarBaseEstadualSP(params)

@@ -6,11 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
-import { Search, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Search, Loader2, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { JsonResultDisplay } from "@/components/admin/JsonResultDisplay";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const exportFields = [
   { key: "tipo_consulta", label: "Tipo" },
@@ -29,6 +40,7 @@ export default function LogsConsultas() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     loadLogs();
@@ -50,6 +62,26 @@ export default function LogsConsultas() {
       toast.error('Erro ao carregar logs');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!logToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('logs_consultas_infosimples')
+        .delete()
+        .eq('id', logToDelete);
+
+      if (error) throw error;
+
+      toast.success('Log deletado com sucesso');
+      setLogs(logs.filter(log => log.id !== logToDelete));
+      setLogToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar log:', error);
+      toast.error('Erro ao deletar log');
     }
   };
 
@@ -144,7 +176,7 @@ export default function LogsConsultas() {
                   <TableHead>Status</TableHead>
                   <TableHead>Tempo</TableHead>
                   <TableHead>Data/Hora</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,13 +211,23 @@ export default function LogsConsultas() {
                     <TableCell>
                       {new Date(log.criado_em).toLocaleString('pt-BR')}
                     </TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => setSelectedLog(log)}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        Ver detalhes
-                      </button>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedLog(log)}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Ver detalhes
+                        </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setLogToDelete(log.id)}
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -245,6 +287,23 @@ export default function LogsConsultas() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!logToDelete} onOpenChange={() => setLogToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar este log? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
