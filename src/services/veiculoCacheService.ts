@@ -138,15 +138,28 @@ export const validarCacheVeiculo = (
  * Extrai dados relevantes da resposta da API
  */
 export const extrairDadosRelevantes = (dadosApi: any) => {
-  const data = dadosApi?.data;
+  // A API base-sp retorna estrutura: { code: 200, data: [{ crv: {...}, debitos: {...}, veiculo: {...} }] }
+  let data = dadosApi?.data || dadosApi;
+  
+  // Se data é um array, pegar o primeiro item
+  if (Array.isArray(data) && data.length > 0) {
+    data = data[0];
+  }
+  
+  // Extrair subseções da resposta base-sp
+  const veiculo = data?.veiculo || {};
+  const crv = data?.crv || {};
+  
+  // Para compatibilidade, mesclar tudo em um único objeto
+  const merged = { ...data, ...veiculo, ...crv };
 
   return {
-    modelo: data?.modelo || data?.Modelo || null,
-    marca: data?.marca || data?.Marca || null,
-    ano_modelo: data?.ano_modelo || data?.AnoModelo || data?.ano || null,
-    renavam: data?.renavam || data?.Renavam || null,
-    chassi: data?.chassi || data?.Chassi || null,
-    placa: data?.placa || data?.Placa || null,
+    modelo: merged?.modelo || merged?.Modelo || null,
+    marca: merged?.marca || merged?.Marca || null,
+    ano_modelo: merged?.ano_modelo || merged?.AnoModelo || merged?.ano || null,
+    renavam: merged?.renavam || merged?.Renavam || null,
+    chassi: merged?.chassi || merged?.Chassi || null,
+    placa: merged?.placa || merged?.Placa || null,
   };
 };
 
