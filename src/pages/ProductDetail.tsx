@@ -3,25 +3,103 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { VehicleDataDisplay } from '@/components/VehicleDataDisplay';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useCheckout } from '@/contexts/CheckoutContext';
+
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
   const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [showResults, setShowResults] = useState(false);
-  const { consultar, loading, resultado } = useVehicleConsultation();
+  const [produto, setProduto] = useState<any>(null);
+  const [galeria, setGaleria] = useState<any[]>([]);
+  const [caracteristicas, setCaracteristicas] = useState<any[]>([]);
+  const [aplicacoes, setAplicacoes] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  
+  const { consultar, loading: consultaLoading, resultado } = useVehicleConsultation();
+  const { setVehicleData, setProductData } = useCheckout();
   const navigate = useNavigate();
   const { id } = useParams();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (id) {
+      loadProduto();
+    }
+  }, [id]);
+
+  const loadProduto = async () => {
+    try {
+      setLoading(true);
+
+      // Carregar produto
+      const { data: produtoData, error: produtoError } = await supabase
+        .from('produtos')
+        .select(`
+          *,
+          produto_tipos (
+            categorias:tipo_id (
+              id,
+              codigo,
+              nome
+            )
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (produtoError) throw produtoError;
+      setProduto(produtoData);
+
+      // Carregar galeria
+      const { data: galeriaData } = await supabase
+        .from('produto_galeria')
+        .select('*')
+        .eq('produto_id', id)
+        .order('ordem');
+      setGaleria(galeriaData || []);
+
+      // Carregar características
+      const { data: caracData } = await supabase
+        .from('produto_caracteristicas')
+        .select('*')
+        .eq('produto_id', id)
+        .order('ordem');
+      setCaracteristicas(caracData || []);
+
+      // Carregar aplicações
+      const { data: aplicData } = await supabase
+        .from('produto_aplicacoes')
+        .select('*')
+        .eq('produto_id', id)
+        .order('ordem');
+      setAplicacoes(aplicData || []);
+
+      // Carregar FAQ
+      const { data: faqData } = await supabase
+        .from('produto_faq')
+        .select('*')
+        .eq('produto_id', id)
+        .order('ordem');
+      setFaqs(faqData || []);
+    } catch (error) {
+      console.error('Erro ao carregar produto:', error);
+      toast.error('Erro ao carregar produto');
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleConsultaRapida = async () => {
     if (!chassiInput || chassiInput.trim().length < 3) {
@@ -39,7 +117,6 @@ export default function ProductDetail() {
       tipo = 'placa';
     }
 
-    // Determinar endpoint: 0KM = BIN, Usado SP = base-sp, Usado outros = BIN
     let endpoint: 'base-sp' | 'bin' = 'bin';
     let uf = originState === 'SP' ? 'SP' : '';
     
@@ -56,62 +133,59 @@ export default function ProductDetail() {
   };
 
   const handleContratarComVeiculo = () => {
-    if (resultado) {
-      localStorage.setItem('consultaData', JSON.stringify({
-        vehicleData: resultado.data,
-        consultaId: resultado.consultaId,
-        origem: 'produto_detail'
-      }));
-      navigate(`/solicitacao/veiculo?produto=${id}`);
+    if (resultado && produto) {
+      // Salvar dados do veículo no CheckoutContext
+      setVehicleData({
+        chassi: resultado.data.chassi || '',
+        renavam: resultado.data.renavam || '',
+        placa: resultado.data.placa || '',
+        ano: resultado.data.anoModelo || resultado.data.ano || '',
+        marca: resultado.data.marca || '',
+        modelo: resultado.data.modelo || '',
+        cor: resultado.data.cor || '',
+      });
+
+      // Salvar dados do produto
+      setProductData({
+        id: produto.id,
+        nome: produto.nome,
+        preco: produto.preco,
+        foto_url: produto.foto_url,
+      });
+
+      navigate('/solicitacao/veiculo');
     }
   };
-  const produto = {
-    nome: 'CARROCERIA SOBRE CHASSI TANQUE',
-    categoria: 'Tanques',
-    descricao: 'Implemento especializado para transporte seguro de líquidos, desenvolvido com materiais de alta resistência e seguindo rigorosas normas de segurança. Ideal para transporte de combustíveis, água, produtos químicos e outros líquidos.',
-    preco: 'R$ 1.950,00',
-    imagens: ['https://via.placeholder.com/600x400?text=Imagem+Principal', 'https://via.placeholder.com/200x150?text=Thumb+1', 'https://via.placeholder.com/200x150?text=Thumb+2', 'https://via.placeholder.com/200x150?text=Thumb+3']
-  };
-  const caracteristicas = [{
-    titulo: 'Capacidade',
-    valor: '15.000 litros'
-  }, {
-    titulo: 'Material',
-    valor: 'Aço inoxidável AISI 304'
-  }, {
-    titulo: 'Espessura',
-    valor: '4,76mm'
-  }, {
-    titulo: 'Compartimentos',
-    valor: '4 compartimentos'
-  }, {
-    titulo: 'Sistema de Descarga',
-    valor: 'Bomba centrífuga 3"'
-  }, {
-    titulo: 'Válvulas',
-    valor: 'Válvulas de fundo API'
-  }, {
-    titulo: 'Certificação',
-    valor: 'INMETRO e ANTT'
-  }, {
-    titulo: 'Garantia',
-    valor: '12 meses'
-  }, {
-    titulo: 'Instalação',
-    valor: 'Incluída'
-  }];
-  return <div className="bg-white min-h-screen">
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-brand-yellow" />
+      </div>
+    );
+  }
+
+  if (!produto) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Produto não encontrado</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-black text-white py-20 px-6">
         <img src={truckBlue} alt="Hero background" className="absolute h-full w-full object-cover inset-0" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/60" />
         <div className="relative max-w-7xl mx-auto">
           <nav className="flex items-center gap-8 mb-12">
-            <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
+            <img src={logoYellow} alt="CHEKAUTO" className="h-8 cursor-pointer" onClick={() => navigate('/')} />
             <div className="flex gap-8 text-sm font-semibold">
               <a href="/#about" className="hover:text-chekauto-yellow transition-colors">A CHEKAUTO</a>
               <a href="/#consultation" className="hover:text-chekauto-yellow transition-colors">CONSULTA</a>
-              <a href="/#implementations" className="hover:text-chekauto-yellow transition-colors">IMPLEMENTOS</a>
+              <a href="/#produtos" className="hover:text-chekauto-yellow transition-colors">IMPLEMENTOS</a>
               <a href="/#benefits" className="hover:text-chekauto-yellow transition-colors">DIFERENCIAIS</a>
             </div>
           </nav>
@@ -131,29 +205,88 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Galeria de Imagens */}
           <div>
-            <div className="bg-gray-100 rounded-lg mb-4 aspect-[4/3] flex items-center justify-center">
-              <p className="text-gray-400">Imagem Principal do Produto</p>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded-lg aspect-square flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-chekauto-yellow transition-all">
-                  <p className="text-xs text-gray-400">Thumb {i}</p>
-                </div>)}
-            </div>
+            {produto.foto_url && (
+              <div className="bg-gray-100 rounded-lg mb-4 aspect-[4/3] overflow-hidden">
+                <img 
+                  src={produto.foto_url} 
+                  alt={produto.nome}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            {galeria.length > 0 && (
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {galeria.slice(0, 3).map((foto, idx) => (
+                    <CarouselItem key={idx} className="basis-1/3">
+                      <div className="bg-gray-100 rounded-lg aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-chekauto-yellow transition-all">
+                        <img 
+                          src={foto.foto_url} 
+                          alt={`Galeria ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {galeria.length > 3 && (
+                  <>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </>
+                )}
+              </Carousel>
+            )}
           </div>
 
           {/* Informações do Produto */}
           <div>
             <img src={logoYellow} alt="CHEKAUTO" className="h-6 mb-4" />
-            <h2 className="text-3xl font-bold text-black mb-2">{produto.nome}</h2>
-            <p className="text-sm text-gray-500 mb-4">{produto.categoria}</p>
+            <h2 className="text-3xl font-bold text-black mb-2">
+              {produto.nome}
+              {produto.apelido && (
+                <span className="text-xl text-gray-500 ml-2 font-normal">({produto.apelido})</span>
+              )}
+            </h2>
+            
+            {produto.produto_tipos?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {produto.produto_tipos.map((pt: any) => {
+                  const tipo = pt.categorias;
+                  if (!tipo) return null;
+                  return (
+                    <span key={tipo.id} className="text-sm bg-gray-100 px-3 py-1 rounded">
+                      {tipo.codigo} - {tipo.nome}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            
             <p className="text-gray-700 mb-6">{produto.descricao}</p>
             
             <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <p className="text-2xl font-bold text-black mb-1">{produto.preco}/mês</p>
-              <p className="text-sm text-gray-500">ou consulte valor para compra</p>
+              <p className="text-2xl font-bold text-black mb-1">
+                R$ {Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-sm text-gray-500">Valor do serviço</p>
             </div>
 
-            <Button onClick={() => navigate('/solicitacao/veiculo')} className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-14 text-lg font-bold rounded-full mb-6 bg-amber-500 hover:bg-amber-400">
+            <Button 
+              onClick={() => {
+                if (produto) {
+                  setProductData({
+                    id: produto.id,
+                    nome: produto.nome,
+                    preco: produto.preco,
+                    foto_url: produto.foto_url,
+                  });
+                }
+                navigate('/solicitacao/veiculo');
+              }} 
+              className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-14 text-lg font-bold rounded-full mb-6 bg-amber-500 hover:bg-amber-400"
+            >
               CONTRATAR SOLUÇÃO
             </Button>
 
@@ -205,10 +338,10 @@ export default function ProductDetail() {
                 />
                 <Button 
                   onClick={handleConsultaRapida}
-                  disabled={loading}
+                  disabled={consultaLoading}
                   className="bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 font-semibold px-8"
                 >
-                  {loading ? (
+                  {consultaLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Consultando
@@ -252,47 +385,68 @@ export default function ProductDetail() {
                 APLICAÇÕES
               </TabsTrigger>
               <TabsTrigger value="duvidas" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
-                DÚVIDAS FREQUENTES
+                PERGUNTAS FREQUENTES
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="caracteristicas" className="mt-8">
-              <div className="bg-[#2c2c2c] rounded-lg p-12">
-                <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">CARACTERÍSTICAS PRINCIPAIS</h3>
-                <div className="grid md:grid-cols-3 gap-x-12 gap-y-8">
-                  {caracteristicas.map((item, index) => <div key={index}>
-                      <p className="text-white font-semibold text-sm mb-2">{item.titulo}:</p>
-                      <p className="text-white/80 text-base">{item.valor}</p>
-                    </div>)}
+              {caracteristicas.length > 0 ? (
+                <div className="bg-[#2c2c2c] rounded-lg p-12">
+                  <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">CARACTERÍSTICAS PRINCIPAIS</h3>
+                  <div className="grid md:grid-cols-3 gap-x-12 gap-y-8">
+                    {caracteristicas.map((item, index) => (
+                      <div key={index}>
+                        <p className="text-white font-semibold text-sm mb-2">{item.titulo}:</p>
+                        <p className="text-white/80 text-base">{item.descricao}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+                  Nenhuma característica cadastrada para este produto
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="aplicacoes" className="mt-8">
-              <div className="bg-gray-50 rounded-lg p-8">
-                <p className="text-gray-700">Informações sobre aplicações do produto...</p>
-              </div>
+              {aplicacoes.length > 0 ? (
+                <div className="bg-gray-50 rounded-lg p-8 space-y-6">
+                  {aplicacoes.map((item, index) => (
+                    <div key={index}>
+                      <h4 className="font-semibold text-lg mb-2">{item.titulo}</h4>
+                      <p className="text-gray-700">{item.descricao}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+                  Nenhuma aplicação cadastrada para este produto
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="duvidas" className="mt-8">
-              <div className="bg-gray-50 rounded-lg p-8">
-                <p className="text-gray-700">Dúvidas frequentes sobre o produto...</p>
-              </div>
+              {faqs.length > 0 ? (
+                <div className="bg-gray-50 rounded-lg p-8 space-y-6">
+                  {faqs.map((item, index) => (
+                    <div key={index}>
+                      <h4 className="font-semibold text-lg mb-2">{item.pergunta}</h4>
+                      <p className="text-gray-700">{item.resposta}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+                  Nenhuma pergunta frequente cadastrada para este produto
+                </div>
+              )}
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* Parceiros Recomendados */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-black mb-8">Parceiros Recomendados para você</h3>
-          <div className="grid md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => <div key={i} className="bg-gray-100 rounded-lg aspect-square flex items-center justify-center">
-                <p className="text-gray-400">Parceiro {i}</p>
-              </div>)}
-          </div>
         </div>
       </section>
 
       <Footer />
-    </div>;
+    </div>
+  );
 }

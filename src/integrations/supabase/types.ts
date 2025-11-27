@@ -44,6 +44,7 @@ export type Database = {
       categorias: {
         Row: {
           atualizado_em: string | null
+          codigo: string | null
           criado_em: string | null
           descricao: string | null
           id: string
@@ -52,6 +53,7 @@ export type Database = {
         }
         Insert: {
           atualizado_em?: string | null
+          codigo?: string | null
           criado_em?: string | null
           descricao?: string | null
           id?: string
@@ -60,6 +62,7 @@ export type Database = {
         }
         Update: {
           atualizado_em?: string | null
+          codigo?: string | null
           criado_em?: string | null
           descricao?: string | null
           id?: string
@@ -565,8 +568,45 @@ export type Database = {
           },
         ]
       }
+      produto_tipos: {
+        Row: {
+          criado_em: string | null
+          id: string
+          produto_id: string
+          tipo_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          produto_id: string
+          tipo_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          produto_id?: string
+          tipo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_tipos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_tipos_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
+          apelido: string | null
           ativo: boolean | null
           atualizado_em: string | null
           categoria_id: string | null
@@ -578,6 +618,7 @@ export type Database = {
           preco: number
         }
         Insert: {
+          apelido?: string | null
           ativo?: boolean | null
           atualizado_em?: string | null
           categoria_id?: string | null
@@ -589,6 +630,7 @@ export type Database = {
           preco: number
         }
         Update: {
+          apelido?: string | null
           ativo?: boolean | null
           atualizado_em?: string | null
           categoria_id?: string | null
