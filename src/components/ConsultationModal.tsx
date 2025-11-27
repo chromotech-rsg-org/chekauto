@@ -64,80 +64,73 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         cpf_cnpj: cpfNumeros,
         telefone: whatsapp,
         status: 'lead',
-        primeira_consulta_id: vehicleData?.consultaId,
+        primeira_consulta_id: vehicleData?.consultaId || undefined,
       });
 
-      if (resultado) {
-        // Associar cliente à consulta
-        if (vehicleData?.consultaId) {
-          await associarClienteConsulta(resultado.id, vehicleData.consultaId);
-        }
+      // Associar cliente à consulta
+      if (vehicleData?.consultaId) {
+        await associarClienteConsulta(resultado.id, vehicleData.consultaId);
+      }
 
-        // Salvar dados no localStorage para usar no checkout
-        localStorage.setItem('consultaData', JSON.stringify({
-          clienteId: resultado.id,
-          nome,
-          whatsapp,
-          vehicleData: vehicleData?.data,
-          consultaId: vehicleData?.consultaId,
-        }));
+      // Salvar dados no localStorage para usar no checkout
+      localStorage.setItem('consultaData', JSON.stringify({
+        clienteId: resultado.id,
+        nome,
+        whatsapp,
+        vehicleData: vehicleData?.data,
+        consultaId: vehicleData?.consultaId,
+      }));
 
-        // Salvar dados do veículo no CheckoutContext
-        if (vehicleData?.data) {
-          const data = vehicleData.data;
-          setVehicleData({
-            chassi: data.identificacao?.chassi || '',
-            renavam: data.identificacao?.renavam || '',
-            ano: data.especificacoes?.anoModelo || '',
-            placa: data.identificacao?.placa || '',
-            estado: '',
-            cidade: '',
-            informacaoAdicional: `${data.especificacoes?.marca || ''} ${data.especificacoes?.modelo || ''}`.trim(),
-            notaFiscal: null,
-          });
-        }
-
-        // Salvar dados básicos do cliente no CheckoutContext
-        setCustomerData({
-          nomeCompleto: nome,
-          cpfCnpj: cpf,
-          cep: '',
-          rua: '',
-          numero: '',
-          bairro: '',
-          complemento: '',
-          email: '',
-          telefone: whatsapp,
-        });
-
-        toast({
-          title: 'Sucesso!',
-          description: 'Dados salvos. Escolha um produto para continuar.',
-        });
-
-        // Fechar modal e navegar para catálogo de produtos
-        onOpenChange(false);
-        navigate('/#produtos');
-        
-        // Scroll suave para a seção de produtos após um pequeno delay
-        setTimeout(() => {
-          const produtosSection = document.getElementById('produtos');
-          if (produtosSection) {
-            produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Erro ao salvar seus dados. Tente novamente.',
-          variant: 'destructive',
+      // Salvar dados do veículo no CheckoutContext
+      if (vehicleData?.data) {
+        const data = vehicleData.data;
+        setVehicleData({
+          chassi: data.identificacao?.chassi || '',
+          renavam: data.identificacao?.renavam || '',
+          ano: data.especificacoes?.anoModelo || '',
+          placa: data.identificacao?.placa || '',
+          estado: '',
+          cidade: '',
+          informacaoAdicional: `${data.especificacoes?.marca || ''} ${data.especificacoes?.modelo || ''}`.trim(),
+          notaFiscal: null,
         });
       }
-    } catch (error) {
+
+      // Salvar dados básicos do cliente no CheckoutContext
+      setCustomerData({
+        nomeCompleto: nome,
+        cpfCnpj: cpf,
+        cep: '',
+        rua: '',
+        numero: '',
+        bairro: '',
+        complemento: '',
+        email: '',
+        telefone: whatsapp,
+      });
+
+      toast({
+        title: 'Sucesso!',
+        description: 'Dados salvos. Escolha um produto para continuar.',
+      });
+
+      // Fechar modal e navegar para catálogo de produtos
+      onOpenChange(false);
+      navigate('/#produtos');
+      
+      // Scroll suave para a seção de produtos após um pequeno delay
+      setTimeout(() => {
+        const produtosSection = document.getElementById('produtos');
+        if (produtosSection) {
+          produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } catch (error: any) {
       console.error('Erro ao consultar:', error);
+      const errorMessage = error?.message || 'Erro ao processar sua solicitação';
       toast({
         title: 'Erro',
-        description: 'Erro ao processar sua solicitação',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
