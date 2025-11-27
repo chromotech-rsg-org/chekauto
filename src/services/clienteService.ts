@@ -52,37 +52,43 @@ export const criarOuAtualizarCliente = async (
 
       if (error) {
         console.error('Erro ao atualizar cliente:', error);
-        return null;
+        throw new Error(error.message || 'Erro ao atualizar cliente');
       }
 
       return { id: clienteExistente.id, isNew: false };
     }
 
     // Cliente não existe - criar novo
+    const insertData: any = {
+      nome: dados.nome,
+      cpf_cnpj: dados.cpf_cnpj,
+      telefone: dados.telefone,
+      email: dados.email,
+      endereco: dados.endereco,
+      status: dados.status || 'lead',
+      ultima_interacao: new Date().toISOString(),
+    };
+
+    // Só adiciona primeira_consulta_id se tiver valor válido
+    if (dados.primeira_consulta_id && dados.primeira_consulta_id.trim() !== '') {
+      insertData.primeira_consulta_id = dados.primeira_consulta_id;
+    }
+
     const { data, error } = await supabase
       .from('clientes')
-      .insert({
-        nome: dados.nome,
-        cpf_cnpj: dados.cpf_cnpj,
-        telefone: dados.telefone,
-        email: dados.email,
-        endereco: dados.endereco,
-        status: dados.status || 'lead',
-        primeira_consulta_id: dados.primeira_consulta_id,
-        ultima_interacao: new Date().toISOString(),
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (error) {
       console.error('Erro ao criar cliente:', error);
-      return null;
+      throw new Error(error.message || 'Erro ao criar cliente');
     }
 
     return { id: data.id, isNew: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao criar ou atualizar cliente:', error);
-    return null;
+    throw error;
   }
 };
 

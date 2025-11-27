@@ -3,7 +3,6 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
-import { mockClientes } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,32 +10,39 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileUpload } from "@/components/admin/FileUpload";
 import { buscarCep } from "@/lib/cep";
+import { criarOuAtualizarCliente } from "@/services/clienteService";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import InputMask from "react-input-mask";
 
-const statusOptions = ["Pendente", "Processado", "Concluído"];
+const statusOptions = [
+  { value: 'lead', label: 'Lead' },
+  { value: 'cliente_ativo', label: 'Cliente Ativo' }
+];
 
 const exportFields = [
   { key: "id", label: "ID" },
   { key: "nome", label: "Nome" },
-  { key: "cpfCnpj", label: "CPF/CNPJ" },
+  { key: "cpf_cnpj", label: "CPF/CNPJ" },
   { key: "email", label: "Email" },
   { key: "telefone", label: "Telefone" },
-  { key: "celular", label: "Celular" },
-  { key: "endereco", label: "Endereço" },
-  { key: "dataCadastro", label: "Data Cadastro" },
   { key: "status", label: "Status" }
 ];
 
 export default function Clientes() {
-  const [clientes] = useState(mockClientes);
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [formData, setFormData] = useState({
-    cpfCnpj: "",
+    nome: "",
+    cpf_cnpj: "",
+    email: "",
+    telefone: "",
+    status: "lead" as 'lead' | 'cliente_ativo',
     cep: "",
     rua: "",
     numero: "",
@@ -44,14 +50,114 @@ export default function Clientes() {
     complemento: ""
   });
 
-  const filteredClientes = clientes.filter(
-    (cliente) => {
-      const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cliente.cpfCnpj.includes(searchTerm);
+  // Buscar clientes do Supabase
+  const { data: clientes = [], isLoading } = useQuery({
+    queryKey: ['clientes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .order('criado_em', { ascending: false });
       
-      const matchesDate = (!startDate || cliente.dataCadastro >= startDate) && 
-        (!endDate || cliente.dataCadastro <= endDate);
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Mutation para criar/atualizar cliente
+  const createClienteMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const endereco = {
+        cep: data.cep,
+        rua: data.rua,
+        numero: data.numero,
+        bairro: data.bairro,
+        complemento: data.complemento
+      };
+
+      const resultado = await criarOuAtualizarCliente({
+        nome: data.nome,
+        cpf_cnpj: data.cpf_cnpj.replace(/\D/g, ''),
+        email: data.email,
+        telefone: data.telefone,
+        status: data.status,
+        endereco: endereco,
+        primeira_consulta_id: undefined
+      });
+
+      if (!resultado) {
+        throw new Error('Erro ao criar cliente');
+      }
+
+      return resultado;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      toast({
+        title: 'Sucesso',
+        description: 'Cliente salvo com sucesso',
+      });
+      setIsModalOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      console.error('Erro ao criar cliente:', error);
+      toast({
+        title: 'Erro',
+        description: error?.message || 'Erro ao salvar cliente. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      nome: "",
+      cpf_cnpj: "",
+      email: "",
+      telefone: "",
+      status: "lead",
+      cep: "",
+      rua: "",
+      numero: "",
+      bairro: "",
+      complemento: ""
+    });
+  };
+
+  const handleSaveCliente = () => {
+    // Validações
+    if (!formData.nome || !formData.cpf_cnpj) {
+      toast({
+        title: 'Erro',
+        description: 'Nome e CPF/CNPJ são obrigatórios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const cpfCnpjNumeros = formData.cpf_cnpj.replace(/\D/g, '');
+    if (cpfCnpjNumeros.length !== 11 && cpfCnpjNumeros.length !== 14) {
+      toast({
+        title: 'Erro',
+        description: 'CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    createClienteMutation.mutate(formData);
+  };
+
+  const filteredClientes = clientes.filter(
+    (cliente: any) => {
+      const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (cliente.email && cliente.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (cliente.cpf_cnpj && cliente.cpf_cnpj.includes(searchTerm.replace(/\D/g, '')));
+      
+      const clienteDate = cliente.criado_em ? new Date(cliente.criado_em).toISOString().split('T')[0] : '';
+      const matchesDate = (!startDate || clienteDate >= startDate) && 
+        (!endDate || clienteDate <= endDate);
       
       return matchesSearch && matchesDate;
     }
@@ -79,7 +185,10 @@ export default function Clientes() {
             <p className="text-muted-foreground">Gerencie os clientes cadastrados</p>
           </div>
           
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog open={isModalOpen} onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black">
                 <Plus className="mr-2 h-4 w-4" />
@@ -94,15 +203,20 @@ export default function Clientes() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
                     <Label htmlFor="nome">Nome Completo / Razão Social *</Label>
-                    <Input id="nome" placeholder="Nome ou razão social" />
+                    <Input 
+                      id="nome" 
+                      placeholder="Nome ou razão social"
+                      value={formData.nome}
+                      onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                    />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="cpfCnpj">CPF/CNPJ *</Label>
                     <InputMask
-                      mask={formData.cpfCnpj.length <= 14 ? "999.999.999-99" : "99.999.999/9999-99"}
-                      value={formData.cpfCnpj}
-                      onChange={(e) => setFormData({...formData, cpfCnpj: e.target.value})}
+                      mask={formData.cpf_cnpj.replace(/\D/g, '').length <= 11 ? "999.999.999-99" : "99.999.999/9999-99"}
+                      value={formData.cpf_cnpj}
+                      onChange={(e) => setFormData({...formData, cpf_cnpj: e.target.value})}
                     >
                       {(inputProps: any) => (
                         <Input {...inputProps} id="cpfCnpj" placeholder="000.000.000-00" />
@@ -111,18 +225,27 @@ export default function Clientes() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input id="email" type="email" placeholder="email@exemplo.com" />
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="email@exemplo.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone *</Label>
-                    <Input id="telefone" placeholder="(11) 3333-4444" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="associacao">Associação/Centravan</Label>
-                    <Input id="associacao" placeholder="Ex: CENTRAL VAN SP" />
+                    <Label htmlFor="telefone">Telefone</Label>
+                    <InputMask
+                      mask="(99) 99999-9999"
+                      value={formData.telefone}
+                      onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                    >
+                      {(inputProps: any) => (
+                        <Input {...inputProps} id="telefone" placeholder="(11) 99999-9999" />
+                      )}
+                    </InputMask>
                   </div>
                   
                   <div className="col-span-2">
@@ -185,23 +308,22 @@ export default function Clientes() {
                   </div>
                   
                   <div className="col-span-2 space-y-2">
-                    <Label htmlFor="status">Status Interno</Label>
-                    <Select defaultValue="Pendente">
+                    <Label htmlFor="status">Status</Label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(value: 'lead' | 'cliente_ativo') => setFormData({...formData, status: value})}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {statusOptions.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <FileUpload label="Nota Fiscal (Opcional)" accept=".pdf,image/*" preview={false} />
                   </div>
                 </div>
               </div>
@@ -209,8 +331,12 @@ export default function Clientes() {
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancelar
                 </Button>
-                <Button className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" onClick={() => setIsModalOpen(false)}>
-                  Salvar
+                <Button 
+                  className="bg-brand-yellow hover:bg-brand-yellow/90 text-black" 
+                  onClick={handleSaveCliente}
+                  disabled={createClienteMutation.isPending}
+                >
+                  {createClienteMutation.isPending ? 'Salvando...' : 'Salvar'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -239,19 +365,6 @@ export default function Clientes() {
             fields={exportFields}
             filename="clientes"
           />
-          <Select>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="bg-white rounded-lg border">
@@ -267,27 +380,41 @@ export default function Clientes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClientes.map((cliente) => (
-                <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{cliente.nome}</TableCell>
-                  <TableCell>{cliente.cpfCnpj}</TableCell>
-                  <TableCell>{cliente.email}</TableCell>
-                  <TableCell>{cliente.telefone}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={cliente.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Carregando clientes...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredClientes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Nenhum cliente encontrado
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredClientes.map((cliente: any) => (
+                  <TableRow key={cliente.id}>
+                    <TableCell className="font-medium">{cliente.nome}</TableCell>
+                    <TableCell>{cliente.cpf_cnpj}</TableCell>
+                    <TableCell>{cliente.email || '-'}</TableCell>
+                    <TableCell>{cliente.telefone || '-'}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={cliente.status} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
