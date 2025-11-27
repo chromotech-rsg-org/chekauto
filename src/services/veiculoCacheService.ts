@@ -200,6 +200,12 @@ function validarCacheLog(
   log: LogConsulta,
   diasConfig: number
 ): boolean {
+  // Se diasConfig for 0, sempre invalida o cache (sempre busca novo)
+  if (diasConfig === 0) {
+    console.log('[Cache] Validação: Cache desabilitado (0 dias configurado)');
+    return false;
+  }
+
   const dataConsulta = new Date(log.criado_em);
   const hoje = new Date();
   const diferencaDias = Math.floor(
@@ -222,6 +228,11 @@ export const validarCacheVeiculo = (
   consulta: VeiculoConsulta,
   diasConfig: number
 ): boolean => {
+  // Se diasConfig for 0, sempre invalida o cache (sempre busca novo)
+  if (diasConfig === 0) {
+    return false;
+  }
+
   const dataConsulta = new Date(consulta.atualizado_em);
   const hoje = new Date();
   const diferencaDias = Math.floor(
