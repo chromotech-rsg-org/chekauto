@@ -45,12 +45,9 @@ const menuItems = [
 ];
 
 const configMenuItems = [
-  { title: "Pacotes", icon: Package, path: "/admin/configuracoes" },
-  { title: "Personalização", icon: Palette, path: "/admin/personalizacao" },
-  { title: "Integração MOTV", icon: Monitor, path: "/admin/integracao-motv" },
-  { title: "Integração Asaas", icon: CreditCard, path: "/admin/configuracao-asaas", requireDeveloper: true },
-  { title: "Config. InfoSimples", icon: Settings, path: "/admin/configuracoes-infosimples", requireDeveloper: true },
-  { title: "Testes API InfoSimples", icon: TestTubes, path: "/admin/testes-api-infosimples", requireDeveloper: true },
+  { title: "Integração Asaas", icon: CreditCard, path: "/admin/configuracao-asaas" },
+  { title: "Config. InfoSimples", icon: Settings, path: "/admin/configuracoes-infosimples" },
+  { title: "Testes API InfoSimples", icon: TestTubes, path: "/admin/testes-api-infosimples" },
 ];
 
 export const AdminSidebar = () => {
@@ -135,25 +132,20 @@ export const AdminSidebar = () => {
               </li>
             ))}
 
-            {/* Menu Configurações Expansível */}
-            <li>
-              <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-                <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-gray-900 transition-colors w-full">
-                  <Settings className="h-5 w-5" />
-                  <span className="flex-1 text-left">Configurações</span>
-                  <ChevronDown 
-                    className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} 
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <ul className="mt-1 space-y-1">
-                    {configMenuItems.map((item) => {
-                      // Se o item requer desenvolvedor, verifica se é desenvolvedor
-                      if (item.requireDeveloper && !isDesenvolvedor) {
-                        return null;
-                      }
-                      
-                      return (
+            {/* Menu Configurações Expansível - Apenas para Desenvolvedores */}
+            {isDesenvolvedor && (
+              <li>
+                <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-gray-900 transition-colors w-full">
+                    <Settings className="h-5 w-5" />
+                    <span className="flex-1 text-left">Configurações</span>
+                    <ChevronDown 
+                      className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} 
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <ul className="mt-1 space-y-1">
+                      {configMenuItems.map((item) => (
                         <li key={item.path}>
                           <NavLink
                             to={item.path}
@@ -170,12 +162,12 @@ export const AdminSidebar = () => {
                             <span className="text-sm">{item.title}</span>
                           </NavLink>
                         </li>
-                      );
-                    })}
-                  </ul>
-                </CollapsibleContent>
-              </Collapsible>
-            </li>
+                      ))}
+                    </ul>
+                  </CollapsibleContent>
+                </Collapsible>
+              </li>
+            )}
           </ul>
         </nav>
 
