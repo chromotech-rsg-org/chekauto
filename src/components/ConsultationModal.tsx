@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { VehicleDataDisplay } from './VehicleDataDisplay';
@@ -20,6 +20,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   vehicleData
 }) => {
   const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -28,15 +29,27 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   useEffect(() => {
     if (!open) {
       setNome("");
+      setCpf("");
       setWhatsapp("");
     }
   }, [open]);
 
   const handleConsultar = async () => {
-    if (!nome || !whatsapp) {
+    if (!nome || !cpf || !whatsapp) {
       toast({
         title: 'Erro',
-        description: 'Por favor, preencha seu nome e WhatsApp',
+        description: 'Por favor, preencha todos os campos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar CPF (apenas números e tamanho)
+    const cpfNumeros = cpf.replace(/\D/g, '');
+    if (cpfNumeros.length !== 11) {
+      toast({
+        title: 'Erro',
+        description: 'CPF deve ter 11 dígitos',
         variant: 'destructive',
       });
       return;
@@ -48,6 +61,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       // Criar ou atualizar cliente
       const resultado = await criarOuAtualizarCliente({
         nome,
+        cpf_cnpj: cpfNumeros,
         telefone: whatsapp,
         status: 'lead',
         primeira_consulta_id: vehicleData?.consultaId,
@@ -86,7 +100,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         // Salvar dados básicos do cliente no CheckoutContext
         setCustomerData({
           nomeCompleto: nome,
-          cpfCnpj: '',
+          cpfCnpj: cpf,
           cep: '',
           rua: '',
           numero: '',
@@ -134,10 +148,12 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-brand-yellow p-8 border-none rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-black text-xl font-bold text-center">
+            Dados do Veículo Encontrados
+          </DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
-            <h2 className="text-black text-xl font-bold text-center mb-4">
-              Dados do Veículo Encontrados
-            </h2>
 
             {/* Exibir dados do veículo */}
             {vehicleData && (
@@ -157,9 +173,32 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               
               <div className="space-y-3">
                 <Input
-                  placeholder="Seu Nome"
+                  placeholder="Seu Nome Completo"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
+                  className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
+                />
+                
+                <Input
+                  placeholder="CPF (000.000.000-00)"
+                  value={cpf}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    let formatted = value;
+                    if (value.length <= 11) {
+                      if (value.length <= 3) {
+                        formatted = value;
+                      } else if (value.length <= 6) {
+                        formatted = value.replace(/^(\d{3})(\d+)/, '$1.$2');
+                      } else if (value.length <= 9) {
+                        formatted = value.replace(/^(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+                      } else {
+                        formatted = value.replace(/^(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+                      }
+                    }
+                    setCpf(formatted);
+                  }}
+                  maxLength={14}
                   className="bg-white border-none h-12 text-black placeholder:text-gray-400 rounded-lg"
                 />
                 
