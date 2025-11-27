@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Database, Clock, TrendingUp } from 'lucide-react';
+import { Loader2, Save, Database, Clock, TrendingUp, Eye, EyeOff, AlertTriangle, Key } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 
 export default function ConfiguracoesInfoSimples() {
@@ -13,6 +14,14 @@ export default function ConfiguracoesInfoSimples() {
   const [diasCache, setDiasCache] = useState('30');
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [showPasswords, setShowPasswords] = useState(false);
+  
+  // Credenciais
+  const [a3, setA3] = useState('');
+  const [a3Pin, setA3Pin] = useState('');
+  const [loginCpf, setLoginCpf] = useState('');
+  const [loginSenha, setLoginSenha] = useState('');
+  
   const [stats, setStats] = useState({
     totalConsultas: 0,
     consultasUnicas: 0,
@@ -30,7 +39,7 @@ export default function ConfiguracoesInfoSimples() {
       const { data, error } = await supabase
         .from('configuracoes_sistema')
         .select('chave, valor')
-        .in('chave', ['infosimples_token', 'dias_cache_veiculo']);
+        .in('chave', ['infosimples_token', 'dias_cache_veiculo', 'infosimples_a3', 'infosimples_a3_pin', 'infosimples_login_cpf', 'infosimples_login_senha']);
 
       if (error) throw error;
 
@@ -39,6 +48,14 @@ export default function ConfiguracoesInfoSimples() {
           setToken(config.valor || '');
         } else if (config.chave === 'dias_cache_veiculo') {
           setDiasCache(config.valor || '30');
+        } else if (config.chave === 'infosimples_a3') {
+          setA3(config.valor || '');
+        } else if (config.chave === 'infosimples_a3_pin') {
+          setA3Pin(config.valor || '');
+        } else if (config.chave === 'infosimples_login_cpf') {
+          setLoginCpf(config.valor || '');
+        } else if (config.chave === 'infosimples_login_senha') {
+          setLoginSenha(config.valor || '');
         }
       });
     } catch (error) {
@@ -85,23 +102,43 @@ export default function ConfiguracoesInfoSimples() {
   };
 
   const salvarConfiguracoes = async () => {
+    // Validar credenciais
+    if (!a3 || !a3Pin || !loginCpf || !loginSenha) {
+      toast({
+        title: 'Erro',
+        description: 'Todos os campos de credenciais são obrigatórios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Salvar token
-      const { error: errorToken } = await supabase
-        .from('configuracoes_sistema')
-        .update({ valor: token })
-        .eq('chave', 'infosimples_token');
+      const updates = [
+        { chave: 'infosimples_token', valor: token },
+        { chave: 'dias_cache_veiculo', valor: diasCache },
+        { chave: 'infosimples_a3', valor: a3 },
+        { chave: 'infosimples_a3_pin', valor: a3Pin },
+        { chave: 'infosimples_login_cpf', valor: loginCpf },
+        { chave: 'infosimples_login_senha', valor: loginSenha },
+      ];
 
-      if (errorToken) throw errorToken;
+      for (const update of updates) {
+        // Tentar atualizar
+        const { error: updateError } = await supabase
+          .from('configuracoes_sistema')
+          .update({ valor: update.valor })
+          .eq('chave', update.chave);
 
-      // Salvar dias de cache
-      const { error: errorDias } = await supabase
-        .from('configuracoes_sistema')
-        .update({ valor: diasCache })
-        .eq('chave', 'dias_cache_veiculo');
-
-      if (errorDias) throw errorDias;
+        // Se não existe, inserir
+        if (updateError) {
+          const { error: insertError } = await supabase
+            .from('configuracoes_sistema')
+            .insert({ chave: update.chave, valor: update.valor });
+          
+          if (insertError) throw insertError;
+        }
+      }
 
       toast({
         title: 'Sucesso',
@@ -129,6 +166,99 @@ export default function ConfiguracoesInfoSimples() {
         </p>
       </div>
 
+      {/* Credenciais */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Configuração de Credenciais
+          </CardTitle>
+          <CardDescription>
+            Configure as credenciais da API Info Simples
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="space-y-3">
+              <div>
+                <strong>📝 Como obter as credenciais:</strong>
+                <p className="mt-1"><strong>1. Token (a3) e Secret (a3_pin):</strong></p>
+                <p className="ml-4 text-sm">→ Acesse <a href="https://api.infosimples.com/tokens" target="_blank" rel="noopener noreferrer" className="text-primary underline">api.infosimples.com/tokens</a> e copie suas credenciais</p>
+                
+                <p className="mt-2"><strong>2. CPF e Senha de Login:</strong></p>
+                <p className="ml-4 text-sm">→ São as credenciais para acessar o portal do ECRVSP/Detran (NÃO são da Info Simples)</p>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="a3">Token (a3) *</Label>
+              <Input
+                id="a3"
+                type={showPasswords ? 'text' : 'password'}
+                value={a3}
+                onChange={(e) => setA3(e.target.value)}
+                placeholder="296984008687583540"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="a3_pin">Token Secret (a3_pin) *</Label>
+              <Input
+                id="a3_pin"
+                type={showPasswords ? 'text' : 'password'}
+                value={a3Pin}
+                onChange={(e) => setA3Pin(e.target.value)}
+                placeholder="1234"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="login_cpf">CPF de Login *</Label>
+              <Input
+                id="login_cpf"
+                value={loginCpf}
+                onChange={(e) => setLoginCpf(e.target.value)}
+                placeholder="17528605867"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="login_senha">Senha de Login *</Label>
+              <Input
+                id="login_senha"
+                type={showPasswords ? 'text' : 'password'}
+                value={loginSenha}
+                onChange={(e) => setLoginSenha(e.target.value)}
+                placeholder="Ed100@son"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPasswords(!showPasswords)}
+            >
+              {showPasswords ? (
+                <>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Ocultar Senhas
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Mostrar Senhas
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Token API */}
       <Card>
         <CardHeader>
@@ -151,7 +281,7 @@ export default function ConfiguracoesInfoSimples() {
               placeholder="Digite o token da API"
             />
             <p className="text-sm text-muted-foreground">
-              Deixe em branco para usar as credenciais configuradas como secrets
+              Deixe em branco para usar as credenciais configuradas acima
             </p>
           </div>
         </CardContent>
@@ -174,13 +304,16 @@ export default function ConfiguracoesInfoSimples() {
             <Input
               id="diasCache"
               type="number"
-              min="1"
+              min="0"
               max="365"
               value={diasCache}
               onChange={(e) => setDiasCache(e.target.value)}
             />
             <p className="text-sm text-muted-foreground">
-              Veículos já consultados serão buscados do cache até {diasCache} dias após a última consulta
+              {diasCache === '0' 
+                ? 'Com 0 dias, sempre será feita uma nova consulta na API (cache desabilitado)'
+                : `Veículos já consultados serão buscados do cache até ${diasCache} dias após a última consulta`
+              }
             </p>
           </div>
 
@@ -190,6 +323,7 @@ export default function ConfiguracoesInfoSimples() {
               <li>• Quando um veículo é consultado, os dados são salvos no banco</li>
               <li>• Consultas futuras do mesmo veículo usam o cache até expirar</li>
               <li>• Após o prazo configurado, uma nova consulta na API é realizada</li>
+              <li>• Configure 0 dias para sempre buscar dados atualizados da API</li>
               <li>• Isso economiza consultas e melhora a velocidade do sistema</li>
             </ul>
           </div>
