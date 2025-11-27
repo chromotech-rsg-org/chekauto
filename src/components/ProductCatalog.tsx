@@ -98,7 +98,7 @@ export const ProductCatalog: React.FC = () => {
 
   // Agrupar produtos por tipo
   const produtosAgrupados = tipos.map(tipo => {
-    const tipoFormatado = `${tipo.codigo} - ${tipo.nome}`;
+    const tipoFormatado = tipo.codigo ? `${tipo.codigo} - ${tipo.nome}` : tipo.nome;
     const produtosDoTipo = produtosFiltrados.filter(produto => 
       produto.produto_tipos?.some((pt: any) => pt.tipo_id === tipo.id)
     );
@@ -109,6 +109,11 @@ export const ProductCatalog: React.FC = () => {
       produtos: produtosDoTipo,
     };
   }).filter(grupo => grupo.produtos.length > 0);
+
+  // Se não houver produtos agrupados mas houver produtos filtrados, mostrar todos
+  const produtosSemTipo = produtosFiltrados.filter(produto => 
+    !produto.produto_tipos || produto.produto_tipos.length === 0
+  );
 
   if (loading) {
     return (
@@ -172,6 +177,38 @@ export const ProductCatalog: React.FC = () => {
                 Ver todos os produtos
               </button>
             )}
+          </div>
+        )}
+
+        {/* Produtos sem tipo definido */}
+        {produtosSemTipo.length > 0 && (
+          <div className="mt-[73px] max-md:mt-10">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">
+                Outros Produtos
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {produtosSemTipo.map((produto) => (
+                <div key={produto.id} className="flex flex-col">
+                  <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
+                    <span>Produto</span>
+                    <button 
+                      onClick={() => navigate(`/produto/${produto.id}`)} 
+                      className="text-brand-yellow hover:text-brand-yellow-dark transition-colors"
+                    >
+                      Saiba mais
+                    </button>
+                  </div>
+                  <ProductCard 
+                    id={produto.id} 
+                    title={produto.apelido || produto.nome} 
+                    image={produto.foto_url || "https://via.placeholder.com/400x300?text=Sem+Imagem"} 
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
