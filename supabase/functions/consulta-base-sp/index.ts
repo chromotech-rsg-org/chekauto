@@ -121,6 +121,11 @@ serve(async (req) => {
     }
 
     logData.sucesso = true;
+    
+    // Extrair dados relevantes para o log
+    const dadosExtraidos = extrairDadosVeiculo(data);
+    Object.assign(logData, dadosExtraidos);
+    
     await saveLog(logData);
 
     return new Response(
@@ -156,6 +161,43 @@ serve(async (req) => {
     );
   }
 });
+
+// Função para extrair dados do veículo da resposta
+function extrairDadosVeiculo(dados: any): any {
+  const resultado: any = {};
+  
+  try {
+    // Tentar extrair de diferentes estruturas possíveis
+    let veiculo = dados?.data || dados;
+    
+    // Se data é um array, pegar o primeiro item
+    if (Array.isArray(veiculo) && veiculo.length > 0) {
+      veiculo = veiculo[0];
+    }
+    
+    // Extrair subseções da resposta base-sp
+    const veiculoData = veiculo?.veiculo || veiculo;
+    const crv = veiculo?.crv || {};
+    
+    // Mesclar dados
+    const merged = { ...veiculo, ...veiculoData, ...crv };
+    
+    resultado.placa = merged?.placa || merged?.Placa || null;
+    resultado.chassi = merged?.chassi || merged?.Chassi || null;
+    resultado.renavam = merged?.renavam || merged?.Renavam || null;
+    resultado.modelo = merged?.modelo || merged?.Modelo || null;
+    resultado.marca = merged?.marca || merged?.Marca || null;
+    resultado.cor = merged?.cor || merged?.Cor || null;
+    resultado.ano_modelo = merged?.ano_modelo || merged?.AnoModelo || merged?.ano || null;
+    resultado.ano_fabricacao = merged?.ano_fabricacao || merged?.AnoFabricacao || null;
+    resultado.combustivel = merged?.combustivel || merged?.Combustivel || null;
+    resultado.categoria = merged?.categoria || merged?.Categoria || merged?.tipo || null;
+  } catch (error) {
+    console.error('Erro ao extrair dados do veículo:', error);
+  }
+  
+  return resultado;
+}
 
 async function saveLog(logData: any) {
   try {

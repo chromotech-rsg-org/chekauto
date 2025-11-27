@@ -28,6 +28,9 @@ const exportFields = [
   { key: "placa", label: "Placa" },
   { key: "chassi", label: "Chassi" },
   { key: "renavam", label: "Renavam" },
+  { key: "modelo", label: "Modelo" },
+  { key: "marca", label: "Marca" },
+  { key: "cor", label: "Cor" },
   { key: "sucesso", label: "Sucesso" },
   { key: "tempo_resposta", label: "Tempo (ms)" },
   { key: "criado_em", label: "Data/Hora" },
@@ -86,14 +89,18 @@ export default function LogsConsultas() {
   };
 
   const filteredLogs = logs.filter((log) => {
-    const placa = log.parametros?.placa || "";
-    const chassi = log.parametros?.chassi || "";
-    const renavam = log.parametros?.renavam || "";
+    const placa = log.placa || log.parametros?.placa || "";
+    const chassi = log.chassi || log.parametros?.chassi || "";
+    const renavam = log.renavam || log.parametros?.renavam || "";
+    const modelo = log.modelo || "";
+    const marca = log.marca || "";
     
     const matchesSearch = 
       placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       chassi.toLowerCase().includes(searchTerm.toLowerCase()) ||
       renavam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.tipo_consulta.toLowerCase().includes(searchTerm.toLowerCase());
     
     const dataCriacao = log.criado_em ? new Date(log.criado_em).toISOString().split('T')[0] : '';
@@ -105,9 +112,12 @@ export default function LogsConsultas() {
 
   const exportData = filteredLogs.map(log => ({
     tipo_consulta: log.tipo_consulta,
-    placa: log.parametros?.placa || "-",
-    chassi: log.parametros?.chassi || "-",
-    renavam: log.parametros?.renavam || "-",
+    placa: log.placa || log.parametros?.placa || "-",
+    chassi: log.chassi || log.parametros?.chassi || "-",
+    renavam: log.renavam || log.parametros?.renavam || "-",
+    modelo: log.modelo || "-",
+    marca: log.marca || "-",
+    cor: log.cor || "-",
     sucesso: log.sucesso ? "Sim" : "Não",
     tempo_resposta: log.tempo_resposta || "-",
     criado_em: new Date(log.criado_em).toLocaleString('pt-BR'),
@@ -173,6 +183,9 @@ export default function LogsConsultas() {
                   <TableHead>Placa</TableHead>
                   <TableHead>Chassi</TableHead>
                   <TableHead>Renavam</TableHead>
+                  <TableHead>Modelo</TableHead>
+                  <TableHead>Marca</TableHead>
+                  <TableHead>Cor</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Tempo</TableHead>
                   <TableHead>Data/Hora</TableHead>
@@ -186,13 +199,22 @@ export default function LogsConsultas() {
                       <Badge variant="outline">{log.tipo_consulta}</Badge>
                     </TableCell>
                     <TableCell className="font-mono">
-                      {log.parametros?.placa || "-"}
+                      {log.placa || log.parametros?.placa || "-"}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      {log.parametros?.chassi || "-"}
+                      {log.chassi || log.parametros?.chassi || "-"}
                     </TableCell>
                     <TableCell className="font-mono">
-                      {log.parametros?.renavam || "-"}
+                      {log.renavam || log.parametros?.renavam || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {log.modelo || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {log.marca || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {log.cor || "-"}
                     </TableCell>
                     <TableCell>
                       {log.sucesso ? (
@@ -265,13 +287,51 @@ export default function LogsConsultas() {
                 </div>
               </div>
 
+              <div className="border-t pt-4">
+                <strong className="block mb-3 text-lg">Dados Extraídos:</strong>
+                <div className="grid grid-cols-2 gap-3 bg-muted/30 p-4 rounded-lg">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Placa:</span>
+                    <p className="font-mono font-semibold">{selectedLog.placa || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Chassi:</span>
+                    <p className="font-mono text-sm">{selectedLog.chassi || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Renavam:</span>
+                    <p className="font-mono font-semibold">{selectedLog.renavam || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Modelo:</span>
+                    <p className="font-semibold">{selectedLog.modelo || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Marca:</span>
+                    <p className="font-semibold">{selectedLog.marca || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Cor:</span>
+                    <p className="font-semibold">{selectedLog.cor || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Ano Modelo:</span>
+                    <p className="font-semibold">{selectedLog.ano_modelo || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Combustível:</span>
+                    <p className="font-semibold">{selectedLog.combustivel || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <strong className="block mb-2">Parâmetros:</strong>
                 <JsonResultDisplay result={selectedLog.parametros} onClear={() => {}} />
               </div>
 
               <div>
-                <strong className="block mb-2">Resposta:</strong>
+                <strong className="block mb-2">Resposta Completa:</strong>
                 <JsonResultDisplay result={selectedLog.resposta} onClear={() => {}} />
               </div>
 
@@ -293,7 +353,7 @@ export default function LogsConsultas() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja deletar este log? Esta ação não pode ser desfeita.
+              Tem certeza que deseja deletar este log? Esta ação não pode ser desfeita e na próxima busca pelo mesmo veículo, os dados serão consultados novamente na API.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

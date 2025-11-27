@@ -120,6 +120,11 @@ serve(async (req) => {
     }
 
     logData.sucesso = true;
+    
+    // Extrair dados relevantes para o log
+    const dadosExtraidos = extrairDadosVeiculo(data);
+    Object.assign(logData, dadosExtraidos);
+    
     await saveLog(logData);
 
     return new Response(
@@ -155,6 +160,31 @@ serve(async (req) => {
     );
   }
 });
+
+// Função para extrair dados do veículo da resposta
+function extrairDadosVeiculo(dados: any): any {
+  const resultado: any = {};
+  
+  try {
+    // Tentar extrair de diferentes estruturas possíveis
+    const veiculo = dados?.data || dados;
+    
+    resultado.placa = veiculo?.placa || veiculo?.Placa || null;
+    resultado.chassi = veiculo?.chassi || veiculo?.Chassi || null;
+    resultado.renavam = veiculo?.renavam || veiculo?.Renavam || null;
+    resultado.modelo = veiculo?.modelo || veiculo?.Modelo || null;
+    resultado.marca = veiculo?.marca || veiculo?.Marca || null;
+    resultado.cor = veiculo?.cor || veiculo?.Cor || null;
+    resultado.ano_modelo = veiculo?.ano_modelo || veiculo?.AnoModelo || veiculo?.ano || null;
+    resultado.ano_fabricacao = veiculo?.ano_fabricacao || veiculo?.AnoFabricacao || null;
+    resultado.combustivel = veiculo?.combustivel || veiculo?.Combustivel || null;
+    resultado.categoria = veiculo?.categoria || veiculo?.Categoria || veiculo?.tipo || null;
+  } catch (error) {
+    console.error('Erro ao extrair dados do veículo:', error);
+  }
+  
+  return resultado;
+}
 
 async function saveLog(logData: any) {
   try {
