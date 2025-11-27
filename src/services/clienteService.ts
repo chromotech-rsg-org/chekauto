@@ -8,7 +8,6 @@ export interface ClienteData {
   email?: string;
   endereco?: any;
   status?: 'lead' | 'cliente_ativo';
-  primeira_consulta_id?: string;
 }
 
 /**
@@ -23,10 +22,34 @@ export const criarOuAtualizarCliente = async (
       return null;
     }
 
-    // Primeiro, buscar se já existe
+    // Se tem ID, é uma atualização
+    if (dados.id) {
+      const updateData: any = {
+        nome: dados.nome,
+        telefone: dados.telefone,
+        email: dados.email,
+        endereco: dados.endereco,
+        status: dados.status,
+        ultima_interacao: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('clientes')
+        .update(updateData)
+        .eq('id', dados.id);
+
+      if (error) {
+        console.error('Erro ao atualizar cliente:', error);
+        throw new Error(error.message || 'Erro ao atualizar cliente');
+      }
+
+      return { id: dados.id, isNew: false };
+    }
+
+    // Se não tem ID, buscar se já existe pelo CPF/CNPJ
     const { data: clienteExistente } = await supabase
       .from('clientes')
-      .select('id, status, primeira_consulta_id')
+      .select('id')
       .eq('cpf_cnpj', dados.cpf_cnpj)
       .maybeSingle();
 
@@ -39,11 +62,6 @@ export const criarOuAtualizarCliente = async (
         endereco: dados.endereco,
         ultima_interacao: new Date().toISOString(),
       };
-
-      // Só atualiza primeira_consulta_id se ainda não tiver
-      if (!clienteExistente.primeira_consulta_id && dados.primeira_consulta_id) {
-        updateData.primeira_consulta_id = dados.primeira_consulta_id;
-      }
 
       const { error } = await supabase
         .from('clientes')
@@ -68,11 +86,6 @@ export const criarOuAtualizarCliente = async (
       status: dados.status || 'lead',
       ultima_interacao: new Date().toISOString(),
     };
-
-    // Só adiciona primeira_consulta_id se tiver valor válido
-    if (dados.primeira_consulta_id && dados.primeira_consulta_id.trim() !== '') {
-      insertData.primeira_consulta_id = dados.primeira_consulta_id;
-    }
 
     const { data, error } = await supabase
       .from('clientes')
