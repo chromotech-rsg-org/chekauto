@@ -244,30 +244,60 @@ export type Database = {
       }
       logs_consultas_infosimples: {
         Row: {
+          ano_fabricacao: string | null
+          ano_modelo: string | null
+          categoria: string | null
+          chassi: string | null
+          combustivel: string | null
+          cor: string | null
           criado_em: string | null
           erro: string | null
           id: string
+          marca: string | null
+          modelo: string | null
           parametros: Json
+          placa: string | null
+          renavam: string | null
           resposta: Json
           sucesso: boolean
           tempo_resposta: number | null
           tipo_consulta: string
         }
         Insert: {
+          ano_fabricacao?: string | null
+          ano_modelo?: string | null
+          categoria?: string | null
+          chassi?: string | null
+          combustivel?: string | null
+          cor?: string | null
           criado_em?: string | null
           erro?: string | null
           id?: string
+          marca?: string | null
+          modelo?: string | null
           parametros: Json
+          placa?: string | null
+          renavam?: string | null
           resposta: Json
           sucesso: boolean
           tempo_resposta?: number | null
           tipo_consulta: string
         }
         Update: {
+          ano_fabricacao?: string | null
+          ano_modelo?: string | null
+          categoria?: string | null
+          chassi?: string | null
+          combustivel?: string | null
+          cor?: string | null
           criado_em?: string | null
           erro?: string | null
           id?: string
+          marca?: string | null
+          modelo?: string | null
           parametros?: Json
+          placa?: string | null
+          renavam?: string | null
           resposta?: Json
           sucesso?: boolean
           tempo_resposta?: number | null

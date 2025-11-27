@@ -23,6 +23,18 @@ export interface LogConsulta {
   sucesso: boolean;
   criado_em: string;
   parametros: any;
+  resposta: any;
+  erro?: string | null;
+  modelo?: string | null;
+  marca?: string | null;
+  placa?: string | null;
+  chassi?: string | null;
+  renavam?: string | null;
+  cor?: string | null;
+  ano_modelo?: string | null;
+  ano_fabricacao?: string | null;
+  combustivel?: string | null;
+  categoria?: string | null;
 }
 
 export interface ResultadoConsulta {
@@ -80,44 +92,57 @@ export const buscarTokenInfoSimples = async (): Promise<string | null> => {
 };
 
 /**
- * Busca o log mais recente da consulta por chassi, placa ou renavam
+ * Busca veículo no cache de logs (principal fonte de dados)
  */
-export const buscarLogConsulta = async (
+async function buscarVeiculoNoLog(
   tipo: 'chassi' | 'placa' | 'renavam',
   valor: string
-): Promise<LogConsulta | null> => {
+): Promise<LogConsulta | null> {
+  console.log('[Cache] Buscando no cache de logs:', { tipo, valor });
+  
   try {
     const valorNormalizado = valor.trim().toUpperCase();
     
-    const { data, error } = await supabase
+    // Determinar qual campo usar na busca baseado no tipo
+    let query = supabase
       .from('logs_consultas_infosimples')
-      .select('id, tipo_consulta, tempo_resposta, sucesso, criado_em, parametros')
-      .eq('tipo_consulta', tipo === 'chassi' ? 'base-sp' : tipo === 'placa' ? 'base-sp' : 'base-sp')
-      .order('criado_em', { ascending: false })
-      .limit(10);
+      .select('*')
+      .eq('sucesso', true)
+      .order('criado_em', { ascending: false });
 
-    if (error || !data || data.length === 0) {
+    // Adicionar filtro baseado no tipo de consulta
+    if (tipo === 'chassi' && valorNormalizado) {
+      query = query.eq('chassi', valorNormalizado);
+    } else if (tipo === 'placa' && valorNormalizado) {
+      query = query.eq('placa', valorNormalizado);
+    } else if (tipo === 'renavam' && valorNormalizado) {
+      query = query.eq('renavam', valorNormalizado);
+    }
+
+    const { data, error } = await query.limit(1).maybeSingle();
+
+    if (error) {
+      console.error('[Cache] Erro ao buscar no cache:', error);
       return null;
     }
 
-    // Procurar o log que corresponde ao valor consultado
-    const logEncontrado = data.find(log => {
-      const params = log.parametros as Record<string, any> || {};
-      const chassiParam = (params.chassi || params.Chassi || '') as string;
-      const placaParam = (params.placa || params.Placa || '') as string;
-      const renavamParam = (params.renavam || params.Renavam || '') as string;
-      
-      return chassiParam === valorNormalizado || 
-             placaParam === valorNormalizado || 
-             renavamParam === valorNormalizado;
-    });
+    if (data) {
+      console.log('[Cache] Dados encontrados no cache de logs:', data.id);
+      return data as LogConsulta;
+    }
 
-    return logEncontrado as LogConsulta | null;
+    console.log('[Cache] Nenhum dado encontrado no cache');
+    return null;
   } catch (error) {
-    console.error('Erro ao buscar log da consulta:', error);
+    console.error('[Cache] Erro ao buscar veículo no cache:', error);
     return null;
   }
-};
+}
+
+/**
+ * Busca o log mais recente da consulta por chassi, placa ou renavam (mantido para compatibilidade)
+ */
+export const buscarLogConsulta = buscarVeiculoNoLog;
 
 /**
  * Busca veículo no cache por renavam, chassi ou placa
@@ -171,6 +196,28 @@ export const buscarVeiculoCache = async (
 /**
  * Valida se o cache ainda é válido baseado nos dias configurados
  */
+function validarCacheLog(
+  log: LogConsulta,
+  diasConfig: number
+): boolean {
+  const dataConsulta = new Date(log.criado_em);
+  const hoje = new Date();
+  const diferencaDias = Math.floor(
+    (hoje.getTime() - dataConsulta.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  const valido = diferencaDias <= diasConfig;
+  console.log('[Cache] Validação:', { 
+    dataConsulta: dataConsulta.toISOString(),
+    diasPassados: diferencaDias,
+    diasPermitidos: diasConfig,
+    valido 
+  });
+  
+  return valido;
+}
+
+// Manter função antiga para compatibilidade
 export const validarCacheVeiculo = (
   consulta: VeiculoConsulta,
   diasConfig: number
@@ -280,7 +327,7 @@ export const atualizarConsultaVeiculo = async (
 };
 
 /**
- * Busca ou consulta veículo (lógica principal de cache)
+ * Busca ou consulta veículo (lógica principal de cache usando logs)
  */
 export const buscarOuConsultarVeiculo = async (
   tipo: 'chassi' | 'placa' | 'renavam',
@@ -288,101 +335,72 @@ export const buscarOuConsultarVeiculo = async (
   endpoint: 'base-sp' | 'bin' = 'base-sp',
   uf?: string
 ): Promise<ResultadoConsulta> => {
+  console.log('[buscarOuConsultarVeiculo] Iniciando:', { tipo, valor, endpoint });
+  
   try {
-    // 1. Buscar no cache
-    const consultaCache = await buscarVeiculoCache(tipo, valor);
-
-    if (consultaCache) {
-      // 2. Verificar se cache é válido
-      const diasConfig = await buscarDiasCacheConfiguracao();
-      const cacheValido = validarCacheVeiculo(consultaCache, diasConfig);
-
+    const diasConfig = await buscarDiasCacheConfiguracao();
+    
+    // 1. Buscar no cache de logs
+    console.log('[buscarOuConsultarVeiculo] Passo 1: Buscar no cache de logs');
+    const logCache = await buscarVeiculoNoLog(tipo, valor);
+    
+    if (logCache) {
+      console.log('[buscarOuConsultarVeiculo] Dados encontrados no cache de logs');
+      
+      // 2. Validar se o cache ainda é válido
+      const cacheValido = validarCacheLog(logCache, diasConfig);
+      
       if (cacheValido) {
-        console.log('Cache válido - retornando dados salvos');
+        console.log('[buscarOuConsultarVeiculo] Cache válido, retornando dados dos logs');
         return {
           fromCache: true,
-          data: consultaCache.dados_completos,
-          ultimaAtualizacao: consultaCache.atualizado_em,
-          consultaId: consultaCache.id,
+          data: logCache.resposta,
+          ultimaAtualizacao: logCache.criado_em,
+          consultaId: logCache.id,
+          logConsulta: logCache,
         };
-      } else {
-        console.log('Cache expirado - atualizando consulta');
-        // 3. Cache expirado - fazer nova consulta
-        const token = await buscarTokenInfoSimples();
-        
-        const params: any = { token: token || undefined };
-        params[tipo] = valor;
-        // Para base-sp, sempre usar UF=SP se não especificado
-        if (endpoint === 'base-sp') {
-          params.uf = uf || 'SP';
-        } else if (uf) {
-          params.uf = uf;
-        }
-
-        const resultado = endpoint === 'base-sp'
-          ? await consultarBaseEstadualSP(params)
-          : await consultarCadastroBIN(params);
-
-        if (resultado.success && resultado.data) {
-          // Atualizar cache
-          await atualizarConsultaVeiculo(consultaCache.id, resultado.data);
-          const logConsulta = await buscarLogConsulta(tipo, valor);
-
-          return {
-            fromCache: false,
-            data: resultado.data,
-            consultaId: consultaCache.id,
-            logConsulta: logConsulta || undefined,
-          };
-        } else {
-          // Erro na API - retornar cache antigo mesmo expirado
-          console.warn('Erro na API - usando cache expirado');
-          const logConsulta = await buscarLogConsulta(tipo, valor);
-          
-          return {
-            fromCache: true,
-            data: consultaCache.dados_completos,
-            ultimaAtualizacao: consultaCache.atualizado_em,
-            consultaId: consultaCache.id,
-            logConsulta: logConsulta || undefined,
-          };
-        }
       }
-    } else {
-      // 4. Não existe no cache - fazer primeira consulta
-      console.log('Primeira consulta deste veículo');
-      const token = await buscarTokenInfoSimples();
       
-      const params: any = { token: token || undefined };
-      params[tipo] = valor;
-      // Para base-sp, sempre usar UF=SP se não especificado
-      if (endpoint === 'base-sp') {
-        params.uf = uf || 'SP';
-      } else if (uf) {
-        params.uf = uf;
-      }
-
-      const resultado = endpoint === 'base-sp'
-        ? await consultarBaseEstadualSP(params)
-        : await consultarCadastroBIN(params);
-
-      if (resultado.success && resultado.data) {
-        // Salvar no cache
-        const consultaId = await salvarConsultaVeiculo(tipo, valor, resultado.data);
-        const logConsulta = await buscarLogConsulta(tipo, valor);
-
-        return {
-          fromCache: false,
-          data: resultado.data,
-          consultaId: consultaId || '',
-          logConsulta: logConsulta || undefined,
-        };
-      } else {
-        throw new Error(resultado.error || 'Erro ao consultar API');
-      }
+      // 3. Cache expirado, fazer nova consulta (que criará um novo log)
+      console.log('[buscarOuConsultarVeiculo] Cache expirado, fazendo nova consulta...');
     }
+    
+    // 4. Não existe no cache ou cache expirado, fazer nova consulta
+    console.log('[buscarOuConsultarVeiculo] Fazendo nova consulta na API');
+    const token = await buscarTokenInfoSimples();
+    
+    const params: any = { token: token || undefined };
+    params[tipo] = valor;
+    // Para base-sp, sempre usar UF=SP se não especificado
+    if (endpoint === 'base-sp') {
+      params.uf = uf || 'SP';
+    } else if (uf) {
+      params.uf = uf;
+    }
+
+    const resultado = endpoint === 'base-sp'
+      ? await consultarBaseEstadualSP(params)
+      : await consultarCadastroBIN(params);
+    
+    if (resultado.success && resultado.data) {
+      // Aguardar um pouco para o log ser salvo pelo edge function
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Buscar o log recém criado
+      const novoLog = await buscarVeiculoNoLog(tipo, valor);
+      
+      return {
+        fromCache: false,
+        data: resultado.data,
+        ultimaAtualizacao: new Date().toISOString(),
+        consultaId: novoLog?.id || '',
+        logConsulta: novoLog || undefined,
+      };
+    }
+    
+    throw new Error(resultado.error || 'Erro ao consultar veículo');
   } catch (error) {
-    console.error('Erro ao buscar ou consultar veículo:', error);
+    console.error('[buscarOuConsultarVeiculo] Erro:', error);
     throw error;
   }
 };
