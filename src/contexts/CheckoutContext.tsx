@@ -9,6 +9,9 @@ export interface VehicleData {
   cidade: string;
   informacaoAdicional: string;
   notaFiscal: File | null;
+  marca?: string;
+  modelo?: string;
+  cor?: string;
 }
 
 export interface CustomerData {
@@ -29,6 +32,8 @@ export interface ProductData {
   price: number;
   description: string;
   image?: string;
+  nome?: string;
+  foto_url?: string;
 }
 
 interface CheckoutContextData {
