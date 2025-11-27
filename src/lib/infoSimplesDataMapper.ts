@@ -67,6 +67,8 @@ const extrairValor = (obj: any, ...caminhos: string[]): string => {
  * Mapeia a resposta da API para o formato estruturado
  */
 export const mapearDadosVeiculo = (apiResponse: any): DadosVeiculoMapeados => {
+  console.log('mapearDadosVeiculo - apiResponse:', apiResponse);
+  
   // A API base-sp retorna estrutura: { code: 200, data: [{ crv: {...}, debitos: {...}, veiculo: {...} }] }
   let data = apiResponse?.data || apiResponse;
   
@@ -75,10 +77,15 @@ export const mapearDadosVeiculo = (apiResponse: any): DadosVeiculoMapeados => {
     data = data[0];
   }
   
+  console.log('mapearDadosVeiculo - data processado:', data);
+  
   // Extrair subseções da resposta base-sp
-  const veiculo = data?.veiculo || {};
-  const crv = data?.crv || {};
-  const debitos = data?.debitos || {};
+  const veiculo = data?.veiculo || data?.Veiculo || {};
+  const crv = data?.crv || data?.CRV || {};
+  const debitos = data?.debitos || data?.Debitos || {};
+  
+  console.log('mapearDadosVeiculo - veiculo:', veiculo);
+  console.log('mapearDadosVeiculo - crv:', crv);
   
   // Para compatibilidade, mesclar tudo em um único objeto
   const merged = { ...data, ...veiculo, ...crv, ...debitos };
