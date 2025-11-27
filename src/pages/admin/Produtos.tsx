@@ -340,11 +340,11 @@ export default function Produtos() {
                 Criar Novo Produto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>{editingProduto ? 'Editar Produto' : 'Criar Novo Produto'}</DialogTitle>
               </DialogHeader>
-              <ScrollArea className="flex-1 px-1">
+              <ScrollArea className="flex-1 h-[calc(90vh-8rem)] px-1">
                 <div className="space-y-6 py-4 pr-4">
                   {/* Informações Básicas */}
                   <div className="space-y-4">
