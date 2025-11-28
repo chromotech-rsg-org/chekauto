@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 import truckBlue from '@/assets/truck-blue-sunset.png';
@@ -381,75 +382,81 @@ export default function ProductDetail() {
         </div>
 
         {/* Tabs de Informações */}
-        <div className="mt-16">
-          <Tabs defaultValue="caracteristicas" className="w-full">
-            <TabsList className="w-full justify-start border-b bg-transparent h-auto p-0 space-x-8">
-              <TabsTrigger value="caracteristicas" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
-                CARACTERÍSTICAS
-              </TabsTrigger>
-              <TabsTrigger value="aplicacoes" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
-                APLICAÇÕES
-              </TabsTrigger>
-              <TabsTrigger value="duvidas" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
-                PERGUNTAS FREQUENTES
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="caracteristicas" className="mt-8">
-              {caracteristicas.length > 0 ? (
-                <div className="bg-[#2c2c2c] rounded-lg p-12">
-                  <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">CARACTERÍSTICAS PRINCIPAIS</h3>
-                  <div className="grid md:grid-cols-3 gap-x-12 gap-y-8">
-                    {caracteristicas.map((item, index) => (
-                      <div key={index}>
-                        <p className="text-white font-semibold text-sm mb-2">{item.titulo}:</p>
-                        <p className="text-white/80 text-base">{item.descricao}</p>
-                      </div>
-                    ))}
+        {(caracteristicas.length > 0 || aplicacoes.length > 0 || faqs.length > 0) && (
+          <div className="mt-16">
+            <Tabs defaultValue={caracteristicas.length > 0 ? "caracteristicas" : aplicacoes.length > 0 ? "aplicacoes" : "duvidas"} className="w-full">
+              <TabsList className="w-full justify-start border-b bg-transparent h-auto p-0 space-x-8">
+                {caracteristicas.length > 0 && (
+                  <TabsTrigger value="caracteristicas" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
+                    CARACTERÍSTICAS
+                  </TabsTrigger>
+                )}
+                {aplicacoes.length > 0 && (
+                  <TabsTrigger value="aplicacoes" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
+                    APLICAÇÕES
+                  </TabsTrigger>
+                )}
+                {faqs.length > 0 && (
+                  <TabsTrigger value="duvidas" className="data-[state=active]:border-b-2 data-[state=active]:border-chekauto-yellow rounded-none pb-3 px-0 bg-transparent">
+                    PERGUNTAS FREQUENTES
+                  </TabsTrigger>
+                )}
+              </TabsList>
+              
+              {caracteristicas.length > 0 && (
+                <TabsContent value="caracteristicas" className="mt-8">
+                  <div className="bg-[#2c2c2c] rounded-lg p-12">
+                    <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">CARACTERÍSTICAS</h3>
+                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-8">
+                      {caracteristicas.map((item, index) => (
+                        <div key={index}>
+                          <p className="text-white font-semibold text-sm mb-2">• {item.titulo}:</p>
+                          <p className="text-white/80 text-base ml-4">{item.descricao}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                  Nenhuma característica cadastrada para este produto
-                </div>
+                </TabsContent>
               )}
-            </TabsContent>
-            
-            <TabsContent value="aplicacoes" className="mt-8">
-              {aplicacoes.length > 0 ? (
-                <div className="bg-gray-50 rounded-lg p-8 space-y-6">
-                  {aplicacoes.map((item, index) => (
-                    <div key={index}>
-                      <h4 className="font-semibold text-lg mb-2">{item.titulo}</h4>
-                      <p className="text-gray-700">{item.descricao}</p>
+              
+              {aplicacoes.length > 0 && (
+                <TabsContent value="aplicacoes" className="mt-8">
+                  <div className="bg-[#2c2c2c] rounded-lg p-12">
+                    <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">APLICAÇÕES</h3>
+                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-8">
+                      {aplicacoes.map((item, index) => (
+                        <div key={index}>
+                          <p className="text-white font-semibold text-sm mb-2">• {item.titulo}:</p>
+                          <p className="text-white/80 text-base ml-4">{item.descricao}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                  Nenhuma aplicação cadastrada para este produto
-                </div>
+                  </div>
+                </TabsContent>
               )}
-            </TabsContent>
-            
-            <TabsContent value="duvidas" className="mt-8">
-              {faqs.length > 0 ? (
-                <div className="bg-gray-50 rounded-lg p-8 space-y-6">
-                  {faqs.map((item, index) => (
-                    <div key={index}>
-                      <h4 className="font-semibold text-lg mb-2">{item.pergunta}</h4>
-                      <p className="text-gray-700">{item.resposta}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                  Nenhuma pergunta frequente cadastrada para este produto
-                </div>
+              
+              {faqs.length > 0 && (
+                <TabsContent value="duvidas" className="mt-8">
+                  <div className="bg-[#2c2c2c] rounded-lg p-12">
+                    <h3 className="text-brand-yellow text-xl font-bold mb-8 text-amber-400">DÚVIDAS FREQUENTES:</h3>
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      {faqs.map((item, index) => (
+                        <AccordionItem key={index} value={`item-${index}`} className="border border-white/20 rounded-lg px-6 bg-white/5">
+                          <AccordionTrigger className="text-white font-semibold hover:no-underline py-4">
+                            {item.pergunta}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-white/80 pb-4">
+                            {item.resposta}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                </TabsContent>
               )}
-            </TabsContent>
-          </Tabs>
-        </div>
+            </Tabs>
+          </div>
+        )}
       </section>
 
       <Footer />
