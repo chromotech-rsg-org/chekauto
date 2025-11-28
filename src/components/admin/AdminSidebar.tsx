@@ -31,8 +31,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard", devOnly: false },
-  { title: "Usuários", icon: Users, path: "/admin/usuarios", devOnly: true },
-  { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis", devOnly: true },
+  { title: "Usuários", icon: Users, path: "/admin/usuarios", devOnly: false },
+  { title: "Perfis de Usuário", icon: Shield, path: "/admin/perfis", devOnly: false },
   { title: "Produtos", icon: Package, path: "/admin/produtos", devOnly: false },
   { title: "Tipos de Carroceria", icon: FolderTree, path: "/admin/categorias", devOnly: false },
   { title: "Clientes", icon: UserCircle, path: "/admin/clientes", devOnly: false },
@@ -151,7 +151,6 @@ export const AdminSidebar = () => {
                         <li key={item.path}>
                           <NavLink
                             to={item.path}
-                            onClick={() => setIsOpen(false)}
                             className={({ isActive }) =>
                               `flex items-center gap-3 px-4 py-2.5 pl-12 rounded-lg transition-colors ${
                                 isActive

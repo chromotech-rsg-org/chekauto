@@ -17,6 +17,20 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     loadUserPermissions();
+
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        loadUserPermissions();
+      } else if (event === 'SIGNED_OUT') {
+        setPermissions(defaultPermissions);
+        setIsDesenvolvedor(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadUserPermissions = async () => {
