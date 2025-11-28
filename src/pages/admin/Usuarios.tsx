@@ -44,7 +44,7 @@ export default function Usuarios() {
   useEffect(() => {
     loadUsuarios();
     loadPerfis();
-  }, []);
+  }, [isDesenvolvedor]);
 
   const loadUsuarios = async () => {
     try {
@@ -107,6 +107,12 @@ export default function Usuarios() {
   );
 
   const handleOpenModal = (usuario?: any) => {
+    // Impede que não-desenvolvedores editem usuários com perfil de desenvolvedor
+    if (usuario && usuario.perfil?.is_desenvolvedor && !isDesenvolvedor) {
+      toast.error("Você não tem permissão para editar usuários com perfil de desenvolvedor");
+      return;
+    }
+
     if (usuario) {
       setEditingUsuario(usuario);
       setFormData({
@@ -217,7 +223,13 @@ export default function Usuarios() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, usuario?: any) => {
+    // Impede que não-desenvolvedores excluam usuários com perfil de desenvolvedor
+    if (usuario?.perfil?.is_desenvolvedor && !isDesenvolvedor) {
+      toast.error("Você não tem permissão para excluir usuários com perfil de desenvolvedor");
+      return;
+    }
+
     if (!confirm("Deseja realmente excluir este usuário?")) return;
 
     try {
@@ -357,7 +369,7 @@ export default function Usuarios() {
                           <Button variant="ghost" size="icon" onClick={() => handleOpenModal(usuario)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(usuario.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(usuario.id, usuario)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>

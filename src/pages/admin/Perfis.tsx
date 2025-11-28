@@ -97,7 +97,7 @@ export default function Perfis() {
 
   useEffect(() => {
     loadPerfis();
-  }, []);
+  }, [userIsDesenvolvedor]);
 
   const loadPerfis = async () => {
     try {
@@ -124,6 +124,12 @@ export default function Perfis() {
   };
 
   const handleOpenModal = (perfil?: any) => {
+    // Impede que não-desenvolvedores editem perfis de desenvolvedor
+    if (perfil && perfil.is_desenvolvedor && !userIsDesenvolvedor) {
+      toast.error("Você não tem permissão para editar perfis de desenvolvedor");
+      return;
+    }
+
     if (perfil) {
       setEditingPerfil(perfil);
       setNomePerfil(perfil.nome);
@@ -218,7 +224,13 @@ export default function Perfis() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, perfil?: any) => {
+    // Impede que não-desenvolvedores excluam perfis de desenvolvedor
+    if (perfil?.is_desenvolvedor && !userIsDesenvolvedor) {
+      toast.error("Você não tem permissão para excluir perfis de desenvolvedor");
+      return;
+    }
+
     if (!confirm("Deseja realmente excluir este perfil?")) return;
 
     try {
@@ -405,7 +417,7 @@ export default function Perfis() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(perfil)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(perfil.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(perfil.id, perfil)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
