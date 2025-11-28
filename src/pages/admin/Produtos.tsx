@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Search, Loader2, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, X, Image as ImageIcon, Copy } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { FileUpload } from "@/components/admin/FileUpload";
 
 interface Caracteristica {
   titulo: string;
@@ -55,6 +56,8 @@ export default function Produtos() {
   const [aplicacoes, setAplicacoes] = useState<Aplicacao[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [capaFile, setCapaFile] = useState<File | null>(null);
+  const [galeriaFiles, setGaleriaFiles] = useState<(File | null)[]>([]);
 
   useEffect(() => {
     loadProdutos();
@@ -110,6 +113,140 @@ export default function Produtos() {
       (!endDate || dataCriacao <= endDate);
     return matchesSearch && matchesDate;
   });
+
+  const uploadImageToStorage = async (file: File, path: string): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
+
+    const { error: uploadError, data } = await supabase.storage
+      .from('produtos')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('produtos')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const handleDuplicate = async (produto: any) => {
+    if (!confirm("Deseja duplicar este produto?")) return;
+
+    try {
+      // Carregar dados completos do produto
+      const { data: tiposData } = await supabase
+        .from('produto_tipos')
+        .select('tipo_id')
+        .eq('produto_id', produto.id);
+      
+      const { data: caracData } = await supabase
+        .from('produto_caracteristicas')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem');
+      
+      const { data: aplicData } = await supabase
+        .from('produto_aplicacoes')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem');
+      
+      const { data: faqData } = await supabase
+        .from('produto_faq')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem');
+
+      const { data: galeriaData } = await supabase
+        .from('produto_galeria')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem');
+
+      // Criar novo produto com nome duplicado
+      const novoProduto = {
+        nome: `${produto.nome} (Cópia)`,
+        apelido: produto.apelido ? `${produto.apelido} (Cópia)` : null,
+        descricao: produto.descricao,
+        preco: produto.preco,
+        foto_url: produto.foto_url,
+        ativo: false, // Inicia desativado
+      };
+
+      const { data: novoProdutoData, error: produtoError } = await supabase
+        .from('produtos')
+        .insert(novoProduto)
+        .select()
+        .single();
+
+      if (produtoError) throw produtoError;
+
+      const novoProdutoId = novoProdutoData.id;
+
+      // Duplicar tipos
+      if (tiposData && tiposData.length > 0) {
+        const tiposInsert = tiposData.map(t => ({
+          produto_id: novoProdutoId,
+          tipo_id: t.tipo_id,
+        }));
+        await supabase.from('produto_tipos').insert(tiposInsert);
+      }
+
+      // Duplicar características
+      if (caracData && caracData.length > 0) {
+        const caracInsert = caracData.map(c => ({
+          produto_id: novoProdutoId,
+          titulo: c.titulo,
+          descricao: c.descricao,
+          ordem: c.ordem,
+        }));
+        await supabase.from('produto_caracteristicas').insert(caracInsert);
+      }
+
+      // Duplicar aplicações
+      if (aplicData && aplicData.length > 0) {
+        const aplicInsert = aplicData.map(a => ({
+          produto_id: novoProdutoId,
+          titulo: a.titulo,
+          descricao: a.descricao,
+          ordem: a.ordem,
+        }));
+        await supabase.from('produto_aplicacoes').insert(aplicInsert);
+      }
+
+      // Duplicar FAQs
+      if (faqData && faqData.length > 0) {
+        const faqInsert = faqData.map(f => ({
+          produto_id: novoProdutoId,
+          pergunta: f.pergunta,
+          resposta: f.resposta,
+          ordem: f.ordem,
+        }));
+        await supabase.from('produto_faq').insert(faqInsert);
+      }
+
+      // Duplicar galeria
+      if (galeriaData && galeriaData.length > 0) {
+        const galeriaInsert = galeriaData.map(g => ({
+          produto_id: novoProdutoId,
+          foto_url: g.foto_url,
+          ordem: g.ordem,
+        }));
+        await supabase.from('produto_galeria').insert(galeriaInsert);
+      }
+
+      toast.success("Produto duplicado com sucesso!");
+      loadProdutos();
+    } catch (error) {
+      console.error('Erro ao duplicar produto:', error);
+      toast.error('Erro ao duplicar produto');
+    }
+  };
 
   const handleOpenModal = async (produto?: any) => {
     if (produto) {
@@ -179,6 +316,8 @@ export default function Produtos() {
       setAplicacoes([]);
       setFaqs([]);
     }
+    setCapaFile(null);
+    setGaleriaFiles([]);
     setIsModalOpen(true);
   };
 
@@ -193,10 +332,31 @@ export default function Produtos() {
     }
 
     try {
+      setUploadingImage(true);
+
+      // Upload da foto de capa
+      let fotoCapaUrl = formData.foto_url;
+      if (capaFile) {
+        fotoCapaUrl = await uploadImageToStorage(capaFile, 'capas');
+      }
+
+      // Upload das fotos da galeria
+      const galeriaUrls = [...formData.galeria];
+      for (let i = 0; i < galeriaFiles.length; i++) {
+        if (galeriaFiles[i]) {
+          const url = await uploadImageToStorage(galeriaFiles[i]!, 'galeria');
+          if (i < galeriaUrls.length) {
+            galeriaUrls[i] = url;
+          } else {
+            galeriaUrls.push(url);
+          }
+        }
+      }
+
       const produtoData = {
         nome: formData.nome,
         apelido: formData.apelido || null,
-        foto_url: formData.foto_url || null,
+        foto_url: fotoCapaUrl || null,
         descricao: formData.descricao,
         preco: Number(formData.preco),
         ativo: formData.ativo,
@@ -281,8 +441,8 @@ export default function Produtos() {
       }
 
       // Inserir galeria
-      if (formData.galeria.length > 0) {
-        const galeriaInsert = formData.galeria.map((url, idx) => ({
+      if (galeriaUrls.length > 0) {
+        const galeriaInsert = galeriaUrls.filter(url => url).map((url, idx) => ({
           produto_id: produtoId,
           foto_url: url,
           ordem: idx,
@@ -292,10 +452,14 @@ export default function Produtos() {
 
       toast.success(editingProduto ? "Produto atualizado com sucesso!" : "Produto criado com sucesso!");
       setIsModalOpen(false);
+      setCapaFile(null);
+      setGaleriaFiles([]);
       loadProdutos();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
       toast.error('Erro ao salvar produto');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -438,49 +602,60 @@ export default function Produtos() {
                   {/* Fotos */}
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Fotos</h3>
-                    <div className="space-y-2">
-                      <Label>Foto de Capa</Label>
-                      <Input 
-                        placeholder="URL da foto de capa"
-                        value={formData.foto_url}
-                        onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
-                      />
-                      {formData.foto_url && (
-                        <img src={formData.foto_url} alt="Capa" className="w-32 h-32 object-cover rounded border" />
-                      )}
-                    </div>
+                    <FileUpload
+                      label="Foto de Capa"
+                      accept="image/*"
+                      value={formData.foto_url}
+                      onChange={(file) => setCapaFile(file)}
+                      preview={true}
+                    />
                     
                     <div className="space-y-2">
                       <Label>Galeria de Fotos</Label>
-                      {formData.galeria.map((url, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Input 
-                            value={url}
-                            onChange={(e) => {
-                              const newGaleria = [...formData.galeria];
-                              newGaleria[idx] = e.target.value;
-                              setFormData({ ...formData, galeria: newGaleria });
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                galeria: formData.galeria.filter((_, i) => i !== idx)
-                              });
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        {formData.galeria.map((url, idx) => (
+                          <div key={idx} className="relative">
+                            {url && !galeriaFiles[idx] ? (
+                              <div className="relative">
+                                <img src={url} alt={`Galeria ${idx + 1}`} className="w-full h-32 object-cover rounded border" />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-1 right-1 h-6 w-6"
+                                  onClick={() => {
+                                    const newGaleria = formData.galeria.filter((_, i) => i !== idx);
+                                    const newFiles = galeriaFiles.filter((_, i) => i !== idx);
+                                    setFormData({ ...formData, galeria: newGaleria });
+                                    setGaleriaFiles(newFiles);
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <FileUpload
+                                label={`Foto ${idx + 1}`}
+                                accept="image/*"
+                                value={null}
+                                onChange={(file) => {
+                                  const newFiles = [...galeriaFiles];
+                                  newFiles[idx] = file;
+                                  setGaleriaFiles(newFiles);
+                                }}
+                                preview={true}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setFormData({ ...formData, galeria: [...formData.galeria, ""] })}
+                        onClick={() => {
+                          setFormData({ ...formData, galeria: [...formData.galeria, ""] });
+                          setGaleriaFiles([...galeriaFiles, null]);
+                        }}
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Adicionar Foto
@@ -629,8 +804,15 @@ export default function Produtos() {
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
-                  {editingProduto ? 'Atualizar' : 'Criar'}
+                <Button onClick={handleSave} disabled={uploadingImage}>
+                  {uploadingImage ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>{editingProduto ? 'Atualizar' : 'Criar'}</>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -684,66 +866,77 @@ export default function Produtos() {
               </div>
             ) : (
               filteredProdutos.map((produto) => (
-                <Card key={produto.id}>
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
+                <Card key={produto.id} className="flex flex-col h-full">
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <div className="space-y-3 flex-1 flex flex-col">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{produto.nome}</h3>
+                          <h3 className="font-semibold text-base line-clamp-1">{produto.nome}</h3>
                           {produto.apelido && (
-                            <p className="text-sm text-muted-foreground italic">{produto.apelido}</p>
-                          )}
-                          {produto.produto_tipos?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {produto.produto_tipos.map((pt: any) => {
-                                const tipo = pt.categorias;
-                                if (!tipo) return null;
-                                return (
-                                  <span key={pt.tipo_id} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    {tipo.codigo} - {tipo.nome}
-                                  </span>
-                                );
-                              })}
-                            </div>
+                            <p className="text-xs text-muted-foreground italic line-clamp-1">{produto.apelido}</p>
                           )}
                         </div>
-                        <div className={`px-2 py-1 rounded text-xs ${produto.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        <div className={`px-2 py-1 rounded text-xs whitespace-nowrap ml-2 ${produto.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                           {produto.ativo ? 'Ativo' : 'Inativo'}
                         </div>
                       </div>
                       
-                      {produto.descricao && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {produto.descricao}
-                        </p>
-                      )}
-                      
-                      {produto.foto_url && (
-                        <div className="mt-2">
-                          <img 
-                            src={produto.foto_url} 
-                            alt={produto.nome}
-                            className="w-full h-32 object-cover rounded"
-                          />
+                      {produto.produto_tipos?.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {produto.produto_tipos.slice(0, 2).map((pt: any) => {
+                            const tipo = pt.categorias;
+                            if (!tipo) return null;
+                            return (
+                              <span key={pt.tipo_id} className="text-xs bg-gray-100 px-2 py-1 rounded line-clamp-1">
+                                {tipo.codigo}
+                              </span>
+                            );
+                          })}
+                          {produto.produto_tipos.length > 2 && (
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              +{produto.produto_tipos.length - 2}
+                            </span>
+                          )}
                         </div>
                       )}
                       
-                      <div className="pt-2 border-t">
-                        <p className="text-2xl font-bold text-brand-yellow">
+                      {produto.foto_url ? (
+                        <div className="flex-1 flex items-center justify-center bg-gray-50 rounded overflow-hidden min-h-[180px] max-h-[180px]">
+                          <img 
+                            src={produto.foto_url} 
+                            alt={produto.nome}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center bg-gray-50 rounded min-h-[180px] max-h-[180px]">
+                          <ImageIcon className="h-16 w-16 text-gray-300" />
+                        </div>
+                      )}
+                      
+                      <div className="pt-2 border-t mt-auto">
+                        <p className="text-xl font-bold text-brand-yellow">
                           R$ {Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="p-4 pt-0 flex gap-2">
+                  <CardFooter className="p-3 pt-0 flex gap-2 mt-auto">
                     <Button
                       variant="outline"
                       size="sm"
                       className="flex-1"
                       onClick={() => handleOpenModal(produto)}
                     >
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Editar
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleDuplicate(produto)}
+                    >
+                      <Copy className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -751,8 +944,7 @@ export default function Produtos() {
                       className="flex-1"
                       onClick={() => handleDelete(produto.id)}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </CardFooter>
                 </Card>
