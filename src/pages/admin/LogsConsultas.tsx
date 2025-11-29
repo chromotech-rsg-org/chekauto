@@ -25,13 +25,20 @@ import {
 
 const exportFields = [
   { key: "tipo_consulta", label: "Tipo" },
+  { key: "endpoint", label: "Endpoint" },
   { key: "placa", label: "Placa" },
   { key: "chassi", label: "Chassi" },
   { key: "renavam", label: "Renavam" },
   { key: "modelo", label: "Modelo" },
   { key: "marca", label: "Marca" },
   { key: "cor", label: "Cor" },
+  { key: "categoria", label: "Categoria" },
+  { key: "ano_modelo", label: "Ano Modelo" },
+  { key: "combustivel", label: "Combustível" },
   { key: "sucesso", label: "Sucesso" },
+  { key: "codigo_resposta", label: "Código" },
+  { key: "api_conectou", label: "API Conectou" },
+  { key: "erro_tipo", label: "Tipo Erro" },
   { key: "tempo_resposta", label: "Tempo (ms)" },
   { key: "criado_em", label: "Data/Hora" },
 ];
@@ -94,6 +101,8 @@ export default function LogsConsultas() {
     const renavam = log.renavam || log.parametros?.renavam || "";
     const modelo = log.modelo || "";
     const marca = log.marca || "";
+    const endpoint = log.endpoint || "";
+    const categoria = log.categoria || "";
     
     const matchesSearch = 
       placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,6 +110,8 @@ export default function LogsConsultas() {
       renavam.toLowerCase().includes(searchTerm.toLowerCase()) ||
       modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      endpoint.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.tipo_consulta.toLowerCase().includes(searchTerm.toLowerCase());
     
     const dataCriacao = log.criado_em ? new Date(log.criado_em).toISOString().split('T')[0] : '';
@@ -112,13 +123,20 @@ export default function LogsConsultas() {
 
   const exportData = filteredLogs.map(log => ({
     tipo_consulta: log.tipo_consulta,
+    endpoint: log.endpoint || "-",
     placa: log.placa || log.parametros?.placa || "-",
     chassi: log.chassi || log.parametros?.chassi || "-",
     renavam: log.renavam || log.parametros?.renavam || "-",
     modelo: log.modelo || "-",
     marca: log.marca || "-",
     cor: log.cor || "-",
+    categoria: log.categoria || "-",
+    ano_modelo: log.ano_modelo || "-",
+    combustivel: log.combustivel || "-",
     sucesso: log.sucesso ? "Sim" : "Não",
+    codigo_resposta: log.codigo_resposta || "-",
+    api_conectou: log.api_conectou ? "Sim" : "Não",
+    erro_tipo: log.erro_tipo || "-",
     tempo_resposta: log.tempo_resposta || "-",
     criado_em: new Date(log.criado_em).toLocaleString('pt-BR'),
   }));
@@ -180,13 +198,14 @@ export default function LogsConsultas() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Tipo</TableHead>
+                  <TableHead>Endpoint</TableHead>
                   <TableHead>Placa</TableHead>
                   <TableHead>Chassi</TableHead>
-                  <TableHead>Renavam</TableHead>
                   <TableHead>Modelo</TableHead>
                   <TableHead>Marca</TableHead>
-                  <TableHead>Cor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Erro Tipo</TableHead>
                   <TableHead>Tempo</TableHead>
                   <TableHead>Data/Hora</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -198,23 +217,22 @@ export default function LogsConsultas() {
                     <TableCell>
                       <Badge variant="outline">{log.tipo_consulta}</Badge>
                     </TableCell>
-                    <TableCell className="font-mono">
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {log.endpoint || "-"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
                       {log.placa || log.parametros?.placa || "-"}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      {log.chassi || log.parametros?.chassi || "-"}
+                      {log.chassi ? log.chassi.substring(0, 10) + "..." : log.parametros?.chassi ? log.parametros.chassi.substring(0, 10) + "..." : "-"}
                     </TableCell>
-                    <TableCell className="font-mono">
-                      {log.renavam || log.parametros?.renavam || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm max-w-[200px] truncate">
                       {log.modelo || "-"}
                     </TableCell>
                     <TableCell className="text-sm">
                       {log.marca || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {log.cor || "-"}
                     </TableCell>
                     <TableCell>
                       {log.sucesso ? (
@@ -229,8 +247,22 @@ export default function LogsConsultas() {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell>{log.tempo_resposta}ms</TableCell>
                     <TableCell>
+                      {log.codigo_resposta ? (
+                        <Badge variant={log.codigo_resposta === 200 ? "default" : "destructive"}>
+                          {log.codigo_resposta}
+                        </Badge>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {log.erro_tipo ? (
+                        <Badge variant="outline" className="bg-red-50">
+                          {log.erro_tipo}
+                        </Badge>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">{log.tempo_resposta}ms</TableCell>
+                    <TableCell className="text-sm">
                       {new Date(log.criado_em).toLocaleString('pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
@@ -291,6 +323,22 @@ export default function LogsConsultas() {
                 <strong className="block mb-3 text-lg">Dados Extraídos:</strong>
                 <div className="grid grid-cols-2 gap-3 bg-muted/30 p-4 rounded-lg">
                   <div>
+                    <span className="text-xs text-muted-foreground">Endpoint:</span>
+                    <p className="font-mono font-semibold">{selectedLog.endpoint || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Código Resposta:</span>
+                    <p className="font-semibold">{selectedLog.codigo_resposta || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">API Conectou:</span>
+                    <p className="font-semibold">{selectedLog.api_conectou ? "Sim" : "Não"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Tipo Erro:</span>
+                    <p className="font-semibold text-destructive">{selectedLog.erro_tipo || "-"}</p>
+                  </div>
+                  <div>
                     <span className="text-xs text-muted-foreground">Placa:</span>
                     <p className="font-mono font-semibold">{selectedLog.placa || "-"}</p>
                   </div>
@@ -315,8 +363,16 @@ export default function LogsConsultas() {
                     <p className="font-semibold">{selectedLog.cor || "-"}</p>
                   </div>
                   <div>
+                    <span className="text-xs text-muted-foreground">Categoria:</span>
+                    <p className="font-semibold">{selectedLog.categoria || "-"}</p>
+                  </div>
+                  <div>
                     <span className="text-xs text-muted-foreground">Ano Modelo:</span>
                     <p className="font-semibold">{selectedLog.ano_modelo || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Ano Fabricação:</span>
+                    <p className="font-semibold">{selectedLog.ano_fabricacao || "-"}</p>
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground">Combustível:</span>
