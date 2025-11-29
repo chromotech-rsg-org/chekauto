@@ -133,7 +133,7 @@ export const AdminSidebar = () => {
           w-64 flex flex-col
         `}>
         {/* Logo & Collapse Button */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between bg-primary">
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between bg-muted">
           {!isCollapsed && <img src={currentLogo} alt="ChekAuto" className="h-7" />}
           <Button variant="ghost" size="icon" onClick={toggleCollapse} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent ml-auto">
             {isCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
