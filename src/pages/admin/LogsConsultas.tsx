@@ -226,7 +226,7 @@ export default function LogsConsultas() {
                         </Badge> : "-"}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {log.erro_tipo ? <Badge variant="outline" className="bg-red-50 text-muted">
+                      {log.erro_tipo ? <Badge variant="outline" className="bg-red-50 text-muted-foreground">
                           {log.erro_tipo}
                         </Badge> : "-"}
                     </TableCell>
