@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, CreditCard, Database, TestTubes, ChevronDown, ChevronsLeft, ChevronsRight, AlertCircle } from "lucide-react";
 import logoYellow from "@/assets/logo-chekauto-yellow.png";
-import logoLight from "@/assets/logo-chekauto-light.png";
+import logoYellowBlack from "@/assets/logo-chekauto-yellow-black.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,7 +99,9 @@ export const AdminSidebar = () => {
   } = usePermissions();
 
   // Define qual logo usar baseado no tema
-  const currentLogo = theme === 'light' ? logoLight : logoYellow;
+  // Padrão e Light: logo amarelo e preto
+  // Dark: logo amarelo e branco
+  const currentLogo = theme === 'dark' ? logoYellow : logoYellowBlack;
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
