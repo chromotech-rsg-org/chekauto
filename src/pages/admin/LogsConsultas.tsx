@@ -12,37 +12,59 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { JsonResultDisplay } from "@/components/admin/JsonResultDisplay";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-const exportFields = [
-  { key: "tipo_consulta", label: "Tipo" },
-  { key: "endpoint", label: "Endpoint" },
-  { key: "placa", label: "Placa" },
-  { key: "chassi", label: "Chassi" },
-  { key: "renavam", label: "Renavam" },
-  { key: "modelo", label: "Modelo" },
-  { key: "marca", label: "Marca" },
-  { key: "cor", label: "Cor" },
-  { key: "categoria", label: "Categoria" },
-  { key: "ano_modelo", label: "Ano Modelo" },
-  { key: "combustivel", label: "Combustível" },
-  { key: "sucesso", label: "Sucesso" },
-  { key: "codigo_resposta", label: "Código" },
-  { key: "api_conectou", label: "API Conectou" },
-  { key: "erro_tipo", label: "Tipo Erro" },
-  { key: "tempo_resposta", label: "Tempo (ms)" },
-  { key: "criado_em", label: "Data/Hora" },
-];
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+const exportFields = [{
+  key: "tipo_consulta",
+  label: "Tipo"
+}, {
+  key: "endpoint",
+  label: "Endpoint"
+}, {
+  key: "placa",
+  label: "Placa"
+}, {
+  key: "chassi",
+  label: "Chassi"
+}, {
+  key: "renavam",
+  label: "Renavam"
+}, {
+  key: "modelo",
+  label: "Modelo"
+}, {
+  key: "marca",
+  label: "Marca"
+}, {
+  key: "cor",
+  label: "Cor"
+}, {
+  key: "categoria",
+  label: "Categoria"
+}, {
+  key: "ano_modelo",
+  label: "Ano Modelo"
+}, {
+  key: "combustivel",
+  label: "Combustível"
+}, {
+  key: "sucesso",
+  label: "Sucesso"
+}, {
+  key: "codigo_resposta",
+  label: "Código"
+}, {
+  key: "api_conectou",
+  label: "API Conectou"
+}, {
+  key: "erro_tipo",
+  label: "Tipo Erro"
+}, {
+  key: "tempo_resposta",
+  label: "Tempo (ms)"
+}, {
+  key: "criado_em",
+  label: "Data/Hora"
+}];
 export default function LogsConsultas() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,20 +73,18 @@ export default function LogsConsultas() {
   const [endDate, setEndDate] = useState("");
   const [selectedLog, setSelectedLog] = useState<any>(null);
   const [logToDelete, setLogToDelete] = useState<string | null>(null);
-
   useEffect(() => {
     loadLogs();
   }, []);
-
   const loadLogs = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('logs_consultas_infosimples')
-        .select('*')
-        .order('criado_em', { ascending: false })
-        .limit(1000);
-
+      const {
+        data,
+        error
+      } = await supabase.from('logs_consultas_infosimples').select('*').order('criado_em', {
+        ascending: false
+      }).limit(1000);
       if (error) throw error;
       setLogs(data || []);
     } catch (error) {
@@ -74,18 +94,13 @@ export default function LogsConsultas() {
       setLoading(false);
     }
   };
-
   const handleDelete = async () => {
     if (!logToDelete) return;
-
     try {
-      const { error } = await supabase
-        .from('logs_consultas_infosimples')
-        .delete()
-        .eq('id', logToDelete);
-
+      const {
+        error
+      } = await supabase.from('logs_consultas_infosimples').delete().eq('id', logToDelete);
       if (error) throw error;
-
       toast.success('Log deletado com sucesso');
       setLogs(logs.filter(log => log.id !== logToDelete));
       setLogToDelete(null);
@@ -94,8 +109,7 @@ export default function LogsConsultas() {
       toast.error('Erro ao deletar log');
     }
   };
-
-  const filteredLogs = logs.filter((log) => {
+  const filteredLogs = logs.filter(log => {
     const placa = log.placa || log.parametros?.placa || "";
     const chassi = log.chassi || log.parametros?.chassi || "";
     const renavam = log.renavam || log.parametros?.renavam || "";
@@ -103,24 +117,11 @@ export default function LogsConsultas() {
     const marca = log.marca || "";
     const endpoint = log.endpoint || "";
     const categoria = log.categoria || "";
-    
-    const matchesSearch = 
-      placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chassi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      renavam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      endpoint.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.tipo_consulta.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = placa.toLowerCase().includes(searchTerm.toLowerCase()) || chassi.toLowerCase().includes(searchTerm.toLowerCase()) || renavam.toLowerCase().includes(searchTerm.toLowerCase()) || modelo.toLowerCase().includes(searchTerm.toLowerCase()) || marca.toLowerCase().includes(searchTerm.toLowerCase()) || categoria.toLowerCase().includes(searchTerm.toLowerCase()) || endpoint.toLowerCase().includes(searchTerm.toLowerCase()) || log.tipo_consulta.toLowerCase().includes(searchTerm.toLowerCase());
     const dataCriacao = log.criado_em ? new Date(log.criado_em).toISOString().split('T')[0] : '';
-    const matchesDate = (!startDate || dataCriacao >= startDate) && 
-      (!endDate || dataCriacao <= endDate);
-    
+    const matchesDate = (!startDate || dataCriacao >= startDate) && (!endDate || dataCriacao <= endDate);
     return matchesSearch && matchesDate;
   });
-
   const exportData = filteredLogs.map(log => ({
     tipo_consulta: log.tipo_consulta,
     endpoint: log.endpoint || "-",
@@ -138,11 +139,9 @@ export default function LogsConsultas() {
     api_conectou: log.api_conectou ? "Sim" : "Não",
     erro_tipo: log.erro_tipo || "-",
     tempo_resposta: log.tempo_resposta || "-",
-    criado_em: new Date(log.criado_em).toLocaleString('pt-BR'),
+    criado_em: new Date(log.criado_em).toLocaleString('pt-BR')
   }));
-
-  return (
-    <AdminLayout>
+  return <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Logs de Consultas InfoSimples</h1>
@@ -156,44 +155,23 @@ export default function LogsConsultas() {
             <Label htmlFor="search">Pesquisar</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="search"
-                placeholder="Buscar por placa, chassi, renavam ou tipo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input id="search" placeholder="Buscar por placa, chassi, renavam ou tipo..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
           </div>
 
-          <DateRangeFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            onClear={() => {
-              setStartDate("");
-              setEndDate("");
-            }}
-          />
+          <DateRangeFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onClear={() => {
+          setStartDate("");
+          setEndDate("");
+        }} />
 
-          <ExportButton
-            data={exportData}
-            fields={exportFields}
-            filename="logs-consultas-infosimples"
-          />
+          <ExportButton data={exportData} fields={exportFields} filename="logs-consultas-infosimples" />
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
+        {loading ? <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : filteredLogs.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          </div> : filteredLogs.length === 0 ? <div className="text-center py-12 text-muted-foreground">
             <p className="text-lg">Nenhum log encontrado</p>
-          </div>
-        ) : (
-          <div className="border rounded-lg overflow-hidden">
+          </div> : <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -212,8 +190,7 @@ export default function LogsConsultas() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.map((log) => (
-                  <TableRow key={log.id}>
+                {filteredLogs.map(log => <TableRow key={log.id}>
                     <TableCell>
                       <Badge variant="outline">{log.tipo_consulta}</Badge>
                     </TableCell>
@@ -235,31 +212,23 @@ export default function LogsConsultas() {
                       {log.marca || "-"}
                     </TableCell>
                     <TableCell>
-                      {log.sucesso ? (
-                        <div className="flex items-center gap-1 text-green-600">
+                      {log.sucesso ? <div className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="h-4 w-4" />
                           <span className="text-sm">Sucesso</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-red-600">
+                        </div> : <div className="flex items-center gap-1 text-red-600">
                           <XCircle className="h-4 w-4" />
                           <span className="text-sm">Erro</span>
-                        </div>
-                      )}
+                        </div>}
                     </TableCell>
                     <TableCell>
-                      {log.codigo_resposta ? (
-                        <Badge variant={log.codigo_resposta === 200 ? "default" : "destructive"}>
+                      {log.codigo_resposta ? <Badge variant={log.codigo_resposta === 200 ? "default" : "destructive"}>
                           {log.codigo_resposta}
-                        </Badge>
-                      ) : "-"}
+                        </Badge> : "-"}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {log.erro_tipo ? (
-                        <Badge variant="outline" className="bg-red-50">
+                      {log.erro_tipo ? <Badge variant="outline" className="bg-red-50 text-muted">
                           {log.erro_tipo}
-                        </Badge>
-                      ) : "-"}
+                        </Badge> : "-"}
                     </TableCell>
                     <TableCell className="text-sm">{log.tempo_resposta}ms</TableCell>
                     <TableCell className="text-sm">
@@ -267,28 +236,18 @@ export default function LogsConsultas() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setSelectedLog(log)}
-                          className="text-sm text-primary hover:underline"
-                        >
+                        <button onClick={() => setSelectedLog(log)} className="text-sm text-primary hover:underline">
                           Ver detalhes
                         </button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setLogToDelete(log.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => setLogToDelete(log.id)} className="h-8 w-8 text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
-          </div>
-        )}
+          </div>}
       </div>
 
       <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
@@ -296,19 +255,14 @@ export default function LogsConsultas() {
           <DialogHeader>
             <DialogTitle>Detalhes da Consulta</DialogTitle>
           </DialogHeader>
-          {selectedLog && (
-            <div className="space-y-4">
+          {selectedLog && <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <strong>Tipo:</strong> {selectedLog.tipo_consulta}
                 </div>
                 <div>
                   <strong>Status:</strong>{" "}
-                  {selectedLog.sucesso ? (
-                    <span className="text-green-600">Sucesso</span>
-                  ) : (
-                    <span className="text-red-600">Erro</span>
-                  )}
+                  {selectedLog.sucesso ? <span className="text-green-600">Sucesso</span> : <span className="text-red-600">Erro</span>}
                 </div>
                 <div>
                   <strong>Tempo:</strong> {selectedLog.tempo_resposta}ms
@@ -391,16 +345,13 @@ export default function LogsConsultas() {
                 <JsonResultDisplay result={selectedLog.resposta} onClear={() => {}} />
               </div>
 
-              {selectedLog.erro && (
-                <div>
+              {selectedLog.erro && <div>
                   <strong className="block mb-2 text-red-600">Erro:</strong>
                   <div className="bg-red-50 p-3 rounded text-sm text-red-900">
                     {selectedLog.erro}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </DialogContent>
       </Dialog>
 
@@ -420,6 +371,5 @@ export default function LogsConsultas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
-  );
+    </AdminLayout>;
 }
