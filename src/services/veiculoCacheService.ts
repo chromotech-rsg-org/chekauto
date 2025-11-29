@@ -162,14 +162,17 @@ function validarCacheLog(
 
   const dataConsulta = new Date(log.criado_em);
   const hoje = new Date();
-  const diferencaDias = Math.floor(
-    (hoje.getTime() - dataConsulta.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const diferencaMs = hoje.getTime() - dataConsulta.getTime();
+  const diferencaDias = diferencaMs / (1000 * 60 * 60 * 24);
 
-  const valido = diferencaDias < diasConfig;
+  // Cache é válido se ainda não passou o número de dias configurado
+  const valido = diferencaDias <= diasConfig;
+  
   console.log('[Cache] Validação:', { 
     dataConsulta: dataConsulta.toISOString(),
-    diasPassados: diferencaDias,
+    hoje: hoje.toISOString(),
+    diferencaMs,
+    diasPassados: diferencaDias.toFixed(2),
     diasPermitidos: diasConfig,
     valido 
   });
@@ -202,6 +205,7 @@ export const buscarOuConsultarVeiculo = async (
     }
 
     const diasConfig = await buscarDiasCacheConfiguracao();
+    console.log('[buscarOuConsultarVeiculo] Configuração de cache:', { diasConfig });
     
     // 1. Buscar todos os logs anteriores (sucessos e erros)
     console.log('[buscarOuConsultarVeiculo] Passo 1: Buscar logs anteriores');
@@ -209,6 +213,12 @@ export const buscarOuConsultarVeiculo = async (
     
     if (logsAnteriores.length > 0) {
       console.log(`[buscarOuConsultarVeiculo] Encontrados ${logsAnteriores.length} logs anteriores`);
+      console.log('[buscarOuConsultarVeiculo] Log mais recente:', {
+        id: logsAnteriores[0].id,
+        sucesso: logsAnteriores[0].sucesso,
+        criado_em: logsAnteriores[0].criado_em,
+        endpoint: logsAnteriores[0].endpoint
+      });
       
       // 2. Verificar se já existe QUALQUER erro no endpoint atual
       const logErroNoEndpoint = logsAnteriores.find(log => 
@@ -253,11 +263,17 @@ export const buscarOuConsultarVeiculo = async (
       const logSucesso = logsAnteriores.find(log => log.sucesso);
       
       if (logSucesso) {
+        console.log('[buscarOuConsultarVeiculo] Log de sucesso encontrado:', {
+          id: logSucesso.id,
+          criado_em: logSucesso.criado_em,
+          endpoint: logSucesso.endpoint
+        });
+        
         // Validar se o cache ainda é válido
         const cacheValido = validarCacheLog(logSucesso, diasConfig);
         
         if (cacheValido) {
-          console.log('[buscarOuConsultarVeiculo] Cache válido, retornando dados dos logs');
+          console.log('[buscarOuConsultarVeiculo] ✅ CACHE VÁLIDO - Retornando dados salvos sem consultar API');
           return {
             fromCache: true,
             data: logSucesso.resposta,
@@ -267,8 +283,12 @@ export const buscarOuConsultarVeiculo = async (
           };
         }
         
-        console.log('[buscarOuConsultarVeiculo] Cache expirado, fazendo nova consulta...');
+        console.log('[buscarOuConsultarVeiculo] ❌ Cache expirado, fazendo nova consulta na API...');
+      } else {
+        console.log('[buscarOuConsultarVeiculo] Nenhum log de sucesso encontrado, fazendo nova consulta...');
       }
+    } else {
+      console.log('[buscarOuConsultarVeiculo] Nenhum log anterior encontrado, fazendo primeira consulta...');
     }
     
     // 4. Fazer nova consulta na API
