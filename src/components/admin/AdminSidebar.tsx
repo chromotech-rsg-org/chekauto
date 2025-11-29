@@ -133,7 +133,7 @@ export const AdminSidebar = () => {
           w-64 flex flex-col
         `}>
         {/* Logo & Collapse Button */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between bg-muted">
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
           {!isCollapsed && <img src={currentLogo} alt="ChekAuto" className="h-7" />}
           <Button variant="ghost" size="icon" onClick={toggleCollapse} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent ml-auto">
             {isCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
@@ -141,8 +141,8 @@ export const AdminSidebar = () => {
         </div>
 
         {/* Navigation with custom scrollbar */}
-        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll bg-sidebar-background bg-muted">
-          <ul className="space-y-1 px-2 bg-sidebar-background">
+        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll bg-sidebar-background">
+          <ul className="space-y-1 px-2">
             {menuItems.filter(item => !item.devOnly || isDesenvolvedor).map(item => <li key={item.path}>
                   <NavLink to={item.path} onClick={() => setIsOpen(false)} className={({
               isActive
