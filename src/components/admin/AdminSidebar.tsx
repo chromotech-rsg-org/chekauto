@@ -126,8 +126,8 @@ export const AdminSidebar = () => {
         </div>
 
         {/* Navigation with custom scrollbar */}
-        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll">
-          <ul className="space-y-1 px-2">
+        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll bg-sidebar-background">
+          <ul className="space-y-1 px-2 bg-sidebar-background">
             {menuItems
               .filter((item) => !item.devOnly || isDesenvolvedor)
               .map((item) => (
