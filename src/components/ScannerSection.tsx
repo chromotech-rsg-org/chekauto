@@ -3,12 +3,15 @@ import { ChevronDown, Loader2 } from 'lucide-react';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { VehicleDataDisplay } from './VehicleDataDisplay';
 import { ErrorDialog } from '@/components/ui/error-dialog';
+import { RelatedProductsModal } from './RelatedProductsModal';
+import { Button } from '@/components/ui/button';
 
 export const ScannerSection: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado' | ''>('');
   const [originState, setOriginState] = useState('');
   const [chassisNumber, setChassisNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [showProductsModal, setShowProductsModal] = useState(false);
   const { consultar, loading, resultado, error, showErrorDialog, closeErrorDialog } = useVehicleConsultation();
   const handleConsultar = async () => {
     if (!chassisNumber || chassisNumber.trim().length < 3) {
@@ -49,6 +52,13 @@ export const ScannerSection: React.FC = () => {
         onClose={closeErrorDialog}
         title="Erro na Consulta"
         message={error || ''}
+      />
+      
+      <RelatedProductsModal
+        open={showProductsModal}
+        onClose={() => setShowProductsModal(false)}
+        vehicleType={resultado?.data?.tipo || ''}
+        vehicleData={resultado?.data || {}}
       />
       
       <div className="bg-white w-full flex justify-center py-8">
@@ -135,6 +145,17 @@ export const ScannerSection: React.FC = () => {
                   ultimaAtualizacao={resultado.ultimaAtualizacao}
                   showFullDetails={true}
                 />
+                
+                {resultado.data?.tipo && (
+                  <div className="mt-6 flex justify-center">
+                    <Button
+                      onClick={() => setShowProductsModal(true)}
+                      className="bg-brand-yellow hover:bg-brand-yellow-dark text-black font-bold px-8 py-3"
+                    >
+                      Ver Produtos Compatíveis
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

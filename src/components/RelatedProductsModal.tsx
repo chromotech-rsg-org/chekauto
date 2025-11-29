@@ -1,0 +1,189 @@
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Loader2, Package, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useCheckout } from '@/contexts/CheckoutContext';
+
+interface Product {
+  id: string;
+  nome: string;
+  apelido: string | null;
+  preco: number;
+  foto_url: string | null;
+  descricao: string | null;
+}
+
+interface RelatedProductsModalProps {
+  open: boolean;
+  onClose: () => void;
+  vehicleType: string;
+  vehicleData: any;
+}
+
+export const RelatedProductsModal = ({ 
+  open, 
+  onClose, 
+  vehicleType,
+  vehicleData 
+}: RelatedProductsModalProps) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setVehicleData, setProductData } = useCheckout();
+
+  useEffect(() => {
+    if (open && vehicleType) {
+      loadRelatedProducts();
+    }
+  }, [open, vehicleType]);
+
+  const loadRelatedProducts = async () => {
+    setLoading(true);
+    try {
+      // Extrair apenas o código do tipo (ex: "11 - SEMIRREBOQUE" -> "11")
+      const tipoCode = vehicleType.split(' ')[0];
+      
+      console.log('Buscando produtos para tipo:', tipoCode);
+
+      // Buscar categorias que correspondem ao tipo do veículo
+      const { data: categorias, error: catError } = await supabase
+        .from('categorias')
+        .select('id')
+        .ilike('codigo', `%${tipoCode}%`);
+
+      if (catError) throw catError;
+
+      if (!categorias || categorias.length === 0) {
+        console.log('Nenhuma categoria encontrada para tipo:', tipoCode);
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      const categoriaIds = categorias.map(c => c.id);
+
+      // Buscar produtos dessas categorias
+      const { data: produtosData, error: prodError } = await supabase
+        .from('produtos')
+        .select('id, nome, apelido, preco, foto_url, descricao, categoria_id')
+        .eq('ativo', true)
+        .in('categoria_id', categoriaIds);
+
+      if (prodError) throw prodError;
+
+      setProducts(produtosData || []);
+    } catch (error) {
+      console.error('Erro ao buscar produtos relacionados:', error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = (productId: string) => {
+    navigate(`/produto/${productId}`);
+    onClose();
+  };
+
+  const handleBuyProduct = async (product: Product) => {
+    // Salvar dados do veículo e produto no contexto
+    setVehicleData({
+      placa: vehicleData?.placa || '',
+      chassi: vehicleData?.chassi || '',
+      renavam: vehicleData?.renavam || '',
+      marca: vehicleData?.marca || '',
+      modelo: vehicleData?.modelo || '',
+      ano: vehicleData?.ano_modelo || '',
+      cor: vehicleData?.cor || '',
+      estado: '',
+      cidade: '',
+      informacaoAdicional: '',
+      notaFiscal: null
+    });
+
+    setProductData({
+      id: product.id,
+      name: product.nome,
+      price: product.preco,
+      description: product.descricao || '',
+      image: product.foto_url || ''
+    });
+
+    // Navegar para a página de checkout
+    navigate('/solicitacao/veiculo');
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <Package className="h-6 w-6 text-brand-yellow" />
+            Produtos Compatíveis
+          </DialogTitle>
+          <p className="text-muted-foreground">
+            Encontramos {products.length} produto(s) compatível(is) com seu veículo tipo: <strong>{vehicleType}</strong>
+          </p>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <Package className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-lg text-muted-foreground">
+              Nenhum produto compatível encontrado para este tipo de veículo.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-card"
+              >
+                {product.foto_url && (
+                  <img
+                    src={product.foto_url}
+                    alt={product.nome}
+                    className="w-full h-48 object-cover rounded-md mb-3"
+                  />
+                )}
+                <h3 className="font-bold text-lg mb-1">{product.apelido || product.nome}</h3>
+                <p className="text-2xl font-bold text-brand-yellow mb-2">
+                  R$ {product.preco.toFixed(2)}
+                </p>
+                {product.descricao && (
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {product.descricao}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleViewDetails(product.id)}
+                    className="flex-1"
+                  >
+                    Ver Detalhes
+                  </Button>
+                  <Button
+                    onClick={() => handleBuyProduct(product)}
+                    className="flex-1 bg-brand-yellow hover:bg-brand-yellow-dark text-black"
+                  >
+                    Comprar
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
