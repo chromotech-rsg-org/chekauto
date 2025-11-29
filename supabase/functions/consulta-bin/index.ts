@@ -197,7 +197,18 @@ function extrairDadosVeiculo(dados: any): any {
   
   try {
     // Para BIN, a estrutura é: { code: 200, data: [...array de objetos...] }
-    if (dados?.code === 200 && Array.isArray(dados?.data)) {
+    if (dados?.code === 200 && Array.isArray(dados?.data) && dados.data.length > 0) {
+      const veiculo = dados.data[0];
+      resultado.placa = veiculo.placa || null;
+      resultado.chassi = veiculo.chassi || null;
+      resultado.renavam = veiculo.renavam || null;
+      resultado.marca = veiculo.marca || null;
+      resultado.modelo = veiculo.modelo || null;
+      resultado.ano_modelo = veiculo.ano_modelo || null;
+      resultado.ano_fabricacao = veiculo.ano_fabricacao || null;
+      resultado.cor = veiculo.cor || null;
+      resultado.combustivel = veiculo.combustivel || null;
+      resultado.categoria = veiculo.categoria || veiculo.tipo || null;
       // Percorrer os dados e extrair informações relevantes
       dados.data.forEach((item: any) => {
         if (item.Placa) resultado.placa = item.Placa;

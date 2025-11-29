@@ -36,6 +36,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
 import AuthGuard from "./components/admin/AuthGuard";
+import CodigosErroApi from "./pages/admin/CodigosErroApi";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
                 <Route path="/admin/configuracao-asaas" element={<ConfiguracaoAsaas />} />
                 <Route path="/admin/configuracoes-infosimples" element={<ConfiguracoesInfoSimples />} />
                 <Route path="/admin/testes-api-infosimples" element={<TestesApiInfoSimples />} />
+                <Route path="/admin/codigos-erro-api" element={<CodigosErroApi />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

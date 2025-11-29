@@ -6,7 +6,10 @@
  * - Possui um dígito verificador na posição 9
  */
 
+// Pesos para cada posição do VIN (ISO 3779)
 const PESOS = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+
+// Tabela de transliteração (ISO 3779)
 const VALORES_LETRAS: { [key: string]: number } = {
   A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8,
   J: 1, K: 2, L: 3, M: 4, N: 5, P: 7, R: 9,

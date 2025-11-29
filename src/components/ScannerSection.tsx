@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { VehicleDataDisplay } from './VehicleDataDisplay';
+import { ErrorDialog } from '@/components/ui/error-dialog';
 
 export const ScannerSection: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado' | ''>('');
   const [originState, setOriginState] = useState('');
   const [chassisNumber, setChassisNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
-  const { consultar, loading, resultado } = useVehicleConsultation();
+  const { consultar, loading, resultado, error, showErrorDialog, closeErrorDialog } = useVehicleConsultation();
   const handleConsultar = async () => {
     if (!chassisNumber || chassisNumber.trim().length < 3) {
       return;
@@ -43,6 +44,13 @@ export const ScannerSection: React.FC = () => {
   };
 
   return <>
+      <ErrorDialog
+        open={showErrorDialog}
+        onClose={closeErrorDialog}
+        title="Erro na Consulta"
+        message={error || ''}
+      />
+      
       <div className="bg-white w-full flex justify-center py-8">
         <ChevronDown className="text-gray-300 w-12 h-12 animate-bounce" />
       </div>
@@ -98,9 +106,9 @@ export const ScannerSection: React.FC = () => {
                 type="text" 
                 placeholder="Digite chassi, placa ou renavam" 
                 value={chassisNumber} 
-                onChange={e => setChassisNumber(e.target.value)} 
+                onChange={e => setChassisNumber(e.target.value.toUpperCase())} 
                 onKeyPress={(e) => e.key === 'Enter' && handleConsultar()}
-                className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500 h-[48px]" 
+                className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500 h-[48px] uppercase" 
               />
               <button 
                 onClick={handleConsultar}

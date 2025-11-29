@@ -36,7 +36,8 @@ export default function Usuarios() {
     email: "",
     perfil_id: "",
     senha: "",
-    confirmarSenha: ""
+    confirmarSenha: "",
+    foto_url: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -120,7 +121,8 @@ export default function Usuarios() {
         email: usuario.email,
         perfil_id: usuario.perfil_id || "",
         senha: "",
-        confirmarSenha: ""
+        confirmarSenha: "",
+        foto_url: usuario.foto_url || ""
       });
     } else {
       setEditingUsuario(null);
@@ -129,7 +131,8 @@ export default function Usuarios() {
         email: "",
         perfil_id: "",
         senha: "",
-        confirmarSenha: ""
+        confirmarSenha: "",
+        foto_url: ""
       });
     }
     setIsModalOpen(true);
@@ -167,7 +170,8 @@ export default function Usuarios() {
         const dataToUpdate: any = {
           nome: formData.nome,
           email: formData.email,
-          perfil_id: formData.perfil_id || null
+          perfil_id: formData.perfil_id || null,
+          foto_url: formData.foto_url || null
         };
 
         const { error } = await supabase
@@ -208,7 +212,8 @@ export default function Usuarios() {
             nome: formData.nome,
             email: formData.email,
             perfil_id: formData.perfil_id || null,
-            auth_user_id: authData.user?.id
+            auth_user_id: authData.user?.id,
+            foto_url: formData.foto_url || null
           }]);
 
         if (error) throw error;
@@ -424,6 +429,20 @@ export default function Usuarios() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="foto_url">Foto de Perfil (URL)</Label>
+                <Input 
+                  id="foto_url" 
+                  type="url"
+                  value={formData.foto_url}
+                  onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
+                  placeholder="https://exemplo.com/foto.jpg" 
+                />
+                <p className="text-xs text-muted-foreground">
+                  Insira a URL da foto de perfil do usuário
+                </p>
               </div>
 
               <div className="space-y-2">
