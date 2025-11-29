@@ -66,12 +66,14 @@ export const ScannerSection: React.FC = () => {
   };
 
   return <>
-      <ErrorDialog
-        open={showErrorDialog}
-        onClose={closeErrorDialog}
-        title="Erro na Consulta"
-        message={error || ''}
-      />
+      {showErrorDialog && (
+        <ErrorDialog
+          open={showErrorDialog}
+          onClose={closeErrorDialog}
+          title="Consulta Já Realizada"
+          message={error || ''}
+        />
+      )}
       
       <RelatedProductsModal
         open={showProductsModal}

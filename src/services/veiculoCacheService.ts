@@ -237,7 +237,7 @@ export const buscarOuConsultarVeiculo = async (
           mensagemErro = `Este ${tipo} não foi encontrado na ${endpoint === 'base-sp' ? 'Base de São Paulo' : 'Base Nacional (BIN)'}.`;
         }
         
-        throw new Error(`⚠️ Consulta Já Realizada\n\n${mensagemErro}\n\nPor favor, verifique as informações digitadas.\n\nÚltima tentativa: ${dataConsulta}`);
+        throw new Error(`Consulta já realizada anteriormente em ${dataConsulta}. ${mensagemErro} Por favor, verifique as informações digitadas.`);
       }
       
       // 3. Verificar se existe erro de API errada
