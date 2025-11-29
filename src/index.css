@@ -118,6 +118,16 @@ All colors MUST be HSL.
     --border: 0 0% 90%; /* Bordas claras */
     --input: 0 0% 95%;
     --ring: 45 89% 53%; /* Yellow */
+
+    /* Sidebar no tema light - fundo claro com letras escuras */
+    --sidebar-background: 0 0% 100%; /* Branco */
+    --sidebar-foreground: 0 0% 10%; /* Preto para contraste */
+    --sidebar-primary: 45 89% 53%; /* Yellow */
+    --sidebar-primary-foreground: 0 0% 0%; /* Black */
+    --sidebar-accent: 0 0% 95%; /* Cinza claro */
+    --sidebar-accent-foreground: 0 0% 10%; /* Preto */
+    --sidebar-border: 0 0% 90%; /* Bordas claras */
+    --sidebar-ring: 45 89% 53%; /* Yellow */
   }
 }
 

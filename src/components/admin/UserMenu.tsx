@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Palette, User } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Monitor } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -55,6 +55,12 @@ export const UserMenu = () => {
       : nome.substring(0, 2).toUpperCase();
   };
 
+  const themeIcons = {
+    padrao: Monitor,
+    dark: Moon,
+    light: Sun
+  };
+
   const themeLabels = {
     padrao: 'Padrão',
     dark: 'Escuro',
@@ -81,23 +87,44 @@ export const UserMenu = () => {
         <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Palette className="mr-2 h-4 w-4" />
-            <span>Tema: {themeLabels[theme]}</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuItem onClick={() => setTheme('padrao')}>
-              {theme === 'padrao' && '✓ '}Padrão
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('dark')}>
-              {theme === 'dark' && '✓ '}Escuro
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('light')}>
-              {theme === 'light' && '✓ '}Claro
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Tema
+        </DropdownMenuLabel>
+        <div className="flex items-center gap-1 p-2">
+          <button
+            onClick={() => setTheme('padrao')}
+            className={`flex-1 flex items-center justify-center p-2 rounded-md transition-colors ${
+              theme === 'padrao' 
+                ? 'bg-accent text-accent-foreground' 
+                : 'hover:bg-muted'
+            }`}
+            title="Padrão"
+          >
+            <Monitor className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setTheme('light')}
+            className={`flex-1 flex items-center justify-center p-2 rounded-md transition-colors ${
+              theme === 'light' 
+                ? 'bg-accent text-accent-foreground' 
+                : 'hover:bg-muted'
+            }`}
+            title="Claro"
+          >
+            <Sun className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setTheme('dark')}
+            className={`flex-1 flex items-center justify-center p-2 rounded-md transition-colors ${
+              theme === 'dark' 
+                ? 'bg-accent text-accent-foreground' 
+                : 'hover:bg-muted'
+            }`}
+            title="Escuro"
+          >
+            <Moon className="h-4 w-4" />
+          </button>
+        </div>
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
