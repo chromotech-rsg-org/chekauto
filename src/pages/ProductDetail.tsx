@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCheckout } from '@/contexts/CheckoutContext';
+import { Lightbox } from '@/components/ui/lightbox';
 
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
@@ -26,6 +27,8 @@ export default function ProductDetail() {
   const [aplicacoes, setAplicacoes] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   const { consultar, loading: consultaLoading, resultado } = useVehicleConsultation();
   const { setVehicleData, setProductData } = useCheckout();
@@ -212,7 +215,14 @@ export default function ProductDetail() {
           {/* Galeria de Imagens */}
           <div>
             {produto.foto_url && (
-              <div className="bg-gray-100 rounded-lg mb-4 aspect-[4/3] overflow-hidden">
+              <div 
+                className="bg-gray-100 rounded-lg mb-4 aspect-[4/3] overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => {
+                  const allImages = [produto.foto_url, ...galeria.map(g => g.foto_url)];
+                  setLightboxIndex(0);
+                  setLightboxOpen(true);
+                }}
+              >
                 <img 
                   src={produto.foto_url} 
                   alt={produto.nome}
@@ -226,7 +236,14 @@ export default function ProductDetail() {
                 <CarouselContent>
                   {galeria.slice(0, 3).map((foto, idx) => (
                     <CarouselItem key={idx} className="basis-1/3">
-                      <div className="bg-gray-100 rounded-lg aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-chekauto-yellow transition-all">
+                      <div 
+                        className="bg-gray-100 rounded-lg aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-chekauto-yellow transition-all"
+                        onClick={() => {
+                          const allImages = [produto.foto_url, ...galeria.map(g => g.foto_url)];
+                          setLightboxIndex(idx + 1);
+                          setLightboxOpen(true);
+                        }}
+                      >
                         <img 
                           src={foto.foto_url} 
                           alt={`Galeria ${idx + 1}`}
@@ -458,6 +475,15 @@ export default function ProductDetail() {
           </div>
         )}
       </section>
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <Lightbox
+          images={[produto.foto_url, ...galeria.map(g => g.foto_url)].filter(Boolean)}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
 
       <Footer />
     </div>
