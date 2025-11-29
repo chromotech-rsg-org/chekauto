@@ -13,28 +13,11 @@ export const ProductCatalog: React.FC = () => {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [tipos, setTipos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tipoFiltro, setTipoFiltro] = useState<string | null>(null);
+  const [categoriasFiltro, setCategoriasFiltro] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
-    checkVehicleConsultation();
   }, []);
-
-  const checkVehicleConsultation = () => {
-    // Verificar se há dados de consulta de veículo salvos
-    const consultaData = localStorage.getItem('consultaData');
-    if (consultaData) {
-      try {
-        const data = JSON.parse(consultaData);
-        // Se veio de consulta, filtrar por tipo de veículo
-        if (data.vehicleData?.tipo) {
-          setTipoFiltro(data.vehicleData.tipo);
-        }
-      } catch (error) {
-        console.error('Erro ao ler dados da consulta:', error);
-      }
-    }
-  };
 
   const loadData = async () => {
     try {
@@ -76,44 +59,44 @@ export const ProductCatalog: React.FC = () => {
     }
   };
 
-  // Filtrar produtos por busca e tipo de veículo (se houver)
-  const produtosFiltrados = produtos.filter(produto => {
+  // Filtrar produtos únicos por ID e aplicar filtros
+  const produtosUnicos = produtos.reduce((acc, produto) => {
+    if (!acc.find((p: any) => p.id === produto.id)) {
+      acc.push(produto);
+    }
+    return acc;
+  }, [] as any[]);
+
+  const produtosFiltrados = produtosUnicos.filter(produto => {
     const matchesSearch = produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       produto.apelido?.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (!matchesSearch) return false;
 
-    // Se houver filtro de tipo de veículo da consulta
-    if (tipoFiltro) {
-      const produtoTipos = produto.produto_tipos?.map((pt: any) => {
-        const tipo = pt.categorias;
-        return tipo ? `${tipo.codigo} - ${tipo.nome}` : null;
-      }).filter(Boolean);
+    // Se houver filtro de categorias
+    if (categoriasFiltro.length > 0) {
+      const produtoCategorias = produto.produto_tipos?.map((pt: any) => 
+        pt.categorias?.nome
+      ).filter(Boolean);
 
-      return produtoTipos?.includes(tipoFiltro);
+      return produtoCategorias?.some((cat: string) => categoriasFiltro.includes(cat));
     }
 
     return true;
   });
 
-  // Agrupar produtos por tipo
-  const produtosAgrupados = tipos.map(tipo => {
-    const tipoFormatado = tipo.codigo ? `${tipo.codigo} - ${tipo.nome}` : tipo.nome;
-    const produtosDoTipo = produtosFiltrados.filter(produto => 
-      produto.produto_tipos?.some((pt: any) => pt.tipo_id === tipo.id)
+  const toggleCategoriaFiltro = (nomeCategoria: string) => {
+    setCategoriasFiltro(prev => 
+      prev.includes(nomeCategoria) 
+        ? prev.filter(c => c !== nomeCategoria)
+        : [...prev, nomeCategoria]
     );
+  };
 
-    return {
-      tipo,
-      tipoFormatado,
-      produtos: produtosDoTipo,
-    };
-  }).filter(grupo => grupo.produtos.length > 0);
-
-  // Se não houver produtos agrupados mas houver produtos filtrados, mostrar todos
-  const produtosSemTipo = produtosFiltrados.filter(produto => 
-    !produto.produto_tipos || produto.produto_tipos.length === 0
-  );
+  const limparFiltros = () => {
+    setCategoriasFiltro([]);
+    setSearchTerm('');
+  };
 
   if (loading) {
     return (
@@ -129,24 +112,33 @@ export const ProductCatalog: React.FC = () => {
   return (
     <section id="produtos" className="bg-[rgba(233,233,233,1)] flex w-full flex-col items-center pb-[95px] px-20 max-md:max-w-full max-md:px-5">
       <div className="bg-white z-10 flex mt-[-200px] w-full max-w-[1274px] flex-col items-stretch pt-[94px] pb-[166px] px-[71px] rounded-[20px_20px_0px_0px] max-md:max-w-full max-md:pb-[100px] max-md:px-5">
-        <div className="flex items-center justify-between mb-8">
-          <img src={logoBlack} alt="CHEKAUTO Logo" className="h-[40px] object-contain" />
+        <div className="flex flex-col mb-8">
+          <img src={logoBlack} alt="CHEKAUTO Logo" className="h-[40px] object-contain mb-6" />
           
-          {tipoFiltro && (
-            <div className="text-sm">
-              <span className="text-gray-600">Filtrando por: </span>
-              <span className="font-semibold text-brand-yellow">{tipoFiltro}</span>
-              <button 
-                onClick={() => {
-                  setTipoFiltro(null);
-                  localStorage.removeItem('consultaData');
-                }}
-                className="ml-2 text-gray-500 hover:text-brand-yellow underline"
+          {/* Filtros por categoria */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {tipos.map(tipo => (
+              <button
+                key={tipo.id}
+                onClick={() => toggleCategoriaFiltro(tipo.nome)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  categoriasFiltro.includes(tipo.nome)
+                    ? 'bg-brand-yellow text-black'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
-                Limpar filtro
+                {tipo.nome}
               </button>
-            </div>
-          )}
+            ))}
+            {categoriasFiltro.length > 0 && (
+              <button
+                onClick={limparFiltros}
+                className="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 relative max-w-md mx-auto w-full">
@@ -162,89 +154,49 @@ export const ProductCatalog: React.FC = () => {
         {produtosFiltrados.length === 0 && (
           <div className="text-center py-12 mt-8">
             <p className="text-gray-500 text-lg">
-              {tipoFiltro 
-                ? 'Nenhum produto encontrado para este tipo de veículo' 
-                : 'Nenhum produto encontrado'}
+              Nenhum produto encontrado
             </p>
-            {tipoFiltro && (
+            {(categoriasFiltro.length > 0 || searchTerm) && (
               <button 
-                onClick={() => {
-                  setTipoFiltro(null);
-                  localStorage.removeItem('consultaData');
-                }}
+                onClick={limparFiltros}
                 className="mt-4 text-brand-yellow hover:underline"
               >
-                Ver todos os produtos
+                Limpar filtros
               </button>
             )}
           </div>
         )}
 
-        {/* Produtos sem tipo definido */}
-        {produtosSemTipo.length > 0 && (
+        {/* Grid de produtos únicos */}
+        {produtosFiltrados.length > 0 && (
           <div className="mt-[73px] max-md:mt-10">
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800">
-                Outros Produtos
-              </h3>
-            </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {produtosSemTipo.map((produto) => (
-                <div key={produto.id} className="flex flex-col">
-                  <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
-                    <span>Produto</span>
-                    <button 
-                      onClick={() => navigate(`/produto/${produto.id}`)} 
-                      className="text-brand-yellow hover:text-brand-yellow-dark transition-colors"
-                    >
-                      Saiba mais
-                    </button>
+              {produtosFiltrados.map((produto) => {
+                const categorias = produto.produto_tipos?.map((pt: any) => pt.categorias?.nome).filter(Boolean) || [];
+                const categoriasTexto = categorias.length > 0 ? categorias.join(', ') : 'Produto';
+                
+                return (
+                  <div key={produto.id} className="flex flex-col">
+                    <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
+                      <span className="truncate">{categoriasTexto}</span>
+                      <button 
+                        onClick={() => navigate(`/produto/${produto.id}`)} 
+                        className="text-brand-yellow hover:text-brand-yellow-dark transition-colors whitespace-nowrap ml-2"
+                      >
+                        Saiba mais
+                      </button>
+                    </div>
+                    <ProductCard 
+                      id={produto.id} 
+                      title={produto.apelido || produto.nome} 
+                      image={produto.foto_url || "https://via.placeholder.com/400x300?text=Sem+Imagem"} 
+                    />
                   </div>
-                  <ProductCard 
-                    id={produto.id} 
-                    title={produto.apelido || produto.nome} 
-                    image={produto.foto_url || "https://via.placeholder.com/400x300?text=Sem+Imagem"} 
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
-
-        {produtosAgrupados.map((grupo, sectionIndex) => (
-          <div key={grupo.tipo.id} className="mt-[73px] max-md:mt-10">
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {grupo.tipoFormatado}
-              </h3>
-              {grupo.tipo.descricao && (
-                <p className="text-sm text-gray-500 mt-1">{grupo.tipo.descricao}</p>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {grupo.produtos.map((produto) => (
-                <div key={produto.id} className="flex flex-col">
-                  <div className="border flex flex-row items-center justify-between px-5 py-4 rounded-[8px_8px_0px_0px] border-[rgba(204,204,204,1)] border-solid text-sm text-black font-medium">
-                    <span>{grupo.tipoFormatado}</span>
-                    <button 
-                      onClick={() => navigate(`/produto/${produto.id}`)} 
-                      className="text-brand-yellow hover:text-brand-yellow-dark transition-colors"
-                    >
-                      Saiba mais
-                    </button>
-                  </div>
-                  <ProductCard 
-                    id={produto.id} 
-                    title={produto.apelido || produto.nome} 
-                    image={produto.foto_url || "https://via.placeholder.com/400x300?text=Sem+Imagem"} 
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
       </div>
     </section>
   );
