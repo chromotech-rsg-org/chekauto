@@ -121,6 +121,30 @@ export type Database = {
           },
         ]
       }
+      codigos_erro_api: {
+        Row: {
+          cobranca: boolean
+          codigo: number
+          criado_em: string | null
+          descricao: string
+          id: string
+        }
+        Insert: {
+          cobranca?: boolean
+          codigo: number
+          criado_em?: string | null
+          descricao: string
+          id?: string
+        }
+        Update: {
+          cobranca?: boolean
+          codigo?: number
+          criado_em?: string | null
+          descricao?: string
+          id?: string
+        }
+        Relationships: []
+      }
       configuracoes_sistema: {
         Row: {
           atualizado_em: string | null
@@ -249,12 +273,16 @@ export type Database = {
         Row: {
           ano_fabricacao: string | null
           ano_modelo: string | null
+          api_conectou: boolean | null
           categoria: string | null
           chassi: string | null
+          codigo_resposta: number | null
           combustivel: string | null
           cor: string | null
           criado_em: string | null
+          endpoint: string | null
           erro: string | null
+          erro_tipo: string | null
           id: string
           marca: string | null
           modelo: string | null
@@ -269,12 +297,16 @@ export type Database = {
         Insert: {
           ano_fabricacao?: string | null
           ano_modelo?: string | null
+          api_conectou?: boolean | null
           categoria?: string | null
           chassi?: string | null
+          codigo_resposta?: number | null
           combustivel?: string | null
           cor?: string | null
           criado_em?: string | null
+          endpoint?: string | null
           erro?: string | null
+          erro_tipo?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
@@ -289,12 +321,16 @@ export type Database = {
         Update: {
           ano_fabricacao?: string | null
           ano_modelo?: string | null
+          api_conectou?: boolean | null
           categoria?: string | null
           chassi?: string | null
+          codigo_resposta?: number | null
           combustivel?: string | null
           cor?: string | null
           criado_em?: string | null
+          endpoint?: string | null
           erro?: string | null
+          erro_tipo?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
