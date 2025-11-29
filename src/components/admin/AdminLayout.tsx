@@ -17,7 +17,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     <div className="flex min-h-screen w-full bg-background">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-card border-b border-border px-6 py-4 flex justify-end items-center">
+        <header className="sticky top-0 z-40 bg-card border-b border-border px-6 py-4 flex justify-end items-center">
           <UserMenu />
         </header>
         <main className="flex-1 overflow-auto">

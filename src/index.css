@@ -16,7 +16,7 @@ All colors MUST be HSL.
     --chekauto-gray-text: 0 0% 65%; /* #A6A6A6 */
     --chekauto-orange: 28 95% 69%; /* #FAA954 */
 
-    /* Base Colors using Brand Palette */
+    /* Base Colors using Brand Palette - Tema Padrão */
     --background: 0 0% 100%; /* White */
     --foreground: 0 0% 0%; /* Black */
 
@@ -47,14 +47,14 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    /* Sidebar - Dark Theme */
+    /* Sidebar - Preto no Tema Padrão */
     --sidebar-background: 0 0% 0%; /* Black */
     --sidebar-foreground: 0 0% 100%; /* White */
     --sidebar-primary: 45 89% 53%; /* Yellow */
     --sidebar-primary-foreground: 0 0% 0%; /* Black */
     --sidebar-accent: 0 0% 10%; /* Dark Gray */
     --sidebar-accent-foreground: 0 0% 100%; /* White */
-    --sidebar-border: 0 0% 20%; /* Border in dark theme */
+    --sidebar-border: 0 0% 20%; /* Border */
     --sidebar-ring: 45 89% 53%; /* Yellow */
   }
 
