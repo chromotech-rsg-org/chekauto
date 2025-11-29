@@ -43,6 +43,7 @@ export const ScannerSection: React.FC = () => {
     const result = await consultar(tipo, valorLimpo, endpoint, uf);
     if (result) {
       setShowResults(true);
+      setShowProductsModal(true);
     }
   };
 
@@ -131,7 +132,7 @@ export const ScannerSection: React.FC = () => {
                     Consultando...
                   </>
                 ) : (
-                  'CONSULTAR'
+                  'CONTINUAR'
                 )}
               </button>
             </div>
@@ -145,17 +146,6 @@ export const ScannerSection: React.FC = () => {
                   ultimaAtualizacao={resultado.ultimaAtualizacao}
                   showFullDetails={true}
                 />
-                
-                {resultado.data?.tipo && (
-                  <div className="mt-6 flex justify-center">
-                    <Button
-                      onClick={() => setShowProductsModal(true)}
-                      className="bg-brand-yellow hover:bg-brand-yellow-dark text-black font-bold px-8 py-3"
-                    >
-                      Ver Produtos Compatíveis
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
           </div>
