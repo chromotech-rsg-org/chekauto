@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 const exportFields = [{
   key: "tipo_consulta",
-  label: "Tipo"
+  label: "Tipo Consulta"
 }, {
   key: "endpoint",
   label: "Endpoint"
@@ -38,11 +38,17 @@ const exportFields = [{
   key: "cor",
   label: "Cor"
 }, {
+  key: "tipo",
+  label: "Tipo Veículo"
+}, {
   key: "categoria",
   label: "Categoria"
 }, {
   key: "ano_modelo",
   label: "Ano Modelo"
+}, {
+  key: "ano_fabricacao",
+  label: "Ano Fabricação"
 }, {
   key: "combustivel",
   label: "Combustível"
@@ -58,6 +64,9 @@ const exportFields = [{
 }, {
   key: "erro_tipo",
   label: "Tipo Erro"
+}, {
+  key: "erro",
+  label: "Mensagem Erro"
 }, {
   key: "tempo_resposta",
   label: "Tempo (ms)"
@@ -131,13 +140,16 @@ export default function LogsConsultas() {
     modelo: log.modelo || "-",
     marca: log.marca || "-",
     cor: log.cor || "-",
+    tipo: log.tipo || "-",
     categoria: log.categoria || "-",
     ano_modelo: log.ano_modelo || "-",
+    ano_fabricacao: log.ano_fabricacao || "-",
     combustivel: log.combustivel || "-",
     sucesso: log.sucesso ? "Sim" : "Não",
     codigo_resposta: log.codigo_resposta || "-",
     api_conectou: log.api_conectou ? "Sim" : "Não",
     erro_tipo: log.erro_tipo || "-",
+    erro: log.erro || "-",
     tempo_resposta: log.tempo_resposta || "-",
     criado_em: new Date(log.criado_em).toLocaleString('pt-BR')
   }));
@@ -315,6 +327,10 @@ export default function LogsConsultas() {
                   <div>
                     <span className="text-xs text-muted-foreground">Cor:</span>
                     <p className="font-semibold">{selectedLog.cor || "-"}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-xs text-muted-foreground">Tipo Veículo:</span>
+                    <p className="font-semibold text-primary">{selectedLog.tipo || "-"}</p>
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground">Categoria:</span>

@@ -199,35 +199,55 @@ function extrairDadosVeiculo(dados: any): any {
     // Para BIN, a estrutura é: { code: 200, data: [...array de objetos...] }
     if (dados?.code === 200 && Array.isArray(dados?.data) && dados.data.length > 0) {
       const veiculo = dados.data[0];
-      resultado.placa = veiculo.placa || null;
-      resultado.chassi = veiculo.chassi || null;
-      resultado.renavam = veiculo.renavam || null;
-      resultado.marca = veiculo.marca || null;
-      resultado.modelo = veiculo.modelo || null;
-      resultado.ano_modelo = veiculo.ano_modelo || null;
-      resultado.ano_fabricacao = veiculo.ano_fabricacao || null;
-      resultado.cor = veiculo.cor || null;
-      resultado.combustivel = veiculo.combustivel || null;
-      resultado.categoria = veiculo.categoria || veiculo.tipo || null;
-      // Percorrer os dados e extrair informações relevantes
+      
+      // Lista de campos a extrair - mapeamento de possíveis variações de nomes
+      const camposMapeamento = {
+        placa: ['placa', 'Placa', 'PLACA'],
+        chassi: ['chassi', 'Chassi', 'CHASSI'],
+        renavam: ['renavam', 'Renavam', 'RENAVAM'],
+        marca: ['marca', 'Marca', 'MARCA'],
+        modelo: ['modelo', 'Modelo', 'MODELO', 'descricao'],
+        ano_modelo: ['ano_modelo', 'AnoModelo', 'Ano Modelo', 'ano'],
+        ano_fabricacao: ['ano_fabricacao', 'AnoFabricacao', 'Ano Fabricação'],
+        cor: ['cor', 'Cor', 'COR'],
+        combustivel: ['combustivel', 'Combustivel', 'COMBUSTIVEL', 'tipo_combustivel'],
+        categoria: ['categoria', 'Categoria', 'CATEGORIA', 'tipo_veiculo', 'TipoVeiculo'],
+        tipo: ['tipo', 'Tipo', 'TIPO', 'codigo_tipo', 'CodigoTipo']
+      };
+      
+      // Função auxiliar para buscar valor em múltiplas variações de chave
+      const buscarValor = (obj: any, variacoes: string[]) => {
+        for (const variacao of variacoes) {
+          if (obj[variacao] !== undefined && obj[variacao] !== null && obj[variacao] !== '') {
+            return obj[variacao];
+          }
+        }
+        return null;
+      };
+      
+      // Extrair campos do primeiro item
+      for (const [campo, variacoes] of Object.entries(camposMapeamento)) {
+        resultado[campo] = buscarValor(veiculo, variacoes);
+      }
+      
+      // Percorrer todos os itens do array data para preencher campos que possam estar em outros objetos
       dados.data.forEach((item: any) => {
-        if (item.Placa) resultado.placa = item.Placa;
-        if (item.Chassi) resultado.chassi = item.Chassi;
-        if (item.Renavam) resultado.renavam = item.Renavam;
-        if (item.Marca) resultado.marca = item.Marca;
-        if (item.Modelo) resultado.modelo = item.Modelo;
-        if (item.AnoFabricacao || item['Ano Fabricação']) {
-          resultado.ano_fabricacao = item.AnoFabricacao || item['Ano Fabricação'];
-        }
-        if (item.AnoModelo || item['Ano Modelo']) {
-          resultado.ano_modelo = item.AnoModelo || item['Ano Modelo'];
-        }
-        if (item.Cor) resultado.cor = item.Cor;
-        if (item.Combustivel) resultado.combustivel = item.Combustivel;
-        if (item.Categoria || item.TipoVeiculo) {
-          resultado.categoria = item.Categoria || item.TipoVeiculo;
+        for (const [campo, variacoes] of Object.entries(camposMapeamento)) {
+          if (!resultado[campo]) {
+            const valor = buscarValor(item, variacoes);
+            if (valor) {
+              resultado[campo] = valor;
+            }
+          }
         }
       });
+      
+      // Extrair tipo do veículo com formatação especial (ex: "11 - SEMIRREBOQUE")
+      if (resultado.tipo && resultado.categoria) {
+        resultado.tipo = `${resultado.tipo} - ${resultado.categoria}`;
+      } else if (!resultado.tipo && resultado.categoria) {
+        resultado.tipo = resultado.categoria;
+      }
     }
   } catch (error) {
     console.error('Erro ao extrair dados do veículo:', error);

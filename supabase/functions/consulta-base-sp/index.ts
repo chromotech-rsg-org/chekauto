@@ -210,19 +210,45 @@ function extrairDadosVeiculo(dados: any): any {
     const veiculoData = veiculo?.veiculo || veiculo;
     const crv = veiculo?.crv || {};
     
-    // Mesclar dados
+    // Mesclar dados de todas as possíveis fontes
     const merged = { ...veiculo, ...veiculoData, ...crv };
     
-    resultado.placa = merged?.placa || merged?.Placa || null;
-    resultado.chassi = merged?.chassi || merged?.Chassi || null;
-    resultado.renavam = merged?.renavam || merged?.Renavam || null;
-    resultado.modelo = merged?.modelo || merged?.Modelo || null;
-    resultado.marca = merged?.marca || merged?.Marca || null;
-    resultado.cor = merged?.cor || merged?.Cor || null;
-    resultado.ano_modelo = merged?.ano_modelo || merged?.AnoModelo || merged?.ano || null;
-    resultado.ano_fabricacao = merged?.ano_fabricacao || merged?.AnoFabricacao || null;
-    resultado.combustivel = merged?.combustivel || merged?.Combustivel || null;
-    resultado.categoria = merged?.categoria || merged?.Categoria || merged?.tipo || null;
+    // Lista de campos a extrair - mapeamento de possíveis variações de nomes
+    const camposMapeamento = {
+      placa: ['placa', 'Placa', 'PLACA'],
+      chassi: ['chassi', 'Chassi', 'CHASSI'],
+      renavam: ['renavam', 'Renavam', 'RENAVAM'],
+      marca: ['marca', 'Marca', 'MARCA'],
+      modelo: ['modelo', 'Modelo', 'MODELO', 'descricao'],
+      ano_modelo: ['ano_modelo', 'AnoModelo', 'Ano Modelo', 'ano'],
+      ano_fabricacao: ['ano_fabricacao', 'AnoFabricacao', 'Ano Fabricação'],
+      cor: ['cor', 'Cor', 'COR'],
+      combustivel: ['combustivel', 'Combustivel', 'COMBUSTIVEL', 'tipo_combustivel'],
+      categoria: ['categoria', 'Categoria', 'CATEGORIA', 'tipo_veiculo', 'TipoVeiculo'],
+      tipo: ['tipo', 'Tipo', 'TIPO', 'codigo_tipo', 'CodigoTipo']
+    };
+    
+    // Função auxiliar para buscar valor em múltiplas variações de chave
+    const buscarValor = (obj: any, variacoes: string[]) => {
+      for (const variacao of variacoes) {
+        if (obj[variacao] !== undefined && obj[variacao] !== null && obj[variacao] !== '') {
+          return obj[variacao];
+        }
+      }
+      return null;
+    };
+    
+    // Extrair todos os campos
+    for (const [campo, variacoes] of Object.entries(camposMapeamento)) {
+      resultado[campo] = buscarValor(merged, variacoes);
+    }
+    
+    // Extrair tipo do veículo com formatação especial (ex: "11 - SEMIRREBOQUE")
+    if (resultado.tipo && resultado.categoria) {
+      resultado.tipo = `${resultado.tipo} - ${resultado.categoria}`;
+    } else if (!resultado.tipo && resultado.categoria) {
+      resultado.tipo = resultado.categoria;
+    }
   } catch (error) {
     console.error('Erro ao extrair dados do veículo:', error);
   }

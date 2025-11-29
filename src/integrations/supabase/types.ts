@@ -292,6 +292,7 @@ export type Database = {
           resposta: Json
           sucesso: boolean
           tempo_resposta: number | null
+          tipo: string | null
           tipo_consulta: string
         }
         Insert: {
@@ -316,6 +317,7 @@ export type Database = {
           resposta: Json
           sucesso: boolean
           tempo_resposta?: number | null
+          tipo?: string | null
           tipo_consulta: string
         }
         Update: {
@@ -340,6 +342,7 @@ export type Database = {
           resposta?: Json
           sucesso?: boolean
           tempo_resposta?: number | null
+          tipo?: string | null
           tipo_consulta?: string
         }
         Relationships: []
