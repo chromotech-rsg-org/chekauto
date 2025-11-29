@@ -126,7 +126,7 @@ export const AdminSidebar = () => {
 
       {/* Sidebar */}
       <aside className={`
-          fixed lg:sticky top-0 left-0 h-screen bg-sidebar-background text-sidebar-foreground z-50
+          fixed lg:sticky top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50
           transition-all duration-300 ease-in-out border-r border-sidebar-border
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
@@ -141,7 +141,7 @@ export const AdminSidebar = () => {
         </div>
 
         {/* Navigation with custom scrollbar */}
-        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll bg-sidebar-background">
+        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll">
           <ul className="space-y-1 px-2">
             {menuItems.filter(item => !item.devOnly || isDesenvolvedor).map(item => <li key={item.path}>
                   <NavLink to={item.path} onClick={() => setIsOpen(false)} className={({
