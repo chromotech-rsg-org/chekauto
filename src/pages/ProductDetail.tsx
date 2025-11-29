@@ -5,12 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Footer } from '@/components/Footer';
 import logoYellow from '@/assets/logo-chekauto-yellow-black.png';
 import truckBlue from '@/assets/truck-blue-sunset.png';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { VehicleDataDisplay } from '@/components/VehicleDataDisplay';
-import { Loader2 } from 'lucide-react';
+import { RelatedProductsModal } from '@/components/RelatedProductsModal';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCheckout } from '@/contexts/CheckoutContext';
@@ -29,6 +40,9 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isCompatible, setIsCompatible] = useState(true);
+  const [showCompatibilityDialog, setShowCompatibilityDialog] = useState(false);
+  const [showRelatedProductsModal, setShowRelatedProductsModal] = useState(false);
   
   const { consultar, loading: consultaLoading, resultado } = useVehicleConsultation();
   const { setVehicleData, setProductData } = useCheckout();
@@ -133,6 +147,21 @@ export default function ProductDetail() {
     const result = await consultar(tipo, valorLimpo, endpoint, uf);
     if (result) {
       setShowResults(true);
+      
+      // Verificar compatibilidade
+      const vehicleTipo = result.data?.tipo || '';
+      const tipoCode = vehicleTipo.split(' ')[0];
+      
+      if (produto && produto.produto_tipos?.length > 0) {
+        const productTipos = produto.produto_tipos.map((pt: any) => pt.categorias?.codigo).filter(Boolean);
+        const compatible = productTipos.some((codigo: string) => codigo === tipoCode || vehicleTipo.includes(codigo));
+        
+        setIsCompatible(compatible);
+        
+        if (!compatible) {
+          setShowCompatibilityDialog(true);
+        }
+      }
     }
   };
 
@@ -386,12 +415,24 @@ export default function ProductDetail() {
                     showFullDetails={true}
                   />
                   
-                  <Button 
-                    onClick={handleContratarComVeiculo}
-                    className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-12 text-lg font-bold"
-                  >
-                    CONTRATAR COM ESTE VEÍCULO
-                  </Button>
+                  {isCompatible ? (
+                    <Button 
+                      onClick={handleContratarComVeiculo}
+                      className="w-full bg-chekauto-yellow text-black hover:bg-chekauto-yellow/90 h-12 text-lg font-bold"
+                    >
+                      CONTRATAR COM ESTE VEÍCULO
+                    </Button>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        <p className="font-semibold text-amber-900">Veículo não compatível</p>
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        O tipo do veículo consultado não é compatível com este produto.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -484,6 +525,43 @@ export default function ProductDetail() {
           onClose={() => setLightboxOpen(false)}
         />
       )}
+
+      {/* Compatibility Dialog */}
+      <AlertDialog open={showCompatibilityDialog} onOpenChange={setShowCompatibilityDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Produto não compatível com o veículo
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              O tipo de veículo consultado não é compatível com este produto. Deseja ver os produtos compatíveis com seu veículo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowCompatibilityDialog(false)}>
+              Não, continuar aqui
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowCompatibilityDialog(false);
+                setShowRelatedProductsModal(true);
+              }}
+              className="bg-brand-yellow hover:bg-brand-yellow-dark text-black"
+            >
+              Sim, ver produtos compatíveis
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Related Products Modal */}
+      <RelatedProductsModal
+        open={showRelatedProductsModal}
+        onClose={() => setShowRelatedProductsModal(false)}
+        vehicleType={resultado?.data?.tipo || ''}
+        vehicleData={resultado?.data || {}}
+      />
 
       <Footer />
     </div>

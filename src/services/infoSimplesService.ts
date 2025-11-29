@@ -28,8 +28,8 @@ export const buscarTokenInfoSimples = async (): Promise<string | null> => {
     const { data, error } = await supabase
       .from('configuracoes_sistema')
       .select('valor')
-      .eq('chave', 'infosimples_api_token')
-      .single();
+      .eq('chave', 'infosimples_token')
+      .maybeSingle();
 
     if (error) {
       console.error('Erro ao buscar token do banco:', error);
