@@ -83,6 +83,8 @@ serve(async (req) => {
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
     logData.tempo_resposta = responseTime;
+    logData.api_conectou = response.ok;
+    logData.endpoint = 'bin';
 
     console.log('Response status:', response.status);
 
@@ -95,22 +97,49 @@ serve(async (req) => {
       const text = await response.text();
       console.error('Resposta não é JSON:', text);
       data = { error: 'Resposta inválida da API', details: text };
+      logData.erro_tipo = 'ERRO_PARSE_JSON';
     }
 
     logData.resposta = data;
+    logData.codigo_resposta = data?.code || response.status;
 
-    if (!response.ok) {
+    // Detectar tipo de erro
+    if (!response.ok || data?.code !== 200) {
       logData.sucesso = false;
-      logData.erro = data.message || data.error || `Erro HTTP ${response.status}`;
+      const erros = data?.errors || [];
+      logData.erro = Array.isArray(erros) ? erros.join(', ') : (data.message || data.error || `Erro HTTP ${response.status}`);
+      
+      // Detectar erros específicos
+      const codigoResposta = data?.code || response.status;
+      if (codigoResposta === 612) {
+        const chassiNaoCadastrado = erros.some((err: string) => 
+          err && err.includes('CHASSI') && err.includes('NÃO CADASTRADO')
+        );
+        logData.erro_tipo = chassiNaoCadastrado ? 'CHASSI_NAO_ENCONTRADO' : 'VEICULO_NAO_ENCONTRADO';
+      } else if (codigoResposta === 601) {
+        logData.erro_tipo = 'ERRO_AUTENTICACAO';
+      } else if (codigoResposta === 606 || codigoResposta === 607) {
+        logData.erro_tipo = 'ERRO_PARAMETROS';
+      } else if (codigoResposta === 615 || codigoResposta === 618) {
+        logData.erro_tipo = 'API_INDISPONIVEL';
+      } else {
+        logData.erro_tipo = `ERRO_${codigoResposta}`;
+      }
+      
+      // Extrair dados mesmo em erro
+      const dadosExtraidos = extrairDadosVeiculo(data);
+      Object.assign(logData, dadosExtraidos);
+      
       await saveLog(logData);
       
       return new Response(
         JSON.stringify({
           success: false,
-          error: data.message || data.error || `Erro HTTP ${response.status}`,
-          status: response.status,
+          error: logData.erro,
+          status: codigoResposta,
           responseTime,
-          data
+          data,
+          endpoint: 'bin'
         }),
         { 
           status: response.status,
@@ -132,7 +161,8 @@ serve(async (req) => {
         success: true,
         data,
         responseTime,
-        status: response.status
+        status: 200,
+        endpoint: 'bin'
       }),
       { 
         status: 200,
@@ -161,24 +191,33 @@ serve(async (req) => {
   }
 });
 
-// Função para extrair dados do veículo da resposta
+// Função para extrair dados do veículo da resposta BIN
 function extrairDadosVeiculo(dados: any): any {
   const resultado: any = {};
   
   try {
-    // Tentar extrair de diferentes estruturas possíveis
-    const veiculo = dados?.data || dados;
-    
-    resultado.placa = veiculo?.placa || veiculo?.Placa || null;
-    resultado.chassi = veiculo?.chassi || veiculo?.Chassi || null;
-    resultado.renavam = veiculo?.renavam || veiculo?.Renavam || null;
-    resultado.modelo = veiculo?.modelo || veiculo?.Modelo || null;
-    resultado.marca = veiculo?.marca || veiculo?.Marca || null;
-    resultado.cor = veiculo?.cor || veiculo?.Cor || null;
-    resultado.ano_modelo = veiculo?.ano_modelo || veiculo?.AnoModelo || veiculo?.ano || null;
-    resultado.ano_fabricacao = veiculo?.ano_fabricacao || veiculo?.AnoFabricacao || null;
-    resultado.combustivel = veiculo?.combustivel || veiculo?.Combustivel || null;
-    resultado.categoria = veiculo?.categoria || veiculo?.Categoria || veiculo?.tipo || null;
+    // Para BIN, a estrutura é: { code: 200, data: [...array de objetos...] }
+    if (dados?.code === 200 && Array.isArray(dados?.data)) {
+      // Percorrer os dados e extrair informações relevantes
+      dados.data.forEach((item: any) => {
+        if (item.Placa) resultado.placa = item.Placa;
+        if (item.Chassi) resultado.chassi = item.Chassi;
+        if (item.Renavam) resultado.renavam = item.Renavam;
+        if (item.Marca) resultado.marca = item.Marca;
+        if (item.Modelo) resultado.modelo = item.Modelo;
+        if (item.AnoFabricacao || item['Ano Fabricação']) {
+          resultado.ano_fabricacao = item.AnoFabricacao || item['Ano Fabricação'];
+        }
+        if (item.AnoModelo || item['Ano Modelo']) {
+          resultado.ano_modelo = item.AnoModelo || item['Ano Modelo'];
+        }
+        if (item.Cor) resultado.cor = item.Cor;
+        if (item.Combustivel) resultado.combustivel = item.Combustivel;
+        if (item.Categoria || item.TipoVeiculo) {
+          resultado.categoria = item.Categoria || item.TipoVeiculo;
+        }
+      });
+    }
   } catch (error) {
     console.error('Erro ao extrair dados do veículo:', error);
   }

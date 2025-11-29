@@ -84,6 +84,8 @@ serve(async (req) => {
     const endTime = performance.now();
     const responseTime = Math.round(endTime - startTime);
     logData.tempo_resposta = responseTime;
+    logData.api_conectou = response.ok;
+    logData.endpoint = 'base-sp';
 
     console.log('Response status:', response.status);
 
@@ -96,22 +98,50 @@ serve(async (req) => {
       const text = await response.text();
       console.error('Resposta não é JSON:', text);
       data = { error: 'Resposta inválida da API', details: text };
+      logData.erro_tipo = 'ERRO_PARSE_JSON';
     }
 
     logData.resposta = data;
+    logData.codigo_resposta = data?.code || response.status;
 
-    if (!response.ok) {
+    // Detectar tipo de erro
+    if (!response.ok || data?.code !== 200) {
       logData.sucesso = false;
-      logData.erro = data.message || data.error || `Erro HTTP ${response.status}`;
+      const erros = data?.errors || [];
+      logData.erro = Array.isArray(erros) ? erros.join(', ') : (data.message || data.error || `Erro HTTP ${response.status}`);
+      
+      // Detectar erros específicos - CHASSI não encontrado na Base SP indica API errada
+      const codigoResposta = data?.code || response.status;
+      if (codigoResposta === 612) {
+        const chassiNaoCadastrado = erros.some((err: string) => 
+          err && err.includes('CHASSI') && err.includes('NÃO CADASTRADO')
+        );
+        // Se chassi não foi encontrado na Base SP, provavelmente é de outro estado
+        logData.erro_tipo = chassiNaoCadastrado ? 'CHASSI_API_ERRADA' : 'VEICULO_NAO_ENCONTRADO';
+      } else if (codigoResposta === 601) {
+        logData.erro_tipo = 'ERRO_AUTENTICACAO';
+      } else if (codigoResposta === 606 || codigoResposta === 607) {
+        logData.erro_tipo = 'ERRO_PARAMETROS';
+      } else if (codigoResposta === 615 || codigoResposta === 618) {
+        logData.erro_tipo = 'API_INDISPONIVEL';
+      } else {
+        logData.erro_tipo = `ERRO_${codigoResposta}`;
+      }
+      
+      // Extrair dados mesmo em erro
+      const dadosExtraidos = extrairDadosVeiculo(data);
+      Object.assign(logData, dadosExtraidos);
+      
       await saveLog(logData);
       
       return new Response(
         JSON.stringify({
           success: false,
-          error: data.message || data.error || `Erro HTTP ${response.status}`,
-          status: response.status,
+          error: logData.erro,
+          status: codigoResposta,
           responseTime,
-          data
+          data,
+          endpoint: 'base-sp'
         }),
         { 
           status: response.status,
@@ -133,7 +163,8 @@ serve(async (req) => {
         success: true,
         data,
         responseTime,
-        status: response.status
+        status: 200,
+        endpoint: 'base-sp'
       }),
       { 
         status: 200,
