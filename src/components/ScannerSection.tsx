@@ -5,6 +5,7 @@ import { VehicleDataDisplay } from './VehicleDataDisplay';
 import { ErrorDialog } from '@/components/ui/error-dialog';
 import { RelatedProductsModal } from './RelatedProductsModal';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 export const ScannerSection: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado' | ''>('');
@@ -44,6 +45,23 @@ export const ScannerSection: React.FC = () => {
     if (result) {
       setShowResults(true);
       setShowProductsModal(true);
+      
+      // Se for do cache, mostrar notificação com data/hora
+      if (result.fromCache && result.ultimaAtualizacao) {
+        const dataConsulta = new Date(result.ultimaAtualizacao).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        toast({
+          title: "📋 Consulta do Cache",
+          description: `Dados consultados anteriormente em ${dataConsulta}`,
+          duration: 5000,
+        });
+      }
     }
   };
 
