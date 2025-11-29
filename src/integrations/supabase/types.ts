@@ -879,9 +879,11 @@ export type Database = {
           auth_user_id: string | null
           criado_em: string | null
           email: string
+          foto_url: string | null
           id: string
           nome: string
           perfil_id: string | null
+          tema: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -889,9 +891,11 @@ export type Database = {
           auth_user_id?: string | null
           criado_em?: string | null
           email: string
+          foto_url?: string | null
           id?: string
           nome: string
           perfil_id?: string | null
+          tema?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -899,9 +903,11 @@ export type Database = {
           auth_user_id?: string | null
           criado_em?: string | null
           email?: string
+          foto_url?: string | null
           id?: string
           nome?: string
           perfil_id?: string | null
+          tema?: string | null
         }
         Relationships: [
           {

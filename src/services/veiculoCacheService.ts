@@ -210,7 +210,26 @@ export const buscarOuConsultarVeiculo = async (
     if (logsAnteriores.length > 0) {
       console.log(`[buscarOuConsultarVeiculo] Encontrados ${logsAnteriores.length} logs anteriores`);
       
-      // 2. Verificar se existe erro de API errada
+      // 2. Verificar se já existe QUALQUER erro no endpoint atual
+      const logErroNoEndpoint = logsAnteriores.find(log => 
+        !log.sucesso && log.endpoint === endpoint
+      );
+      
+      if (logErroNoEndpoint) {
+        console.log('[buscarOuConsultarVeiculo] Já existe erro anterior neste endpoint:', endpoint);
+        
+        // Não consultar novamente, retornar erro salvo
+        let mensagemErro = logErroNoEndpoint.erro || 'Esta consulta já foi realizada anteriormente e retornou erro.';
+        
+        // Mensagem específica para "CHASSI NÃO CADASTRADO"
+        if (logErroNoEndpoint.erro && logErroNoEndpoint.erro.includes('CHASSI NÃO CADASTRADO')) {
+          mensagemErro = `Este chassi não foi encontrado na ${endpoint === 'base-sp' ? 'Base de São Paulo' : 'Base Nacional (BIN)'}. Por favor, verifique se o estado de origem (UF) está correto e tente novamente.`;
+        }
+        
+        throw new Error(`${mensagemErro}\n\n(Consulta já realizada anteriormente em ${new Date(logErroNoEndpoint.criado_em).toLocaleString('pt-BR')})`);
+      }
+      
+      // 3. Verificar se existe erro de API errada
       const logErroApiErrada = logsAnteriores.find(log => 
         log.erro_tipo === 'CHASSI_API_ERRADA' && log.endpoint
       );

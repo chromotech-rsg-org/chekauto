@@ -7,7 +7,6 @@ import {
   UserCircle, 
   FileText, 
   DollarSign, 
-  LogOut,
   Menu,
   X,
   FolderTree,
@@ -15,12 +14,13 @@ import {
   Table2,
   Receipt,
   Settings,
-  Palette,
-  Monitor,
   CreditCard,
   Database,
   TestTubes,
   ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
+  AlertCircle,
 } from "lucide-react";
 import logoAdmin from "@/assets/logo-admin-chekauto.png";
 import { Button } from "@/components/ui/button";
@@ -48,24 +48,20 @@ const configMenuItems = [
   { title: "Integração Asaas", icon: CreditCard, path: "/admin/configuracao-asaas" },
   { title: "Config. InfoSimples", icon: Settings, path: "/admin/configuracoes-infosimples" },
   { title: "Testes API InfoSimples", icon: TestTubes, path: "/admin/testes-api-infosimples" },
+  { title: "Códigos de Erro", icon: AlertCircle, path: "/admin/codigos-erro-api" },
 ];
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const { hasPermission, isDesenvolvedor } = usePermissions();
+  const { isDesenvolvedor } = usePermissions();
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      // Limpa todo localStorage conforme solicitado
+      await supabase.auth.signOut();
       localStorage.clear();
-      if (error) {
-        // Mesmo em caso de erro, redireciona para login
-        navigate("/login");
-        return;
-      }
       navigate("/login");
     } catch {
       navigate("/login");
@@ -74,6 +70,10 @@ export const AdminSidebar = () => {
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   return (
@@ -99,20 +99,29 @@ export const AdminSidebar = () => {
       {/* Sidebar */}
       <aside 
         className={`
-          fixed lg:sticky top-0 left-0 h-screen bg-black text-white z-50
-          transition-transform duration-300 ease-in-out
+          fixed lg:sticky top-0 left-0 h-screen bg-sidebar-background text-sidebar-foreground z-50
+          transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
           w-64 flex flex-col
         `}
       >
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-800">
-          <img src={logoAdmin} alt="ChekAuto" className="h-8 mx-auto" />
+        {/* Logo & Collapse Button */}
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+          {!isCollapsed && <img src={logoAdmin} alt="ChekAuto" className="h-7" />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapse}
+            className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent ml-auto"
+          >
+            {isCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+          </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
+        {/* Navigation with custom scrollbar */}
+        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll">
+          <ul className="space-y-1 px-2">
             {menuItems
               .filter((item) => !item.devOnly || isDesenvolvedor)
               .map((item) => (
@@ -121,15 +130,16 @@ export const AdminSidebar = () => {
                     to={item.path}
                     onClick={() => setIsOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                         isActive
-                          ? "bg-brand-yellow text-black font-semibold"
-                          : "text-white hover:bg-gray-900"
-                      }`
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                      } ${isCollapsed ? 'justify-center' : ''}`
                     }
+                    title={isCollapsed ? item.title : undefined}
                   >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.title}</span>
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="text-sm">{item.title}</span>}
                   </NavLink>
                 </li>
               ))}
@@ -137,52 +147,72 @@ export const AdminSidebar = () => {
             {/* Menu Configurações Expansível - Apenas para Desenvolvedores */}
             {isDesenvolvedor && (
               <li>
-                <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-gray-900 transition-colors w-full">
+                {isCollapsed ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-full text-sidebar-foreground hover:bg-sidebar-accent"
+                    title="Configurações"
+                  >
                     <Settings className="h-5 w-5" />
-                    <span className="flex-1 text-left">Configurações</span>
-                    <ChevronDown 
-                      className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} 
-                    />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <ul className="mt-1 space-y-1">
-                      {configMenuItems.map((item) => (
-                        <li key={item.path}>
-                          <NavLink
-                            to={item.path}
-                            className={({ isActive }) =>
-                              `flex items-center gap-3 px-4 py-2.5 pl-12 rounded-lg transition-colors ${
-                                isActive
-                                  ? "bg-brand-yellow text-black font-semibold"
-                                  : "text-white hover:bg-gray-900"
-                              }`
-                            }
-                          >
-                            <item.icon className="h-4 w-4" />
-                            <span className="text-sm">{item.title}</span>
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </CollapsibleContent>
-                </Collapsible>
+                  </Button>
+                ) : (
+                  <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                    <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full">
+                      <Settings className="h-5 w-5 flex-shrink-0" />
+                      <span className="flex-1 text-left text-sm">Configurações</span>
+                      <ChevronDown 
+                        className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} 
+                      />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <ul className="mt-1 space-y-1">
+                        {configMenuItems.map((item) => (
+                          <li key={item.path}>
+                            <NavLink
+                              to={item.path}
+                              className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2 pl-10 rounded-lg transition-colors ${
+                                  isActive
+                                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
+                                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                                }`
+                              }
+                            >
+                              <item.icon className="h-4 w-4" />
+                              <span className="text-sm">{item.title}</span>
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </li>
             )}
           </ul>
         </nav>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-gray-800">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-white hover:bg-gray-900 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Sair</span>
-          </button>
-        </div>
       </aside>
+
+      {/* Custom Scrollbar Styles */}
+      <style>{`
+        .sidebar-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+          background: hsl(var(--sidebar-border));
+          border-radius: 3px;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: hsl(var(--sidebar-accent));
+        }
+      `}</style>
     </>
   );
 };
