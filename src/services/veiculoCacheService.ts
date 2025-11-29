@@ -108,27 +108,20 @@ async function buscarLogsAnteriores(
   try {
     const valorNormalizado = valor.trim().toUpperCase();
     
-    let query = supabase
+    // Buscar pelo valor nos parametros JSON, que é onde realmente está salvo
+    const { data, error } = await supabase
       .from('logs_consultas_infosimples')
       .select('*')
+      .contains('parametros', { [tipo]: valorNormalizado })
       .order('criado_em', { ascending: false })
       .limit(10);
-
-    if (tipo === 'chassi' && valorNormalizado) {
-      query = query.eq('chassi', valorNormalizado);
-    } else if (tipo === 'placa' && valorNormalizado) {
-      query = query.eq('placa', valorNormalizado);
-    } else if (tipo === 'renavam' && valorNormalizado) {
-      query = query.eq('renavam', valorNormalizado);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('[Cache] Erro ao buscar logs:', error);
       return [];
     }
 
+    console.log('[Cache] Logs encontrados:', data?.length || 0);
     return (data || []) as LogConsulta[];
   } catch (error) {
     console.error('[Cache] Erro ao buscar logs anteriores:', error);
