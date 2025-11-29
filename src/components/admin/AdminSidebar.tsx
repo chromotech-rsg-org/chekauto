@@ -22,7 +22,7 @@ import {
   ChevronsRight,
   AlertCircle,
 } from "lucide-react";
-import logoAdmin from "@/assets/logo-admin-chekauto.png";
+import logoYellowBlack from "@/assets/logo-chekauto-yellow-black.png";
 import logoLight from "@/assets/logo-chekauto-light.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -62,7 +62,7 @@ export const AdminSidebar = () => {
   const { isDesenvolvedor } = usePermissions();
 
   // Define qual logo usar baseado no tema
-  const currentLogo = theme === 'light' ? logoLight : logoAdmin;
+  const currentLogo = theme === 'light' ? logoLight : logoYellowBlack;
 
   const handleLogout = async () => {
     try {
