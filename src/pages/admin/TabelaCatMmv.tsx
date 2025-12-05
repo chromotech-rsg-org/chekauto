@@ -127,8 +127,26 @@ export default function TabelaCatMmv() {
     setIsUploadOpen(false);
   };
 
-  const handleExport = () => {
-    toast.info("Funcionalidade de exportação em desenvolvimento");
+  const handleDownloadTemplate = () => {
+    // Criar template vazio com cabeçalhos
+    const templateData = [
+      {
+        "MMV Original": "CAMINHÃO TRATOR",
+        "Código MMV Original": "042008",
+        "MMV Transformada": "CAMINHÃO SEMI-LEVE",
+        "Código MMV Transformada": "042003",
+        "WMI": "9BM",
+        "Categoria": "Caminhão trator para caminhão"
+      }
+    ];
+
+    import("xlsx").then((XLSX) => {
+      const ws = XLSX.utils.json_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template CAT MMV");
+      XLSX.writeFile(wb, "template-cat-mmv.xlsx");
+      toast.success("Template baixado com sucesso!");
+    });
   };
 
   return (
@@ -141,9 +159,9 @@ export default function TabelaCatMmv() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport}>
+            <Button variant="outline" onClick={handleDownloadTemplate}>
               <Download className="mr-2 h-4 w-4" />
-              Exportar Excel
+              Baixar Template
             </Button>
             <Button variant="outline" onClick={() => setIsUploadOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />
