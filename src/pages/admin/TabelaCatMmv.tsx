@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { mockCatMmv } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Upload, Pencil, Trash2, Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,44 +11,99 @@ import { ExcelUpload } from "@/components/admin/ExcelUpload";
 import { toast } from "sonner";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const categorias = [
   "Caminhão trator para caminhão",
-  "Troca de tração para elétrico",
-  "Cabine estendida",
+  "Troca de Tração para Elétrico",
+  "Cabine Estendida",
   "Comércio"
 ];
 
+interface CatMmvItem {
+  id: string;
+  mmv_original: string | null;
+  codigo_mmv_original: string | null;
+  mmv_transformada: string | null;
+  codigo_mmv_transformada: string | null;
+  wmi: string | null;
+  categoria: string | null;
+  marca: string | null;
+  modelo_original: string | null;
+  modelo_transformado: string | null;
+  tipo_transformacao: string | null;
+  carroceria: string | null;
+  eixos: string | null;
+  numero_cat: string | null;
+  numero_cct: string | null;
+  vencimento: string | null;
+  origem: string | null;
+  criado_em: string | null;
+}
+
 export default function TabelaCatMmv() {
-  const [catMmvData, setCatMmvData] = useState(mockCatMmv);
+  const [catMmvData, setCatMmvData] = useState<CatMmvItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<CatMmvItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategoria, setFilterCategoria] = useState("todas");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const [formData, setFormData] = useState({
-    mmvOriginal: "",
-    codigoMmvOriginal: "",
-    mmvTransformada: "",
-    codigoMmvTransformada: "",
+    mmv_original: "",
+    codigo_mmv_original: "",
+    mmv_transformada: "",
+    codigo_mmv_transformada: "",
     wmi: "",
-    categoria: ""
+    categoria: "",
+    marca: "",
+    modelo_original: "",
+    modelo_transformado: "",
+    tipo_transformacao: "",
+    carroceria: "",
+    eixos: "",
+    numero_cat: "",
+    numero_cct: "",
+    vencimento: "",
+    origem: ""
   });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("cat_mmv")
+      .select("*")
+      .order("criado_em", { ascending: false });
+
+    if (error) {
+      toast.error("Erro ao carregar dados");
+      console.error(error);
+    } else {
+      setCatMmvData(data || []);
+    }
+    setLoading(false);
+  };
 
   const filteredData = catMmvData.filter((item) => {
     const matchesSearch = 
-      item.mmvOriginal.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.mmvTransformada.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.codigoMmvOriginal.includes(searchTerm) ||
-      item.codigoMmvTransformada.includes(searchTerm) ||
-      item.wmi.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.mmv_original || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.mmv_transformada || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.codigo_mmv_original || "").includes(searchTerm) ||
+      (item.codigo_mmv_transformada || "").includes(searchTerm) ||
+      (item.wmi || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.marca || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategoria = filterCategoria === "todas" || item.categoria === filterCategoria;
     
-    const itemDate = new Date(item.dataCriacao || new Date());
+    const itemDate = new Date(item.criado_em || new Date());
     const matchesDateRange = 
       (!startDate || itemDate >= new Date(startDate)) &&
       (!endDate || itemDate <= new Date(endDate));
@@ -58,85 +112,174 @@ export default function TabelaCatMmv() {
   });
 
   const exportFields = [
-    { key: "mmvOriginal", label: "MMV Original" },
-    { key: "codigoMmvOriginal", label: "Código MMV Original" },
-    { key: "mmvTransformada", label: "MMV Transformada" },
-    { key: "codigoMmvTransformada", label: "Código MMV Transformada" },
+    { key: "mmv_original", label: "MMV Original" },
+    { key: "codigo_mmv_original", label: "Código MMV Original" },
+    { key: "mmv_transformada", label: "MMV Transformada" },
+    { key: "codigo_mmv_transformada", label: "Código MMV Transformada" },
     { key: "wmi", label: "WMI" },
     { key: "categoria", label: "Categoria" },
-    { key: "dataCriacao", label: "Data Criação" }
+    { key: "marca", label: "Marca" },
+    { key: "modelo_original", label: "Modelo Original" },
+    { key: "modelo_transformado", label: "Modelo Transformado" },
+    { key: "tipo_transformacao", label: "Tipo de Transformação" },
+    { key: "carroceria", label: "Carroceria" },
+    { key: "eixos", label: "Eixos" },
+    { key: "numero_cat", label: "Nº CAT" },
+    { key: "numero_cct", label: "Nº CCT" },
+    { key: "vencimento", label: "Vencimento" },
+    { key: "origem", label: "Origem" }
   ];
 
-  const handleOpenModal = (item?: any) => {
+  const handleOpenModal = (item?: CatMmvItem) => {
     if (item) {
       setEditingItem(item);
-      setFormData(item);
+      setFormData({
+        mmv_original: item.mmv_original || "",
+        codigo_mmv_original: item.codigo_mmv_original || "",
+        mmv_transformada: item.mmv_transformada || "",
+        codigo_mmv_transformada: item.codigo_mmv_transformada || "",
+        wmi: item.wmi || "",
+        categoria: item.categoria || "",
+        marca: item.marca || "",
+        modelo_original: item.modelo_original || "",
+        modelo_transformado: item.modelo_transformado || "",
+        tipo_transformacao: item.tipo_transformacao || "",
+        carroceria: item.carroceria || "",
+        eixos: item.eixos || "",
+        numero_cat: item.numero_cat || "",
+        numero_cct: item.numero_cct || "",
+        vencimento: item.vencimento || "",
+        origem: item.origem || ""
+      });
     } else {
       setEditingItem(null);
       setFormData({
-        mmvOriginal: "",
-        codigoMmvOriginal: "",
-        mmvTransformada: "",
-        codigoMmvTransformada: "",
+        mmv_original: "",
+        codigo_mmv_original: "",
+        mmv_transformada: "",
+        codigo_mmv_transformada: "",
         wmi: "",
-        categoria: ""
+        categoria: "",
+        marca: "",
+        modelo_original: "",
+        modelo_transformado: "",
+        tipo_transformacao: "",
+        carroceria: "",
+        eixos: "",
+        numero_cat: "",
+        numero_cct: "",
+        vencimento: "",
+        origem: ""
       });
     }
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.mmvOriginal || !formData.codigoMmvOriginal || !formData.categoria) {
-      toast.error("Preencha os campos obrigatórios");
+  const handleSave = async () => {
+    if (!formData.mmv_original) {
+      toast.error("Preencha o campo MMV Original");
       return;
     }
 
     if (editingItem) {
-      setCatMmvData(catMmvData.map(item => item.id === editingItem.id ? { ...formData, id: editingItem.id, dataCriacao: item.dataCriacao } : item));
-      toast.success("Registro atualizado com sucesso!");
+      const { error } = await supabase
+        .from("cat_mmv")
+        .update(formData)
+        .eq("id", editingItem.id);
+
+      if (error) {
+        toast.error("Erro ao atualizar registro");
+        console.error(error);
+      } else {
+        toast.success("Registro atualizado com sucesso!");
+        fetchData();
+      }
     } else {
-      const newItem = { ...formData, id: catMmvData.length + 1, dataCriacao: new Date().toISOString().split('T')[0] };
-      setCatMmvData([...catMmvData, newItem]);
-      toast.success("Registro cadastrado com sucesso!");
+      const { error } = await supabase
+        .from("cat_mmv")
+        .insert(formData);
+
+      if (error) {
+        toast.error("Erro ao cadastrar registro");
+        console.error(error);
+      } else {
+        toast.success("Registro cadastrado com sucesso!");
+        fetchData();
+      }
     }
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Deseja realmente excluir este registro?")) {
-      setCatMmvData(catMmvData.filter(item => item.id !== id));
-      toast.success("Registro excluído com sucesso!");
+      const { error } = await supabase
+        .from("cat_mmv")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        toast.error("Erro ao excluir registro");
+        console.error(error);
+      } else {
+        toast.success("Registro excluído com sucesso!");
+        fetchData();
+      }
     }
   };
 
-  const handleExcelUpload = (data: any[]) => {
-    // Processar dados do Excel
-    const newData = data.map((row, index) => ({
-      id: catMmvData.length + index + 1,
-      mmvOriginal: row["MMV Original"] || "",
-      codigoMmvOriginal: row["Código MMV Original"] || "",
-      mmvTransformada: row["MMV Transformada"] || "",
-      codigoMmvTransformada: row["Código MMV Transformada"] || "",
-      wmi: row["WMI"] || "",
-      categoria: row["Categoria"] || "",
-      dataCriacao: new Date().toISOString().split('T')[0]
+  const handleExcelUpload = async (data: any[]) => {
+    const mappedData = data.map((row) => ({
+      mmv_original: row["MMV Original"] || null,
+      codigo_mmv_original: String(row["Código MMV Original"] || ""),
+      mmv_transformada: row["MMV Transformada"] || null,
+      codigo_mmv_transformada: String(row["Código MMV Transformada"] || ""),
+      wmi: row["WMI"] || null,
+      categoria: row["Categoria"] || null,
+      marca: row["Marca"] || null,
+      modelo_original: row["Modelo Original"] || null,
+      modelo_transformado: row["Modelo Transformado"] || null,
+      tipo_transformacao: row["Tipo de Transformação"] || null,
+      carroceria: row["Carroceria"] || null,
+      eixos: row["Eixos"] || null,
+      numero_cat: row["Nº CAT"] || null,
+      numero_cct: row["Nº CCT"] || null,
+      vencimento: row["Vencimento"] || null,
+      origem: row["ORGEM"] || row["Origem"] || null
     }));
 
-    setCatMmvData([...catMmvData, ...newData]);
-    toast.success(`${newData.length} registros importados com sucesso!`);
+    const { error } = await supabase
+      .from("cat_mmv")
+      .insert(mappedData);
+
+    if (error) {
+      toast.error("Erro ao importar dados");
+      console.error(error);
+    } else {
+      toast.success(`${mappedData.length} registros importados com sucesso!`);
+      fetchData();
+    }
     setIsUploadOpen(false);
   };
 
   const handleDownloadTemplate = () => {
-    // Criar template vazio com cabeçalhos
     const templateData = [
       {
-        "MMV Original": "CAMINHÃO TRATOR",
-        "Código MMV Original": "042008",
-        "MMV Transformada": "CAMINHÃO SEMI-LEVE",
-        "Código MMV Transformada": "042003",
-        "WMI": "9BM",
-        "Categoria": "Caminhão trator para caminhão"
+        "MMV Original": "VW/19.320 CLC TT",
+        "Código MMV Original": "339047",
+        "MMV Transformada": "VW/19.320 VIABRZ CLC",
+        "Código MMV Transformada": "301622",
+        "WMI": "953",
+        "Categoria": "Caminhão trator para caminhão",
+        "Marca": "Volkswagen",
+        "Modelo Original": "19.320 CLC TT",
+        "Modelo Transformado": "19.320 VIABRZ CLC",
+        "Tipo de Transformação": "",
+        "Carroceria": "",
+        "Eixos": "",
+        "Nº CAT": "",
+        "Nº CCT": "",
+        "Vencimento": "",
+        "ORGEM": "CHEKAUTO"
       }
     ];
 
@@ -152,13 +295,13 @@ export default function TabelaCatMmv() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold">Tabela CAT MMV</h1>
             <p className="text-muted-foreground">Gerencie as transformações de veículos</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleDownloadTemplate}>
               <Download className="mr-2 h-4 w-4" />
               Baixar Template
@@ -178,7 +321,7 @@ export default function TabelaCatMmv() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por MMV, código ou WMI..."
+              placeholder="Buscar por MMV, código, WMI ou marca..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -212,89 +355,114 @@ export default function TabelaCatMmv() {
           />
         </div>
 
-        <div className="bg-white rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>MMV Original</TableHead>
-                <TableHead>Código</TableHead>
-                <TableHead>MMV Transformada</TableHead>
-                <TableHead>Código</TableHead>
-                <TableHead>WMI</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.mmvOriginal}</TableCell>
-                  <TableCell className="font-mono text-sm">{item.codigoMmvOriginal}</TableCell>
-                  <TableCell className="font-medium">{item.mmvTransformada}</TableCell>
-                  <TableCell className="font-mono text-sm">{item.codigoMmvTransformada}</TableCell>
-                  <TableCell className="font-mono text-sm">{item.wmi}</TableCell>
-                  <TableCell className="text-sm">{item.categoria}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal(item)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <div className="bg-card rounded-lg border">
+          <ScrollArea className="w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">MMV Original</TableHead>
+                  <TableHead className="min-w-[100px]">Código</TableHead>
+                  <TableHead className="min-w-[200px]">MMV Transformada</TableHead>
+                  <TableHead className="min-w-[100px]">Código</TableHead>
+                  <TableHead className="min-w-[80px]">WMI</TableHead>
+                  <TableHead className="min-w-[180px]">Categoria</TableHead>
+                  <TableHead className="min-w-[120px]">Marca</TableHead>
+                  <TableHead className="min-w-[100px]">Nº CAT</TableHead>
+                  <TableHead className="min-w-[100px]">Vencimento</TableHead>
+                  <TableHead className="min-w-[100px]">Origem</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={11} className="text-center py-8">
+                      Carregando...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                      Nenhum registro encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredData.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.mmv_original}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.codigo_mmv_original}</TableCell>
+                      <TableCell className="font-medium">{item.mmv_transformada}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.codigo_mmv_transformada}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.wmi}</TableCell>
+                      <TableCell className="text-sm">{item.categoria}</TableCell>
+                      <TableCell className="text-sm">{item.marca}</TableCell>
+                      <TableCell className="text-sm">{item.numero_cat}</TableCell>
+                      <TableCell className="text-sm">{item.vencimento}</TableCell>
+                      <TableCell className="text-sm">{item.origem}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(item)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
 
         {/* Modal de Cadastro */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingItem ? "Editar Registro" : "Novo Registro"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mmvOriginal">MMV Original *</Label>
+                  <Label htmlFor="mmv_original">MMV Original *</Label>
                   <Input
-                    id="mmvOriginal"
-                    value={formData.mmvOriginal}
-                    onChange={(e) => setFormData({ ...formData, mmvOriginal: e.target.value })}
-                    placeholder="Ex: CAMINHÃO TRATOR"
+                    id="mmv_original"
+                    value={formData.mmv_original}
+                    onChange={(e) => setFormData({ ...formData, mmv_original: e.target.value })}
+                    placeholder="Ex: VW/19.320 CLC TT"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="codigoMmvOriginal">Código MMV Original *</Label>
+                  <Label htmlFor="codigo_mmv_original">Código MMV Original</Label>
                   <Input
-                    id="codigoMmvOriginal"
-                    value={formData.codigoMmvOriginal}
-                    onChange={(e) => setFormData({ ...formData, codigoMmvOriginal: e.target.value })}
-                    placeholder="Ex: 042008"
+                    id="codigo_mmv_original"
+                    value={formData.codigo_mmv_original}
+                    onChange={(e) => setFormData({ ...formData, codigo_mmv_original: e.target.value })}
+                    placeholder="Ex: 339047"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mmvTransformada">MMV Transformada</Label>
+                  <Label htmlFor="mmv_transformada">MMV Transformada</Label>
                   <Input
-                    id="mmvTransformada"
-                    value={formData.mmvTransformada}
-                    onChange={(e) => setFormData({ ...formData, mmvTransformada: e.target.value })}
-                    placeholder="Ex: CAMINHÃO SEMI-LEVE"
+                    id="mmv_transformada"
+                    value={formData.mmv_transformada}
+                    onChange={(e) => setFormData({ ...formData, mmv_transformada: e.target.value })}
+                    placeholder="Ex: VW/19.320 VIABRZ CLC"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="codigoMmvTransformada">Código MMV Transformada</Label>
+                  <Label htmlFor="codigo_mmv_transformada">Código MMV Transformada</Label>
                   <Input
-                    id="codigoMmvTransformada"
-                    value={formData.codigoMmvTransformada}
-                    onChange={(e) => setFormData({ ...formData, codigoMmvTransformada: e.target.value })}
-                    placeholder="Ex: 042003"
+                    id="codigo_mmv_transformada"
+                    value={formData.codigo_mmv_transformada}
+                    onChange={(e) => setFormData({ ...formData, codigo_mmv_transformada: e.target.value })}
+                    placeholder="Ex: 301622"
                   />
                 </div>
 
@@ -304,12 +472,12 @@ export default function TabelaCatMmv() {
                     id="wmi"
                     value={formData.wmi}
                     onChange={(e) => setFormData({ ...formData, wmi: e.target.value })}
-                    placeholder="Ex: 9BM"
+                    placeholder="Ex: 953"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria *</Label>
+                  <Label htmlFor="categoria">Categoria</Label>
                   <Select value={formData.categoria} onValueChange={(value) => setFormData({ ...formData, categoria: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
@@ -320,6 +488,106 @@ export default function TabelaCatMmv() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="marca">Marca</Label>
+                  <Input
+                    id="marca"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                    placeholder="Ex: Volkswagen"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="modelo_original">Modelo Original</Label>
+                  <Input
+                    id="modelo_original"
+                    value={formData.modelo_original}
+                    onChange={(e) => setFormData({ ...formData, modelo_original: e.target.value })}
+                    placeholder="Ex: 19.320 CLC TT"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="modelo_transformado">Modelo Transformado</Label>
+                  <Input
+                    id="modelo_transformado"
+                    value={formData.modelo_transformado}
+                    onChange={(e) => setFormData({ ...formData, modelo_transformado: e.target.value })}
+                    placeholder="Ex: 19.320 VIABRZ CLC"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tipo_transformacao">Tipo de Transformação</Label>
+                  <Input
+                    id="tipo_transformacao"
+                    value={formData.tipo_transformacao}
+                    onChange={(e) => setFormData({ ...formData, tipo_transformacao: e.target.value })}
+                    placeholder="Ex: cavalo p caminhão"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="carroceria">Carroceria</Label>
+                  <Input
+                    id="carroceria"
+                    value={formData.carroceria}
+                    onChange={(e) => setFormData({ ...formData, carroceria: e.target.value })}
+                    placeholder="Ex: inacabada"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="eixos">Eixos</Label>
+                  <Input
+                    id="eixos"
+                    value={formData.eixos}
+                    onChange={(e) => setFormData({ ...formData, eixos: e.target.value })}
+                    placeholder="Ex: 02 / 4x2"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="numero_cat">Nº CAT</Label>
+                  <Input
+                    id="numero_cat"
+                    value={formData.numero_cat}
+                    onChange={(e) => setFormData({ ...formData, numero_cat: e.target.value })}
+                    placeholder="Ex: CAT nº 1205/2019"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="numero_cct">Nº CCT</Label>
+                  <Input
+                    id="numero_cct"
+                    value={formData.numero_cct}
+                    onChange={(e) => setFormData({ ...formData, numero_cct: e.target.value })}
+                    placeholder="Ex: 24785"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vencimento">Vencimento</Label>
+                  <Input
+                    id="vencimento"
+                    value={formData.vencimento}
+                    onChange={(e) => setFormData({ ...formData, vencimento: e.target.value })}
+                    placeholder="Ex: 17/07/2021"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="origem">Origem</Label>
+                  <Input
+                    id="origem"
+                    value={formData.origem}
+                    onChange={(e) => setFormData({ ...formData, origem: e.target.value })}
+                    placeholder="Ex: CHEKAUTO"
+                  />
                 </div>
               </div>
             </div>
@@ -336,7 +604,7 @@ export default function TabelaCatMmv() {
 
         {/* Modal de Upload */}
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Importar Excel - Tabela CAT MMV</DialogTitle>
             </DialogHeader>
