@@ -16,28 +16,64 @@ export type Database = {
     Tables: {
       cat_mmv: {
         Row: {
-          codigo_cat: string | null
-          codigo_mmv: string | null
+          carroceria: string | null
+          categoria: string | null
+          codigo_mmv_original: string | null
+          codigo_mmv_transformada: string | null
           criado_em: string | null
-          descricao: string | null
+          eixos: string | null
           id: string
-          tipo_veiculo: string | null
+          marca: string | null
+          mmv_original: string | null
+          mmv_transformada: string | null
+          modelo_original: string | null
+          modelo_transformado: string | null
+          numero_cat: string | null
+          numero_cct: string | null
+          origem: string | null
+          tipo_transformacao: string | null
+          vencimento: string | null
+          wmi: string | null
         }
         Insert: {
-          codigo_cat?: string | null
-          codigo_mmv?: string | null
+          carroceria?: string | null
+          categoria?: string | null
+          codigo_mmv_original?: string | null
+          codigo_mmv_transformada?: string | null
           criado_em?: string | null
-          descricao?: string | null
+          eixos?: string | null
           id?: string
-          tipo_veiculo?: string | null
+          marca?: string | null
+          mmv_original?: string | null
+          mmv_transformada?: string | null
+          modelo_original?: string | null
+          modelo_transformado?: string | null
+          numero_cat?: string | null
+          numero_cct?: string | null
+          origem?: string | null
+          tipo_transformacao?: string | null
+          vencimento?: string | null
+          wmi?: string | null
         }
         Update: {
-          codigo_cat?: string | null
-          codigo_mmv?: string | null
+          carroceria?: string | null
+          categoria?: string | null
+          codigo_mmv_original?: string | null
+          codigo_mmv_transformada?: string | null
           criado_em?: string | null
-          descricao?: string | null
+          eixos?: string | null
           id?: string
-          tipo_veiculo?: string | null
+          marca?: string | null
+          mmv_original?: string | null
+          mmv_transformada?: string | null
+          modelo_original?: string | null
+          modelo_transformado?: string | null
+          numero_cat?: string | null
+          numero_cct?: string | null
+          origem?: string | null
+          tipo_transformacao?: string | null
+          vencimento?: string | null
+          wmi?: string | null
         }
         Relationships: []
       }
