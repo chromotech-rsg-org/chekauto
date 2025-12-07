@@ -22,6 +22,8 @@ interface RelatedProductsModalProps {
   vehicleData: any;
 }
 
+type ProductSource = 'related' | 'all';
+
 export const RelatedProductsModal = ({ 
   open, 
   onClose, 
@@ -30,26 +32,34 @@ export const RelatedProductsModal = ({
 }: RelatedProductsModalProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [productSource, setProductSource] = useState<ProductSource>('related');
   const navigate = useNavigate();
   const { setVehicleData, setProductData } = useCheckout();
 
   useEffect(() => {
-    if (open && vehicleType) {
+    if (open) {
       loadRelatedProducts();
     }
   }, [open, vehicleType]);
 
   const loadRelatedProducts = async () => {
     setLoading(true);
+    setProductSource('related');
+    
     try {
+      // Se não temos tipo de veículo, buscar todos os produtos
+      if (!vehicleType) {
+        await loadAllProducts();
+        return;
+      }
+
       // Extrair apenas o código do tipo (ex: "11 - SEMIRREBOQUE" -> "11")
       const tipoCode = vehicleType.split(' ')[0]?.trim();
       
       console.log('Buscando produtos para tipo:', tipoCode, 'vehicleType:', vehicleType);
 
       if (!tipoCode) {
-        setProducts([]);
-        setLoading(false);
+        await loadAllProducts();
         return;
       }
 
@@ -65,8 +75,7 @@ export const RelatedProductsModal = ({
 
       if (!categorias || categorias.length === 0) {
         console.log('Nenhuma categoria encontrada para tipo:', tipoCode);
-        setProducts([]);
-        setLoading(false);
+        await loadAllProducts();
         return;
       }
 
@@ -80,6 +89,8 @@ export const RelatedProductsModal = ({
 
       if (ptError) throw ptError;
 
+      let foundProducts: Product[] = [];
+
       if (!produtoTipos || produtoTipos.length === 0) {
         // Fallback: buscar por categoria_id direta
         const { data: produtosDiretos, error: prodError } = await supabase
@@ -89,29 +100,53 @@ export const RelatedProductsModal = ({
           .in('categoria_id', categoriaIds);
 
         if (prodError) throw prodError;
-        setProducts(produtosDiretos || []);
-        setLoading(false);
-        return;
+        foundProducts = produtosDiretos || [];
+      } else {
+        const produtoIds = [...new Set(produtoTipos.map(pt => pt.produto_id))];
+
+        // Buscar produtos
+        const { data: produtosData, error: prodError } = await supabase
+          .from('produtos')
+          .select('id, nome, apelido, preco, foto_url, descricao')
+          .eq('ativo', true)
+          .in('id', produtoIds);
+
+        if (prodError) throw prodError;
+        foundProducts = produtosData || [];
       }
 
-      const produtoIds = [...new Set(produtoTipos.map(pt => pt.produto_id))];
+      console.log('Produtos encontrados:', foundProducts?.length);
+      
+      // Se não encontrou produtos relacionados, buscar todos
+      if (foundProducts.length === 0) {
+        await loadAllProducts();
+      } else {
+        setProducts(foundProducts);
+        setProductSource('related');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos relacionados:', error);
+      await loadAllProducts();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Buscar produtos
-      const { data: produtosData, error: prodError } = await supabase
+  const loadAllProducts = async () => {
+    try {
+      const { data, error } = await supabase
         .from('produtos')
         .select('id, nome, apelido, preco, foto_url, descricao')
         .eq('ativo', true)
-        .in('id', produtoIds);
+        .order('nome');
 
-      if (prodError) throw prodError;
-
-      console.log('Produtos encontrados:', produtosData?.length);
-      setProducts(produtosData || []);
+      if (error) throw error;
+      
+      setProducts(data || []);
+      setProductSource('all');
     } catch (error) {
-      console.error('Erro ao buscar produtos relacionados:', error);
+      console.error('Erro ao buscar todos os produtos:', error);
       setProducts([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -176,11 +211,20 @@ export const RelatedProductsModal = ({
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Package className="h-6 w-6 text-brand-yellow" />
-            Produtos Compatíveis
+            {productSource === 'related' ? 'Produtos Compatíveis' : 'Todos os Produtos'}
           </DialogTitle>
-          <p className="text-muted-foreground">
-            Encontramos {products.length} produto(s) compatível(is) com seu veículo tipo: <strong>{vehicleType}</strong>
-          </p>
+          {productSource === 'all' ? (
+            <div className="space-y-2">
+              <p className="text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 p-3 rounded-md">
+                <strong>Atenção:</strong> Nenhum produto relacionado ao tipo <strong>{vehicleType || 'não identificado'}</strong> foi encontrado. 
+                Exibindo todos os produtos disponíveis.
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
+              Encontramos {products.length} produto(s) compatível(is) com seu veículo tipo: <strong>{vehicleType}</strong>
+            </p>
+          )}
         </DialogHeader>
 
         {loading ? (
@@ -191,7 +235,7 @@ export const RelatedProductsModal = ({
           <div className="text-center py-12">
             <Package className="h-16 w-16 mx-auto mb-4 text-gray-300" />
             <p className="text-lg text-muted-foreground">
-              Nenhum produto compatível encontrado para este tipo de veículo.
+              Nenhum produto disponível no momento.
             </p>
           </div>
         ) : (
