@@ -43,15 +43,23 @@ export const RelatedProductsModal = ({
     setLoading(true);
     try {
       // Extrair apenas o código do tipo (ex: "11 - SEMIRREBOQUE" -> "11")
-      const tipoCode = vehicleType.split(' ')[0];
+      const tipoCode = vehicleType.split(' ')[0]?.trim();
       
-      console.log('Buscando produtos para tipo:', tipoCode);
+      console.log('Buscando produtos para tipo:', tipoCode, 'vehicleType:', vehicleType);
+
+      if (!tipoCode) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
 
       // Buscar categorias que correspondem ao tipo do veículo
       const { data: categorias, error: catError } = await supabase
         .from('categorias')
-        .select('id')
-        .ilike('codigo', `%${tipoCode}%`);
+        .select('id, codigo, nome')
+        .eq('codigo', tipoCode);
+
+      console.log('Categorias encontradas:', categorias);
 
       if (catError) throw catError;
 
@@ -64,15 +72,40 @@ export const RelatedProductsModal = ({
 
       const categoriaIds = categorias.map(c => c.id);
 
-      // Buscar produtos dessas categorias
+      // Buscar produtos através da tabela de junção produto_tipos
+      const { data: produtoTipos, error: ptError } = await supabase
+        .from('produto_tipos')
+        .select('produto_id')
+        .in('tipo_id', categoriaIds);
+
+      if (ptError) throw ptError;
+
+      if (!produtoTipos || produtoTipos.length === 0) {
+        // Fallback: buscar por categoria_id direta
+        const { data: produtosDiretos, error: prodError } = await supabase
+          .from('produtos')
+          .select('id, nome, apelido, preco, foto_url, descricao')
+          .eq('ativo', true)
+          .in('categoria_id', categoriaIds);
+
+        if (prodError) throw prodError;
+        setProducts(produtosDiretos || []);
+        setLoading(false);
+        return;
+      }
+
+      const produtoIds = [...new Set(produtoTipos.map(pt => pt.produto_id))];
+
+      // Buscar produtos
       const { data: produtosData, error: prodError } = await supabase
         .from('produtos')
-        .select('id, nome, apelido, preco, foto_url, descricao, categoria_id')
+        .select('id, nome, apelido, preco, foto_url, descricao')
         .eq('ativo', true)
-        .in('categoria_id', categoriaIds);
+        .in('id', produtoIds);
 
       if (prodError) throw prodError;
 
+      console.log('Produtos encontrados:', produtosData?.length);
       setProducts(produtosData || []);
     } catch (error) {
       console.error('Erro ao buscar produtos relacionados:', error);
@@ -83,22 +116,43 @@ export const RelatedProductsModal = ({
   };
 
   const handleViewDetails = (productId: string) => {
+    // Salvar dados do veículo no localStorage para uso posterior na página do produto
+    if (vehicleData) {
+      localStorage.setItem('consultedVehicleData', JSON.stringify(vehicleData));
+    }
     navigate(`/produto/${productId}`);
     onClose();
   };
 
   const handleBuyProduct = async (product: Product) => {
+    // Extrair dados do veículo usando o mapper para consistência
+    const extractValue = (value: any) => {
+      if (value && value !== 'N/A') return value;
+      return '';
+    };
+
+    // Tentar extrair de múltiplas fontes
+    const chassi = extractValue(vehicleData?.chassi) || extractValue(vehicleData?.Chassi);
+    const renavam = extractValue(vehicleData?.renavam) || extractValue(vehicleData?.Renavam);
+    const placa = extractValue(vehicleData?.placa) || extractValue(vehicleData?.Placa);
+    const marca = extractValue(vehicleData?.marca) || extractValue(vehicleData?.Marca);
+    const modelo = extractValue(vehicleData?.modelo) || extractValue(vehicleData?.Modelo);
+    const ano = extractValue(vehicleData?.ano_modelo) || extractValue(vehicleData?.AnoModelo) || extractValue(vehicleData?.ano);
+    const cor = extractValue(vehicleData?.cor) || extractValue(vehicleData?.Cor);
+    const uf = extractValue(vehicleData?.uf) || extractValue(vehicleData?.UF);
+    const municipio = extractValue(vehicleData?.municipio) || extractValue(vehicleData?.Municipio);
+
     // Salvar dados do veículo e produto no contexto
     setVehicleData({
-      placa: vehicleData?.placa || '',
-      chassi: vehicleData?.chassi || '',
-      renavam: vehicleData?.renavam || '',
-      marca: vehicleData?.marca || '',
-      modelo: vehicleData?.modelo || '',
-      ano: vehicleData?.ano_modelo || '',
-      cor: vehicleData?.cor || '',
-      estado: '',
-      cidade: '',
+      chassi,
+      renavam,
+      placa,
+      marca,
+      modelo,
+      ano,
+      cor,
+      estado: uf,
+      cidade: municipio,
       informacaoAdicional: '',
       notaFiscal: null
     });

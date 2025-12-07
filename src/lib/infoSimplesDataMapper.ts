@@ -83,6 +83,17 @@ export const mapearDadosVeiculo = (apiResponse: any): DadosVeiculoMapeados => {
   // Para compatibilidade, mesclar tudo em um único objeto
   const merged = { ...data, ...veiculo, ...crv, ...debitos };
 
+  // Extrair e formatar o tipo (ex: "11 - SEMIRREBOQUE")
+  let tipoFormatado = extrairValor(merged, 'tipo', 'Tipo', 'tipo_veiculo');
+  const categoria = extrairValor(merged, 'categoria', 'Categoria');
+  
+  // Se temos código do tipo e categoria, formatar como "11 - SEMIRREBOQUE"
+  if (tipoFormatado !== 'N/A' && categoria !== 'N/A' && !tipoFormatado.includes(' - ')) {
+    tipoFormatado = `${tipoFormatado} - ${categoria}`;
+  } else if (tipoFormatado === 'N/A' && categoria !== 'N/A') {
+    tipoFormatado = categoria;
+  }
+
   return {
     identificacao: {
       placa: extrairValor(merged, 'placa', 'Placa'),
@@ -97,9 +108,9 @@ export const mapearDadosVeiculo = (apiResponse: any): DadosVeiculoMapeados => {
       anoFabricacao: extrairValor(merged, 'ano_fabricacao', 'AnoFabricacao', 'ano_fab'),
       anoModelo: extrairValor(merged, 'ano_modelo', 'AnoModelo', 'ano'),
       cor: extrairValor(merged, 'cor', 'Cor'),
-      tipo: extrairValor(merged, 'tipo', 'Tipo', 'tipo_veiculo'),
+      tipo: tipoFormatado,
       especie: extrairValor(merged, 'especie', 'Especie'),
-      categoria: extrairValor(merged, 'categoria', 'Categoria'),
+      categoria: categoria,
     },
     
     motorizacao: {
