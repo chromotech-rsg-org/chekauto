@@ -42,6 +42,8 @@ interface CatMmvItem {
   criado_em: string | null;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export default function TabelaCatMmv() {
   const [catMmvData, setCatMmvData] = useState<CatMmvItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,7 @@ export default function TabelaCatMmv() {
   const [filterCategoria, setFilterCategoria] = useState("todas");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [formData, setFormData] = useState({
     mmv_original: "",
@@ -110,6 +113,18 @@ export default function TabelaCatMmv() {
     
     return matchesSearch && matchesCategoria && matchesDateRange;
   });
+
+  // Paginação
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategoria, startDate, endDate]);
 
   const exportFields = [
     { key: "mmv_original", label: "MMV Original" },
@@ -380,14 +395,14 @@ export default function TabelaCatMmv() {
                       Carregando...
                     </TableCell>
                   </TableRow>
-                ) : filteredData.length === 0 ? (
+                ) : paginatedData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                       Nenhum registro encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredData.map((item) => (
+                  paginatedData.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.mmv_original}</TableCell>
                       <TableCell className="font-mono text-sm">{item.codigo_mmv_original}</TableCell>
@@ -416,6 +431,36 @@ export default function TabelaCatMmv() {
             </Table>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length} registros
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm px-2">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal de Cadastro */}
@@ -604,11 +649,13 @@ export default function TabelaCatMmv() {
 
         {/* Modal de Upload */}
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>Importar Excel - Tabela CAT MMV</DialogTitle>
             </DialogHeader>
-            <ExcelUpload onUpload={handleExcelUpload} />
+            <div className="max-h-[70vh] overflow-y-auto">
+              <ExcelUpload onUpload={handleExcelUpload} />
+            </div>
           </DialogContent>
         </Dialog>
       </div>

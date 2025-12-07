@@ -177,29 +177,31 @@ export const ExcelUpload = ({ onUpload }: ExcelUploadProps) => {
             <p className="font-semibold">Preview dos Dados (primeiras 5 linhas)</p>
           </div>
           
-          <div className="border rounded-lg overflow-x-auto max-h-[300px] overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headers.map((header, index) => (
-                    <TableHead key={index} className="whitespace-nowrap">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {previewData.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {headers.map((header, colIndex) => (
-                      <TableCell key={colIndex} className="whitespace-nowrap">
-                        {row[header]}
-                      </TableCell>
+          <div className="border rounded-lg max-h-[300px] overflow-y-auto">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {headers.map((header, index) => (
+                      <TableHead key={index} className="whitespace-nowrap">
+                        {header}
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {previewData.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {headers.map((header, colIndex) => (
+                        <TableCell key={colIndex} className="whitespace-nowrap">
+                          {row[header]}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           <Alert>
