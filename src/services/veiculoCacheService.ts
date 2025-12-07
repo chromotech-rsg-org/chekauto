@@ -224,8 +224,10 @@ export const buscarOuConsultarVeiculo = async (
         console.log('[buscarOuConsultarVeiculo] Erro 612 anterior neste endpoint:', endpoint);
         
         // Sugerir tentar o outro endpoint
-        const outroEndpoint = endpoint === 'base-sp' ? 'BIN' : 'Base SP';
-        throw new Error(`Erro, reveja os dados fornecidos e consulte novamente. Este veículo pode não estar cadastrado nesta base. Tente consultar na ${outroEndpoint}.`);
+        const mensagemErro = endpoint === 'base-sp' 
+          ? 'Erro, reveja os dados fornecidos e consulte novamente. Este veículo pode não estar cadastrado nesta base São Paulo. Tente consultar em outro estado.'
+          : 'Erro, reveja os dados fornecidos e consulte novamente. Este veículo pode não estar cadastrado nesta base. Tente consultar em São Paulo.';
+        throw new Error(mensagemErro);
       }
       
       // 3. Verificar outros erros no endpoint atual
