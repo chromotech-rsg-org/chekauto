@@ -6,6 +6,7 @@ import { ErrorDialog } from '@/components/ui/error-dialog';
 import { RelatedProductsModal } from './RelatedProductsModal';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { mapearDadosVeiculo } from '@/lib/infoSimplesDataMapper';
 
 export const ScannerSection: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado' | ''>('');
@@ -13,7 +14,9 @@ export const ScannerSection: React.FC = () => {
   const [chassisNumber, setChassisNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showProductsModal, setShowProductsModal] = useState(false);
+  const [vehicleTipo, setVehicleTipo] = useState('');
   const { consultar, loading, resultado, error, showErrorDialog, closeErrorDialog } = useVehicleConsultation();
+  
   const handleConsultar = async () => {
     if (!chassisNumber || chassisNumber.trim().length < 3) {
       return;
@@ -44,7 +47,20 @@ export const ScannerSection: React.FC = () => {
     const result = await consultar(tipo, valorLimpo, endpoint, uf);
     if (result) {
       setShowResults(true);
-      setShowProductsModal(true);
+      
+      // Extrair o tipo de carroceria dos dados mapeados
+      const dadosMapeados = mapearDadosVeiculo(result.data);
+      const tipoCarroceria = dadosMapeados.especificacoes.tipo !== 'N/A' 
+        ? dadosMapeados.especificacoes.tipo 
+        : '';
+      
+      console.log('Tipo de carroceria extraído:', tipoCarroceria);
+      setVehicleTipo(tipoCarroceria);
+      
+      // Só abrir modal se tiver tipo de carroceria
+      if (tipoCarroceria) {
+        setShowProductsModal(true);
+      }
       
       // Se for do cache, mostrar notificação com data/hora
       if (result.fromCache && result.ultimaAtualizacao) {
@@ -78,7 +94,7 @@ export const ScannerSection: React.FC = () => {
       <RelatedProductsModal
         open={showProductsModal}
         onClose={() => setShowProductsModal(false)}
-        vehicleType={resultado?.data?.tipo || ''}
+        vehicleType={vehicleTipo}
         vehicleData={resultado?.data || {}}
       />
       

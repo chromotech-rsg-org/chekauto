@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import { Lightbox } from '@/components/ui/lightbox';
+import { mapearDadosVeiculo } from '@/lib/infoSimplesDataMapper';
 
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
@@ -37,13 +38,14 @@ export default function ProductDetail() {
   const [caracteristicas, setCaracteristicas] = useState<any[]>([]);
   const [aplicacoes, setAplicacoes] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
+  const [produtosRelacionados, setProdutosRelacionados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isCompatible, setIsCompatible] = useState(true);
   const [showCompatibilityDialog, setShowCompatibilityDialog] = useState(false);
   const [showRelatedProductsModal, setShowRelatedProductsModal] = useState(false);
-  
+  const [consultedVehicleTipo, setConsultedVehicleTipo] = useState('');
   const { consultar, loading: consultaLoading, resultado } = useVehicleConsultation();
   const { setVehicleData, setProductData } = useCheckout();
   const navigate = useNavigate();
@@ -110,6 +112,33 @@ export default function ProductDetail() {
         .eq('produto_id', id)
         .order('ordem');
       setFaqs(faqData || []);
+
+      // Carregar produtos relacionados (mesmo tipo de carroceria)
+      if (produtoData?.produto_tipos?.length > 0) {
+        const tipoIds = produtoData.produto_tipos.map((pt: any) => pt.categorias?.id).filter(Boolean);
+        
+        if (tipoIds.length > 0) {
+          // Buscar outros produtos com o mesmo tipo
+          const { data: produtoTiposData } = await supabase
+            .from('produto_tipos')
+            .select('produto_id')
+            .in('tipo_id', tipoIds)
+            .neq('produto_id', id);
+
+          if (produtoTiposData && produtoTiposData.length > 0) {
+            const produtoIds = [...new Set(produtoTiposData.map(pt => pt.produto_id))];
+            
+            const { data: relacionadosData } = await supabase
+              .from('produtos')
+              .select('id, nome, apelido, preco, foto_url')
+              .eq('ativo', true)
+              .in('id', produtoIds)
+              .limit(4);
+
+            setProdutosRelacionados(relacionadosData || []);
+          }
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
       toast.error('Erro ao carregar produto');
@@ -148,9 +177,16 @@ export default function ProductDetail() {
     if (result) {
       setShowResults(true);
       
-      // Verificar compatibilidade
-      const vehicleTipo = result.data?.tipo || '';
-      const tipoCode = vehicleTipo.split(' ')[0];
+      // Extrair tipo de carroceria usando o mapper
+      const dadosMapeados = mapearDadosVeiculo(result.data);
+      const vehicleTipo = dadosMapeados.especificacoes.tipo !== 'N/A' 
+        ? dadosMapeados.especificacoes.tipo 
+        : '';
+      
+      console.log('Tipo de carroceria extraído:', vehicleTipo);
+      setConsultedVehicleTipo(vehicleTipo);
+      
+      const tipoCode = vehicleTipo.split(' ')[0]?.trim();
       
       if (produto && produto.produto_tipos?.length > 0) {
         const productTipos = produto.produto_tipos.map((pt: any) => pt.categorias?.codigo).filter(Boolean);
@@ -167,17 +203,20 @@ export default function ProductDetail() {
 
   const handleContratarComVeiculo = () => {
     if (resultado && produto) {
+      // Extrair dados usando o mapper para consistência
+      const dadosMapeados = mapearDadosVeiculo(resultado.data);
+      
       // Salvar dados do veículo no CheckoutContext
       setVehicleData({
-        chassi: resultado.data.chassi || '',
-        renavam: resultado.data.renavam || '',
-        placa: resultado.data.placa || '',
-        ano: resultado.data.anoModelo || resultado.data.ano || '',
-        marca: resultado.data.marca || '',
-        modelo: resultado.data.modelo || '',
-        cor: resultado.data.cor || '',
-        estado: '',
-        cidade: '',
+        chassi: dadosMapeados.identificacao.chassi !== 'N/A' ? dadosMapeados.identificacao.chassi : '',
+        renavam: dadosMapeados.identificacao.renavam !== 'N/A' ? dadosMapeados.identificacao.renavam : '',
+        placa: dadosMapeados.identificacao.placa !== 'N/A' ? dadosMapeados.identificacao.placa : '',
+        ano: dadosMapeados.especificacoes.anoModelo !== 'N/A' ? dadosMapeados.especificacoes.anoModelo : '',
+        marca: dadosMapeados.especificacoes.marca !== 'N/A' ? dadosMapeados.especificacoes.marca : '',
+        modelo: dadosMapeados.especificacoes.modelo !== 'N/A' ? dadosMapeados.especificacoes.modelo : '',
+        cor: dadosMapeados.especificacoes.cor !== 'N/A' ? dadosMapeados.especificacoes.cor : '',
+        estado: dadosMapeados.registro.uf !== 'N/A' ? dadosMapeados.registro.uf : '',
+        cidade: dadosMapeados.registro.municipio !== 'N/A' ? dadosMapeados.registro.municipio : '',
         informacaoAdicional: '',
         notaFiscal: null,
       });
@@ -491,7 +530,39 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 </TabsContent>
-              )}
+        )}
+
+        {/* Produtos Relacionados */}
+        {produtosRelacionados.length > 0 && (
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold mb-8">Produtos Relacionados</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {produtosRelacionados.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/produto/${prod.id}`)}
+                >
+                  {prod.foto_url && (
+                    <img
+                      src={prod.foto_url}
+                      alt={prod.nome}
+                      className="w-full h-40 object-cover"
+                    />
+                  )}
+                  <div className="p-4">
+                    <h4 className="font-semibold text-sm mb-2 line-clamp-2">
+                      {prod.apelido || prod.nome}
+                    </h4>
+                    <p className="text-lg font-bold text-amber-500">
+                      R$ {Number(prod.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
               
               {faqs.length > 0 && (
                 <TabsContent value="duvidas" className="mt-8">
@@ -559,7 +630,7 @@ export default function ProductDetail() {
       <RelatedProductsModal
         open={showRelatedProductsModal}
         onClose={() => setShowRelatedProductsModal(false)}
-        vehicleType={resultado?.data?.tipo || ''}
+        vehicleType={consultedVehicleTipo}
         vehicleData={resultado?.data || {}}
       />
 

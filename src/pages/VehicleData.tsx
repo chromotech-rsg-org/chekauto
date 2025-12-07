@@ -28,27 +28,22 @@ export default function VehicleData() {
     notaFiscal: vehicle.notaFiscal || null
   });
 
-  // Pré-preencher dados da consulta se existirem
+  // Pré-preencher dados do contexto de checkout (vindos da consulta)
   useEffect(() => {
-    try {
-      const consultaData = localStorage.getItem('consultaData');
-      if (consultaData) {
-        const dados = JSON.parse(consultaData);
-        
-        setFormData(prev => ({
-          ...prev,
-          chassi: dados.chassi || prev.chassi,
-          renavam: dados.renavam || prev.renavam,
-          placa: dados.placa || prev.placa,
-          ano: dados.ano_modelo || prev.ano,
-        }));
-        
-        setDadosImportados(true);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados da consulta:', error);
+    // Se há dados no contexto, usar eles
+    if (vehicle.chassi || vehicle.renavam || vehicle.placa) {
+      setFormData(prev => ({
+        ...prev,
+        chassi: vehicle.chassi || prev.chassi,
+        renavam: vehicle.renavam || prev.renavam,
+        placa: vehicle.placa || prev.placa,
+        ano: vehicle.ano || prev.ano,
+        estado: vehicle.estado || prev.estado,
+        cidade: vehicle.cidade || prev.cidade,
+      }));
+      setDadosImportados(true);
     }
-  }, []);
+  }, [vehicle]);
   const steps = [{
     label: 'Dados do Veículo',
     completed: false,
