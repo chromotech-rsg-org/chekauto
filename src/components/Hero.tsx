@@ -5,6 +5,8 @@ import heroBackground from '@/assets/truck-blue-sunset.png';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import { useVehicleConsultation } from '@/hooks/useVehicleConsultation';
 import { toast } from '@/hooks/use-toast';
+import { ErrorDialog } from '@/components/ui/error-dialog';
+
 export const Hero: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
   const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
@@ -12,7 +14,18 @@ export const Hero: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [vehicleData, setVehicleData] = useState<any>(null);
   const navigate = useNavigate();
-  const { consultar, loading } = useVehicleConsultation();
+  const { consultar, loading, error, showErrorDialog, closeErrorDialog } = useVehicleConsultation();
+  
+  // Determinar título do erro baseado na mensagem
+  const getErrorTitle = () => {
+    if (!error) return 'Erro na Consulta';
+    if (error.includes('reveja os dados fornecidos')) return 'Dados Não Encontrados';
+    if (error.includes('Consulta já realizada')) return 'Consulta Já Realizada';
+    if (error.includes('Chassi inválido') || error.includes('dígito verificador')) return 'Chassi Inválido';
+    if (error.includes('não foi encontrado')) return 'Veículo Não Encontrado';
+    if (error.includes('API errada') || error.includes('outro estado')) return 'Estado Incorreto';
+    return 'Atenção';
+  };
   
   const handleConsult = async () => {
     if (!chassisNumber || chassisNumber.trim().length < 3) {
@@ -56,7 +69,16 @@ export const Hero: React.FC = () => {
       setModalOpen(true);
     }
   };
-  return <section className="flex flex-col relative min-h-[600px] w-full pb-[11px] max-md:max-w-full">
+
+  return <>
+      <ErrorDialog
+        open={showErrorDialog}
+        onClose={closeErrorDialog}
+        title={getErrorTitle()}
+        message={error || 'Ocorreu um erro ao consultar o veículo.'}
+      />
+      
+      <section className="flex flex-col relative min-h-[600px] w-full pb-[11px] max-md:max-w-full">
       <img src={heroBackground} alt="Hero background" className="absolute h-full w-full object-cover inset-0" />
       <div className="absolute inset-0 bg-black/80" />
       <div className="relative flex w-full flex-col items-center pt-[73px] pb-[120px] px-20 max-md:max-w-full max-md:pb-[100px] max-md:px-5">
@@ -138,5 +160,6 @@ export const Hero: React.FC = () => {
       </div>
       
       <ConsultationModal open={modalOpen} onOpenChange={setModalOpen} vehicleData={vehicleData} />
-    </section>;
+    </section>
+  </>;
 };
