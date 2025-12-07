@@ -84,11 +84,19 @@ export const ScannerSection: React.FC = () => {
   // Determinar título do erro baseado na mensagem
   const getErrorTitle = () => {
     if (!error) return 'Erro na Consulta';
+    if (error.includes('reveja os dados fornecidos')) return 'Dados Não Encontrados';
     if (error.includes('Consulta já realizada')) return 'Consulta Já Realizada';
     if (error.includes('Chassi inválido') || error.includes('dígito verificador')) return 'Chassi Inválido';
     if (error.includes('não foi encontrado')) return 'Veículo Não Encontrado';
     if (error.includes('API errada') || error.includes('outro estado')) return 'Estado Incorreto';
     return 'Atenção';
+  };
+  
+  // Função para abrir modal de produtos manualmente
+  const handleOpenProductsModal = () => {
+    if (vehicleTipo) {
+      setShowProductsModal(true);
+    }
   };
 
   return <>
@@ -190,6 +198,18 @@ export const ScannerSection: React.FC = () => {
                   ultimaAtualizacao={resultado.ultimaAtualizacao}
                   showFullDetails={true}
                 />
+                
+                {/* Botão para abrir modal de produtos */}
+                {vehicleTipo && (
+                  <div className="mt-6 flex justify-center">
+                    <Button 
+                      onClick={handleOpenProductsModal}
+                      className="bg-brand-yellow text-black font-bold uppercase px-8 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors"
+                    >
+                      Consultar Agora - Ver Produtos Compatíveis
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

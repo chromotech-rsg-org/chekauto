@@ -213,7 +213,22 @@ export const buscarOuConsultarVeiculo = async (
         endpoint: logsAnteriores[0].endpoint
       });
       
-      // 2. Verificar se já existe QUALQUER erro no endpoint atual
+      // 2. Verificar se já existe erro 612 (API errada) no endpoint atual
+      const logErro612 = logsAnteriores.find(log => 
+        !log.sucesso && 
+        log.endpoint === endpoint && 
+        (log.codigo_resposta === 612 || log.erro_tipo === 'CHASSI_API_ERRADA')
+      );
+      
+      if (logErro612) {
+        console.log('[buscarOuConsultarVeiculo] Erro 612 anterior neste endpoint:', endpoint);
+        
+        // Sugerir tentar o outro endpoint
+        const outroEndpoint = endpoint === 'base-sp' ? 'BIN' : 'Base SP';
+        throw new Error(`Erro, reveja os dados fornecidos e consulte novamente. Este veículo pode não estar cadastrado nesta base. Tente consultar na ${outroEndpoint}.`);
+      }
+      
+      // 3. Verificar outros erros no endpoint atual
       const logErroNoEndpoint = logsAnteriores.find(log => 
         !log.sucesso && log.endpoint === endpoint
       );
@@ -323,6 +338,11 @@ export const buscarOuConsultarVeiculo = async (
         consultaId: novoLog?.id || '',
         logConsulta: novoLog || undefined,
       };
+    }
+    
+    // Tratar erro 612 especificamente
+    if (resultado.status === 612) {
+      throw new Error('Erro, reveja os dados fornecidos e consulte novamente.');
     }
     
     throw new Error(resultado.error || 'Erro ao consultar veículo');
