@@ -81,15 +81,23 @@ export const ScannerSection: React.FC = () => {
     }
   };
 
+  // Determinar título do erro baseado na mensagem
+  const getErrorTitle = () => {
+    if (!error) return 'Erro na Consulta';
+    if (error.includes('Consulta já realizada')) return 'Consulta Já Realizada';
+    if (error.includes('Chassi inválido') || error.includes('dígito verificador')) return 'Chassi Inválido';
+    if (error.includes('não foi encontrado')) return 'Veículo Não Encontrado';
+    if (error.includes('API errada') || error.includes('outro estado')) return 'Estado Incorreto';
+    return 'Atenção';
+  };
+
   return <>
-      {showErrorDialog && (
-        <ErrorDialog
-          open={showErrorDialog}
-          onClose={closeErrorDialog}
-          title="Consulta Já Realizada"
-          message={error || ''}
-        />
-      )}
+      <ErrorDialog
+        open={showErrorDialog}
+        onClose={closeErrorDialog}
+        title={getErrorTitle()}
+        message={error || 'Ocorreu um erro ao consultar o veículo.'}
+      />
       
       <RelatedProductsModal
         open={showProductsModal}
