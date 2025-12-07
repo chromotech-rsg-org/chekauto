@@ -42,7 +42,14 @@ interface CatMmvItem {
   criado_em: string | null;
 }
 
-const ITEMS_PER_PAGE = 20;
+const PAGE_SIZE_OPTIONS = [
+  { value: "5", label: "5" },
+  { value: "10", label: "10" },
+  { value: "20", label: "20" },
+  { value: "50", label: "50" },
+  { value: "100", label: "100" },
+  { value: "all", label: "Todas" }
+];
 
 export default function TabelaCatMmv() {
   const [catMmvData, setCatMmvData] = useState<CatMmvItem[]>([]);
@@ -55,6 +62,7 @@ export default function TabelaCatMmv() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState("20");
 
   const [formData, setFormData] = useState({
     mmv_original: "",
@@ -115,16 +123,19 @@ export default function TabelaCatMmv() {
   });
 
   // Paginação
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const itemsPerPage = pageSize === "all" ? filteredData.length : parseInt(pageSize);
+  const totalPages = pageSize === "all" ? 1 : Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = pageSize === "all" 
+    ? filteredData 
+    : filteredData.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      );
 
-  // Reset page when filters change
+  // Reset page when filters or page size change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCategoria, startDate, endDate]);
+  }, [searchTerm, filterCategoria, startDate, endDate, pageSize]);
 
   const exportFields = [
     { key: "mmv_original", label: "MMV Original" },
@@ -433,11 +444,28 @@ export default function TabelaCatMmv() {
           </ScrollArea>
 
           {/* Paginação */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="flex items-center justify-between px-4 py-3 border-t flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Linhas por página:</span>
+                <Select value={pageSize} onValueChange={setPageSize}>
+                  <SelectTrigger className="w-[100px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <p className="text-sm text-muted-foreground">
-                Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length} registros
+                Mostrando {filteredData.length === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredData.length)} de {filteredData.length} registros
               </p>
+            </div>
+            {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -459,8 +487,8 @@ export default function TabelaCatMmv() {
                   Próxima
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Modal de Cadastro */}
