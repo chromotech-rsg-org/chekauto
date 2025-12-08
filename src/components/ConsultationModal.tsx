@@ -37,7 +37,9 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   // Extrair tipo de carroceria do veículo
   const getVehicleType = () => {
     if (!vehicleData?.data) return '';
-    const tipo = vehicleData.data.caracteristicas?.tipoCarroceria;
+    // O tipo está em especificacoes.tipo no formato mapeado (ex: "14 - CAMINHÃO - 2 - ALUGUEL")
+    const tipo = vehicleData.data.especificacoes?.tipo || vehicleData.data.caracteristicas?.tipoCarroceria;
+    console.log('getVehicleType - vehicleData:', vehicleData?.data, 'tipo:', tipo);
     return tipo || '';
   };
 
@@ -52,8 +54,8 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       marca: data.especificacoes?.marca,
       modelo: data.especificacoes?.modelo,
       ano_modelo: data.especificacoes?.anoModelo,
-      cor: data.caracteristicas?.cor,
-      tipo: data.caracteristicas?.tipoCarroceria,
+      cor: data.especificacoes?.cor,
+      tipo: data.especificacoes?.tipo || data.caracteristicas?.tipoCarroceria,
     };
   };
 
