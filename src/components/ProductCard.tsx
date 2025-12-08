@@ -12,7 +12,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   id = '1',
   title,
   image,
-  buttonText = "CONTRATAR",
+  buttonText = "CONTRATAR SOLUÇÃO",
   onContract,
   onShowDetails
 }) => {
