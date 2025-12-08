@@ -3,8 +3,9 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
+import { ClienteDetailModal } from "@/components/admin/ClienteDetailModal";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Search } from "lucide-react";
+import { Plus, Pencil, Search, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function Clientes() {
   const [endDate, setEndDate] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingCliente, setEditingCliente] = useState<any>(null);
+  const [viewingCliente, setViewingCliente] = useState<any>(null);
   const [formData, setFormData] = useState({
     nome: "",
     cpf_cnpj: "",
@@ -427,6 +429,15 @@ export default function Clientes() {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          title="Ver detalhes"
+                          onClick={() => setViewingCliente(cliente)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          title="Editar"
                           onClick={() => {
                             setEditingCliente(cliente);
                             setFormData({
@@ -454,6 +465,13 @@ export default function Clientes() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Modal de detalhes do cliente */}
+        <ClienteDetailModal
+          open={!!viewingCliente}
+          onClose={() => setViewingCliente(null)}
+          cliente={viewingCliente}
+        />
       </div>
     </AdminLayout>
   );
