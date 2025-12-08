@@ -201,11 +201,38 @@ export default function VehicleData() {
               <div className="bg-gray-100 rounded-lg p-6 text-center">
                 <p className="text-sm text-gray-600 mb-2">Faça o Upload da Nota Fiscal do seu Veículo:</p>
                 <p className="text-xs text-gray-500 mb-3">Imagem em PNG, JPG ou PDF. Máximo de 2MB</p>
-                <input id="notaFiscal" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
+                <input 
+                  id="notaFiscal" 
+                  type="file" 
+                  accept=".pdf,.jpg,.jpeg,.png" 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                />
                 <label htmlFor="notaFiscal" className="cursor-pointer inline-block">
-                  <div className="w-20 h-20 bg-white rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <span className="text-3xl text-gray-400">+</span>
-                  </div>
+                  {formData.notaFiscal ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-20 h-20 bg-green-100 rounded-lg mx-auto flex items-center justify-center border-2 border-green-500">
+                        <CheckCircle2 className="w-8 h-8 text-green-600" />
+                      </div>
+                      <span className="text-xs text-green-600 font-medium max-w-[200px] truncate">
+                        {formData.notaFiscal.name}
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, notaFiscal: null }));
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700 underline"
+                      >
+                        Remover arquivo
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-white rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-brand-yellow transition-colors">
+                      <span className="text-3xl text-gray-400">+</span>
+                    </div>
+                  )}
                 </label>
               </div>
 
