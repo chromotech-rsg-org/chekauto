@@ -34,28 +34,74 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     }
   }, [open]);
 
+  // Helper para extrair dados mapeados ou brutos da API
+  const getVehicleInfo = () => {
+    if (!vehicleData?.data) return null;
+    
+    const data = vehicleData.data;
+    
+    // Verificar se é o formato mapeado (tem identificacao/especificacoes)
+    if (data.identificacao && data.especificacoes) {
+      return {
+        chassi: data.identificacao.chassi,
+        renavam: data.identificacao.renavam,
+        placa: data.identificacao.placa,
+        marca: data.especificacoes.marca,
+        modelo: data.especificacoes.modelo,
+        ano_modelo: data.especificacoes.anoModelo,
+        cor: data.especificacoes.cor,
+        tipo: data.especificacoes.tipo,
+        uf: data.identificacao.uf || data.registro?.uf,
+        municipio: data.registro?.municipio,
+      };
+    }
+    
+    // Formato bruto da API (data.data[0].veiculo)
+    if (data.data && Array.isArray(data.data) && data.data[0]?.veiculo) {
+      const veiculo = data.data[0].veiculo;
+      return {
+        chassi: veiculo.chassi,
+        renavam: veiculo.renavam,
+        placa: veiculo.placa,
+        marca: veiculo.marca,
+        modelo: veiculo.modelo,
+        ano_modelo: veiculo.ano_modelo,
+        cor: veiculo.cor,
+        tipo: `${veiculo.tipo || ''} - ${data.data[0].veiculo?.categoria || ''}`.trim(),
+        uf: veiculo.uf || '',
+        municipio: veiculo.municipio || '',
+      };
+    }
+    
+    return null;
+  };
+
   // Extrair tipo de carroceria do veículo
   const getVehicleType = () => {
-    if (!vehicleData?.data) return '';
-    // O tipo está em especificacoes.tipo no formato mapeado (ex: "14 - CAMINHÃO - 2 - ALUGUEL")
-    const tipo = vehicleData.data.especificacoes?.tipo || vehicleData.data.caracteristicas?.tipoCarroceria;
-    console.log('getVehicleType - vehicleData:', vehicleData?.data, 'tipo:', tipo);
-    return tipo || '';
+    const info = getVehicleInfo();
+    if (!info) return '';
+    
+    console.log('getVehicleType - info:', info, 'tipo:', info.tipo);
+    return info.tipo || '';
   };
 
   // Extrair dados do veículo para o modal de produtos
   const getVehicleDataForProducts = () => {
-    if (!vehicleData?.data) return {};
-    const data = vehicleData.data;
+    const info = getVehicleInfo();
+    if (!info) return {};
+    
+    console.log('getVehicleDataForProducts - info:', info);
     return {
-      chassi: data.identificacao?.chassi,
-      renavam: data.identificacao?.renavam,
-      placa: data.identificacao?.placa,
-      marca: data.especificacoes?.marca,
-      modelo: data.especificacoes?.modelo,
-      ano_modelo: data.especificacoes?.anoModelo,
-      cor: data.especificacoes?.cor,
-      tipo: data.especificacoes?.tipo || data.caracteristicas?.tipoCarroceria,
+      chassi: info.chassi,
+      renavam: info.renavam,
+      placa: info.placa,
+      marca: info.marca,
+      modelo: info.modelo,
+      ano_modelo: info.ano_modelo,
+      cor: info.cor,
+      tipo: info.tipo,
+      uf: info.uf,
+      municipio: info.municipio,
     };
   };
 
