@@ -20,41 +20,46 @@ interface ClienteDetailModalProps {
 export function ClienteDetailModal({ open, onClose, cliente }: ClienteDetailModalProps) {
   const [activeTab, setActiveTab] = useState("info");
 
-  // Buscar consultas do cliente (através das solicitações)
+  // Buscar consultas do cliente (através da tabela de junção cliente_consultas)
   const { data: consultas = [], isLoading: loadingConsultas } = useQuery({
     queryKey: ['cliente-consultas', cliente?.id],
     queryFn: async () => {
       if (!cliente?.id) return [];
       
-      // Buscar solicitações do cliente que têm consulta_veiculo_id
+      // Buscar consultas através da tabela de junção cliente_consultas
+      const { data: clienteConsultas, error: ccError } = await supabase
+        .from('cliente_consultas')
+        .select('consulta_id')
+        .eq('cliente_id', cliente.id);
+      
+      if (ccError) {
+        console.error('Erro ao buscar cliente_consultas:', ccError);
+      }
+      
+      const consultaIds = clienteConsultas?.map(cc => cc.consulta_id) || [];
+      
+      // Incluir primeira_consulta_id se existir e não estiver na lista
+      if (cliente.primeira_consulta_id && !consultaIds.includes(cliente.primeira_consulta_id)) {
+        consultaIds.push(cliente.primeira_consulta_id);
+      }
+      
+      // Buscar também via solicitações (para compatibilidade)
       const { data: solicitacoes, error: solError } = await supabase
         .from('solicitacoes')
         .select('consulta_veiculo_id')
         .eq('cliente_id', cliente.id)
         .not('consulta_veiculo_id', 'is', null);
       
-      if (solError) throw solError;
-      
-      if (!solicitacoes || solicitacoes.length === 0) {
-        // Também verificar pela primeira_consulta_id do cliente
-        if (cliente.primeira_consulta_id) {
-          const { data: primeiraConsulta, error: pcError } = await supabase
-            .from('consultas_veiculos')
-            .select('*')
-            .eq('id', cliente.primeira_consulta_id)
-            .single();
-          
-          if (pcError && pcError.code !== 'PGRST116') throw pcError;
-          return primeiraConsulta ? [primeiraConsulta] : [];
-        }
-        return [];
+      if (!solError && solicitacoes) {
+        solicitacoes.forEach(s => {
+          if (s.consulta_veiculo_id && !consultaIds.includes(s.consulta_veiculo_id)) {
+            consultaIds.push(s.consulta_veiculo_id);
+          }
+        });
       }
       
-      const consultaIds = [...new Set(solicitacoes.map(s => s.consulta_veiculo_id))];
-      
-      // Incluir primeira_consulta_id se existir
-      if (cliente.primeira_consulta_id && !consultaIds.includes(cliente.primeira_consulta_id)) {
-        consultaIds.push(cliente.primeira_consulta_id);
+      if (consultaIds.length === 0) {
+        return [];
       }
       
       const { data: consultasData, error: consError } = await supabase

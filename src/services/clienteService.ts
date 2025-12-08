@@ -138,6 +138,21 @@ export const associarClienteConsulta = async (
   consultaId: string
 ): Promise<boolean> => {
   try {
+    // Inserir na tabela de junção cliente_consultas
+    const { error: juncaoError } = await supabase
+      .from('cliente_consultas')
+      .upsert({
+        cliente_id: clienteId,
+        consulta_id: consultaId,
+      }, {
+        onConflict: 'cliente_id,consulta_id'
+      });
+
+    if (juncaoError) {
+      console.error('Erro ao inserir em cliente_consultas:', juncaoError);
+      // Continuar mesmo se falhar (pode ser duplicata)
+    }
+
     // Verifica se já tem primeira_consulta_id
     const { data: cliente } = await supabase
       .from('clientes')

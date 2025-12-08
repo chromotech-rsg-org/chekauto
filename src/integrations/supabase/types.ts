@@ -107,6 +107,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cliente_consultas: {
+        Row: {
+          cliente_id: string
+          consulta_id: string
+          criado_em: string
+          id: string
+        }
+        Insert: {
+          cliente_id: string
+          consulta_id: string
+          criado_em?: string
+          id?: string
+        }
+        Update: {
+          cliente_id?: string
+          consulta_id?: string
+          criado_em?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_consultas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_consultas_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           atualizado_em: string | null
