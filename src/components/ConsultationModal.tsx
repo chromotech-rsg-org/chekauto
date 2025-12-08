@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useNavigate } from 'react-router-dom';
 import { VehicleDataDisplay } from './VehicleDataDisplay';
+import { RelatedProductsModal } from './RelatedProductsModal';
 import { criarOuAtualizarCliente, associarClienteConsulta } from '@/services/clienteService';
 import { toast } from '@/hooks/use-toast';
 import { ResultadoConsulta } from '@/services/veiculoCacheService';
 import { useCheckout } from '@/contexts/CheckoutContext';
-
 interface ConsultationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,7 +22,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const [showProductsModal, setShowProductsModal] = useState(false);
   const { setVehicleData, setCustomerData } = useCheckout();
 
   useEffect(() => {
@@ -31,8 +30,32 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       setNome("");
       setCpf("");
       setWhatsapp("");
+      setShowProductsModal(false);
     }
   }, [open]);
+
+  // Extrair tipo de carroceria do veículo
+  const getVehicleType = () => {
+    if (!vehicleData?.data) return '';
+    const tipo = vehicleData.data.caracteristicas?.tipoCarroceria;
+    return tipo || '';
+  };
+
+  // Extrair dados do veículo para o modal de produtos
+  const getVehicleDataForProducts = () => {
+    if (!vehicleData?.data) return {};
+    const data = vehicleData.data;
+    return {
+      chassi: data.identificacao?.chassi,
+      renavam: data.identificacao?.renavam,
+      placa: data.identificacao?.placa,
+      marca: data.especificacoes?.marca,
+      modelo: data.especificacoes?.modelo,
+      ano_modelo: data.especificacoes?.anoModelo,
+      cor: data.caracteristicas?.cor,
+      tipo: data.caracteristicas?.tipoCarroceria,
+    };
+  };
 
   const handleConsultar = async () => {
     if (!nome || !cpf || !whatsapp) {
@@ -117,17 +140,8 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         description: 'Dados salvos. Escolha um produto para continuar.',
       });
 
-      // Fechar modal e navegar para catálogo de produtos
-      onOpenChange(false);
-      navigate('/#produtos');
-      
-      // Scroll suave para a seção de produtos após um pequeno delay
-      setTimeout(() => {
-        const produtosSection = document.getElementById('produtos');
-        if (produtosSection) {
-          produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+      // Abrir modal de produtos relacionados
+      setShowProductsModal(true);
     } catch (error: any) {
       console.error('Erro ao consultar:', error);
       const errorMessage = error?.message || 'Erro ao processar sua solicitação';
@@ -229,6 +243,17 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
             </button>
         </div>
       </DialogContent>
+
+      {/* Modal de produtos relacionados */}
+      <RelatedProductsModal
+        open={showProductsModal}
+        onClose={() => {
+          setShowProductsModal(false);
+          onOpenChange(false);
+        }}
+        vehicleType={getVehicleType()}
+        vehicleData={getVehicleDataForProducts()}
+      />
     </Dialog>
   );
 };
