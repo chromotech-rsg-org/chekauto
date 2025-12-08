@@ -271,7 +271,7 @@ export const RelatedProductsModal = ({
       return '';
     };
 
-    // Tentar extrair de múltiplas fontes
+    // Tentar extrair de múltiplas fontes - vehicleData vem do ConsultationModal
     const chassi = extractValue(vehicleData?.chassi) || extractValue(vehicleData?.Chassi);
     const renavam = extractValue(vehicleData?.renavam) || extractValue(vehicleData?.Renavam);
     const placa = extractValue(vehicleData?.placa) || extractValue(vehicleData?.Placa);
@@ -281,20 +281,24 @@ export const RelatedProductsModal = ({
     const cor = extractValue(vehicleData?.cor) || extractValue(vehicleData?.Cor);
     const uf = extractValue(vehicleData?.uf) || extractValue(vehicleData?.UF);
     const municipio = extractValue(vehicleData?.municipio) || extractValue(vehicleData?.Municipio);
+    const tipo = extractValue(vehicleData?.tipo) || extractValue(vehicleData?.Tipo);
+
+    console.log('handleContratarSolucao - vehicleData:', vehicleData);
+    console.log('Dados extraídos:', { chassi, renavam, placa, marca, modelo, ano, cor, uf, municipio });
 
     // Salvar dados do veículo e produto no contexto
     setVehicleData({
       chassi,
       renavam,
-      placa,
-      marca,
-      modelo,
       ano,
-      cor,
+      placa,
       estado: uf,
       cidade: municipio,
-      informacaoAdicional: '',
-      notaFiscal: null
+      informacaoAdicional: `${marca} ${modelo}`.trim(),
+      notaFiscal: null,
+      marca,
+      modelo,
+      cor,
     });
 
     setProductData({
