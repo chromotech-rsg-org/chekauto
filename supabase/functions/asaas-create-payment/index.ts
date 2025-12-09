@@ -207,14 +207,23 @@ serve(async (req) => {
 
     // Criar solicitação vinculada ao pagamento (usando UUID do banco, não ID do Asaas)
     if (clienteId) {
+      // Preparar dados completos do veículo incluindo nome do anexo se existir
+      const dadosVeiculoCompletos = {
+        ...vehicleData,
+        // Se notaFiscal existir, salvar apenas o nome do arquivo
+        notaFiscalNome: vehicleData?.notaFiscal?.name || vehicleData?.notaFiscalNome || null
+      };
+      // Remover o File object pois não pode ser serializado
+      delete dadosVeiculoCompletos.notaFiscal;
+
       const { error: solError } = await supabase
         .from('solicitacoes')
         .insert({
-          pagamento_id: pagamentoInserido.id, // Usar o ID do banco de dados
+          pagamento_id: pagamentoInserido.id,
           cliente_id: clienteId,
           produto_id: productData?.id || null,
           status: 'pendente',
-          dados_veiculo: vehicleData
+          dados_veiculo: dadosVeiculoCompletos
         });
       
       if (solError) {

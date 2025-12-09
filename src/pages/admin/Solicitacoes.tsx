@@ -26,24 +26,9 @@ interface Solicitacao {
   status: string;
   criado_em: string;
   dados_veiculo: any;
-  clientes: {
-    id: string;
-    nome: string;
-    email: string;
-    cpf_cnpj: string;
-    telefone: string;
-  };
-  produtos: {
-    id: string;
-    nome: string;
-    preco: number;
-  };
-  pagamentos: {
-    id: string;
-    status: string;
-    metodo_pagamento: string;
-    valor: number;
-  };
+  clientes: any;
+  produtos: any;
+  pagamentos: any;
 }
 
 export default function Solicitacoes() {
@@ -96,10 +81,11 @@ export default function Solicitacoes() {
   };
 
   const filteredSolicitacoes = solicitacoes.filter((sol) => {
+    const chassi = sol.dados_veiculo?.chassi || sol.dados_veiculo?.chassis || '';
     const matchesSearch = 
       sol.clientes?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sol.id.includes(searchTerm) ||
-      sol.dados_veiculo?.chassis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      chassi.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sol.dados_veiculo?.placa?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesPaymentStatus = 
@@ -326,12 +312,12 @@ export default function Solicitacoes() {
                     <TableCell>{new Date(solicitacao.criado_em).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{solicitacao.clientes?.nome || "N/A"}</TableCell>
                     <TableCell>{solicitacao.produtos?.nome || "N/A"}</TableCell>
-                    <TableCell className="font-mono text-sm">{solicitacao.dados_veiculo?.chassis || "N/A"}</TableCell>
+                    <TableCell className="font-mono text-sm">{solicitacao.dados_veiculo?.chassi || solicitacao.dados_veiculo?.chassis || "N/A"}</TableCell>
                     <TableCell>
                       <StatusBadge status={solicitacao.status} />
                     </TableCell>
                     <TableCell>
-                      <PaymentStatusBadge status={getPaymentStatusLabel(solicitacao.pagamentos?.status || "PENDING")} />
+                      <PaymentStatusBadge status={solicitacao.pagamentos?.status || "PENDING"} />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -369,6 +355,10 @@ export default function Solicitacoes() {
                 <Card>
                   <CardContent className="pt-6 space-y-3">
                     <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <Label className="text-muted-foreground">Chassis</Label>
+                        <p className="font-medium font-mono">{selectedSolicitacao?.dados_veiculo?.chassi || selectedSolicitacao?.dados_veiculo?.chassis || "N/A"}</p>
+                      </div>
                       <div>
                         <Label className="text-muted-foreground">Placa</Label>
                         <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.placa || "N/A"}</p>
@@ -377,18 +367,50 @@ export default function Solicitacoes() {
                         <Label className="text-muted-foreground">RENAVAM</Label>
                         <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.renavam || "N/A"}</p>
                       </div>
-                      <div className="col-span-2">
-                        <Label className="text-muted-foreground">Chassis</Label>
-                        <p className="font-medium font-mono">{selectedSolicitacao?.dados_veiculo?.chassis || "N/A"}</p>
+                      <div>
+                        <Label className="text-muted-foreground">Marca</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.marca || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Modelo</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.modelo || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Ano</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.ano || selectedSolicitacao?.dados_veiculo?.anoModelo || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Cor</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.cor || "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Tipo de Carroceria</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.tipoCarroceria || selectedSolicitacao?.dados_veiculo?.tipo || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Categoria</Label>
                         <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.categoria || "N/A"}</p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">Tipo de Carroceria</Label>
-                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.tipoCarroceria || "N/A"}</p>
+                        <Label className="text-muted-foreground">Estado</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.estado || "N/A"}</p>
                       </div>
+                      <div>
+                        <Label className="text-muted-foreground">Cidade</Label>
+                        <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.cidade || "N/A"}</p>
+                      </div>
+                      {selectedSolicitacao?.dados_veiculo?.informacaoAdicional && (
+                        <div className="col-span-2">
+                          <Label className="text-muted-foreground">Informação Adicional</Label>
+                          <p className="font-medium">{selectedSolicitacao?.dados_veiculo?.informacaoAdicional}</p>
+                        </div>
+                      )}
+                      {selectedSolicitacao?.dados_veiculo?.notaFiscalNome && (
+                        <div className="col-span-2">
+                          <Label className="text-muted-foreground">Nota Fiscal Anexada</Label>
+                          <p className="font-medium text-green-600">✓ {selectedSolicitacao?.dados_veiculo?.notaFiscalNome}</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -397,23 +419,41 @@ export default function Solicitacoes() {
               <TabsContent value="cliente" className="space-y-4">
                 <Card>
                   <CardContent className="pt-6 space-y-3">
-                    <div className="space-y-3">
-                      <div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
                         <Label className="text-muted-foreground">Nome</Label>
                         <p className="font-medium">{selectedSolicitacao?.clientes?.nome || "N/A"}</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Email</Label>
-                        <p className="font-medium">{selectedSolicitacao?.clientes?.email || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">CPF/CNPJ</Label>
                         <p className="font-medium">{selectedSolicitacao?.clientes?.cpf_cnpj || "N/A"}</p>
                       </div>
                       <div>
+                        <Label className="text-muted-foreground">Email</Label>
+                        <p className="font-medium">{selectedSolicitacao?.clientes?.email || "N/A"}</p>
+                      </div>
+                      <div>
                         <Label className="text-muted-foreground">Telefone</Label>
                         <p className="font-medium">{selectedSolicitacao?.clientes?.telefone || "N/A"}</p>
                       </div>
+                      <div>
+                        <Label className="text-muted-foreground">Status</Label>
+                        <div className="mt-1">
+                          <StatusBadge status={selectedSolicitacao?.clientes?.status || "lead"} />
+                        </div>
+                      </div>
+                      {selectedSolicitacao?.clientes?.endereco && (
+                        <div className="col-span-2">
+                          <Label className="text-muted-foreground">Endereço</Label>
+                          <p className="font-medium">
+                            {selectedSolicitacao?.clientes?.endereco?.logradouro && `${selectedSolicitacao?.clientes?.endereco?.logradouro}, `}
+                            {selectedSolicitacao?.clientes?.endereco?.numero && `${selectedSolicitacao?.clientes?.endereco?.numero} - `}
+                            {selectedSolicitacao?.clientes?.endereco?.bairro && `${selectedSolicitacao?.clientes?.endereco?.bairro}, `}
+                            {selectedSolicitacao?.clientes?.endereco?.cep && `CEP: ${selectedSolicitacao?.clientes?.endereco?.cep}`}
+                            {selectedSolicitacao?.clientes?.endereco?.complemento && ` (${selectedSolicitacao?.clientes?.endereco?.complemento})`}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -425,7 +465,7 @@ export default function Solicitacoes() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Método de Pagamento</Label>
-                        <p className="font-medium">{selectedSolicitacao?.pagamentos?.metodo_pagamento || "N/A"}</p>
+                        <p className="font-medium">{selectedSolicitacao?.pagamentos?.metodo_pagamento === 'PIX' ? 'PIX' : selectedSolicitacao?.pagamentos?.metodo_pagamento === 'CREDIT_CARD' ? 'Cartão de Crédito' : selectedSolicitacao?.pagamentos?.metodo_pagamento || "N/A"}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Valor Total</Label>
@@ -436,8 +476,12 @@ export default function Solicitacoes() {
                       <div className="col-span-2">
                         <Label className="text-muted-foreground">Status do Pagamento</Label>
                         <div className="mt-2">
-                          <PaymentStatusBadge status={getPaymentStatusLabel(selectedSolicitacao?.pagamentos?.status || "PENDING")} />
+                          <PaymentStatusBadge status={selectedSolicitacao?.pagamentos?.status || "PENDING"} />
                         </div>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-muted-foreground">Produto</Label>
+                        <p className="font-medium">{selectedSolicitacao?.produtos?.nome || "N/A"}</p>
                       </div>
                     </div>
                   </CardContent>

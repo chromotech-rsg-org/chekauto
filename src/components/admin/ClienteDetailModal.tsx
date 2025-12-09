@@ -228,9 +228,15 @@ export function ClienteDetailModal({ open, onClose, cliente }: ClienteDetailModa
                   <TableBody>
                     {consultas.map((consulta: any) => {
                       // Verificar se esta consulta evoluiu para uma solicitação
-                      const temSolicitacao = solicitacoes.some(
-                        (s: any) => s.consulta_veiculo_id === consulta.id
-                      );
+                      // Verifica pelo chassi OU pelo consulta_veiculo_id
+                      const temSolicitacao = solicitacoes.some((s: any) => {
+                        if (s.consulta_veiculo_id === consulta.id) return true;
+                        // Também verificar pelo chassi nos dados do veículo
+                        const chassiConsulta = consulta.chassi || consulta.valor_consultado;
+                        const chassiSolicitacao = s.dados_veiculo?.chassis || s.dados_veiculo?.chassi;
+                        return chassiConsulta && chassiSolicitacao && 
+                               chassiConsulta.toLowerCase() === chassiSolicitacao.toLowerCase();
+                      });
                       
                       return (
                         <TableRow key={consulta.id}>
@@ -241,7 +247,7 @@ export function ClienteDetailModal({ open, onClose, cliente }: ClienteDetailModa
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
-                            {consulta.valor_consultado}
+                            {consulta.valor_consultado || consulta.chassi || '-'}
                           </TableCell>
                           <TableCell>
                             {consulta.marca && consulta.modelo 
