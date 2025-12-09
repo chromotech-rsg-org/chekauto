@@ -305,10 +305,10 @@ export default function Dashboard() {
                   <TableBody>
                     {recentSolicitacoes.map((solicitacao) => (
                       <TableRow key={solicitacao.id}>
-                        <TableCell className="font-medium">#{solicitacao.id}</TableCell>
-                        <TableCell>{solicitacao.cliente}</TableCell>
+                        <TableCell className="font-medium">#{solicitacao.id.substring(0, 8)}</TableCell>
+                        <TableCell>{solicitacao.cliente?.nome || 'N/A'}</TableCell>
                         <TableCell>
-                          <StatusBadge status={solicitacao.status} />
+                          <StatusBadge status={solicitacao.status || 'pendente'} />
                         </TableCell>
                       </TableRow>
                     ))}

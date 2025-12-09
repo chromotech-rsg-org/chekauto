@@ -128,11 +128,19 @@ export const createFullPayment = async (
       };
     }
 
+    // Preparar dados do veículo para enviar - incluindo nome do arquivo se existir
+    const vehicleDataToSend = {
+      ...vehicle,
+      notaFiscalNome: vehicle.notaFiscal?.name || null,
+    };
+    // Remover objeto File pois não pode ser serializado no JSON
+    delete vehicleDataToSend.notaFiscal;
+
     const { data, error } = await supabase.functions.invoke('asaas-create-payment', {
       body: {
         customerData,
         paymentData: asaasPaymentData,
-        vehicleData: vehicle,
+        vehicleData: vehicleDataToSend,
         productData: product,
         userId: user?.id || null,
       },
