@@ -119,7 +119,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error: dbError } = await supabase
+    // Inserir pagamento e obter o ID do banco
+    const { data: pagamentoInserido, error: dbError } = await supabase
       .from('pagamentos')
       .insert({
         asaas_payment_id: payment.id,
@@ -133,14 +134,16 @@ serve(async (req) => {
         dados_cliente: customerData,
         dados_produto: productData || null,
         dados_veiculo: vehicleData || null,
-      });
+      })
+      .select()
+      .single();
 
     if (dbError) {
       console.error('Erro ao salvar no banco:', dbError);
       throw dbError;
     }
 
-    console.log('Pagamento salvo no banco de dados');
+    console.log('Pagamento salvo no banco de dados com ID:', pagamentoInserido.id);
 
     // Criar ou atualizar cliente na tabela clientes
     let clienteId = null;
@@ -155,20 +158,22 @@ serve(async (req) => {
         .maybeSingle();
 
       if (clienteExistente) {
-        // Atualizar cliente existente
+        // Atualizar cliente existente para cliente_ativo (fez solicitação)
         const { data: clienteAtualizado } = await supabase
           .from('clientes')
           .update({
             nome: customerData.name,
             email: customerData.email,
             telefone: customerData.phone || customerData.mobilePhone,
+            status: 'cliente_ativo', // Mudou de lead para cliente_ativo ao fazer solicitação
             endereco: {
               logradouro: customerData.address,
               numero: customerData.addressNumber,
               complemento: customerData.complement,
               bairro: customerData.province,
               cep: customerData.postalCode
-            }
+            },
+            ultima_interacao: new Date().toISOString()
           })
           .eq('id', clienteExistente.id)
           .select()
@@ -176,7 +181,7 @@ serve(async (req) => {
         
         clienteId = clienteAtualizado?.id;
       } else {
-        // Criar novo cliente
+        // Criar novo cliente como cliente_ativo (já está fazendo solicitação)
         const { data: novoCliente } = await supabase
           .from('clientes')
           .insert({
@@ -184,6 +189,7 @@ serve(async (req) => {
             email: customerData.email,
             cpf_cnpj: cpfCnpjLimpo,
             telefone: customerData.phone || customerData.mobilePhone,
+            status: 'cliente_ativo',
             endereco: {
               logradouro: customerData.address,
               numero: customerData.addressNumber,
@@ -199,17 +205,23 @@ serve(async (req) => {
       }
     }
 
-    // Criar solicitação vinculada ao pagamento
+    // Criar solicitação vinculada ao pagamento (usando UUID do banco, não ID do Asaas)
     if (clienteId) {
-      await supabase
+      const { error: solError } = await supabase
         .from('solicitacoes')
         .insert({
-          pagamento_id: payment.id,
+          pagamento_id: pagamentoInserido.id, // Usar o ID do banco de dados
           cliente_id: clienteId,
           produto_id: productData?.id || null,
           status: 'pendente',
           dados_veiculo: vehicleData
         });
+      
+      if (solError) {
+        console.error('Erro ao criar solicitação:', solError);
+      } else {
+        console.log('Solicitação criada com sucesso para cliente:', clienteId);
+      }
     }
 
     // Enviar email de confirmação de pedido

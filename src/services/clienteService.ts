@@ -132,25 +132,43 @@ export const buscarClientePorCpf = async (
 
 /**
  * Associa cliente a uma consulta de veículo
+ * Funciona tanto para consultas novas quanto para consultas do cache
  */
 export const associarClienteConsulta = async (
   clienteId: string,
   consultaId: string
 ): Promise<boolean> => {
   try {
-    // Inserir na tabela de junção cliente_consultas
-    const { error: juncaoError } = await supabase
-      .from('cliente_consultas')
-      .upsert({
-        cliente_id: clienteId,
-        consulta_id: consultaId,
-      }, {
-        onConflict: 'cliente_id,consulta_id'
-      });
+    if (!clienteId || !consultaId) {
+      console.warn('Cliente ID ou Consulta ID não fornecidos');
+      return false;
+    }
 
-    if (juncaoError) {
-      console.error('Erro ao inserir em cliente_consultas:', juncaoError);
-      // Continuar mesmo se falhar (pode ser duplicata)
+    // Verificar se já existe essa associação
+    const { data: existente } = await supabase
+      .from('cliente_consultas')
+      .select('id')
+      .eq('cliente_id', clienteId)
+      .eq('consulta_id', consultaId)
+      .maybeSingle();
+
+    if (!existente) {
+      // Inserir nova associação
+      const { error: juncaoError } = await supabase
+        .from('cliente_consultas')
+        .insert({
+          cliente_id: clienteId,
+          consulta_id: consultaId,
+        });
+
+      if (juncaoError) {
+        console.error('Erro ao inserir em cliente_consultas:', juncaoError);
+        // Continuar mesmo se falhar (pode ser constraint)
+      } else {
+        console.log('Consulta associada ao cliente com sucesso:', { clienteId, consultaId });
+      }
+    } else {
+      console.log('Associação cliente-consulta já existe');
     }
 
     // Verifica se já tem primeira_consulta_id

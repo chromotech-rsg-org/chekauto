@@ -113,18 +113,21 @@ export type Database = {
           consulta_id: string
           criado_em: string
           id: string
+          tipo_referencia: string | null
         }
         Insert: {
           cliente_id: string
           consulta_id: string
           criado_em?: string
           id?: string
+          tipo_referencia?: string | null
         }
         Update: {
           cliente_id?: string
           consulta_id?: string
           criado_em?: string
           id?: string
+          tipo_referencia?: string | null
         }
         Relationships: [
           {
@@ -132,13 +135,6 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cliente_consultas_consulta_id_fkey"
-            columns: ["consulta_id"]
-            isOneToOne: false
-            referencedRelation: "consultas_veiculos"
             referencedColumns: ["id"]
           },
         ]
