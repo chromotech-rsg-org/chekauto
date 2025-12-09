@@ -183,31 +183,31 @@ export default function Confirmation() {
             </p>
           </div>
 
-          {/* QR Code PIX (se disponível) */}
-          {paymentData?.pixQrCode && paymentStatus === 'PENDING' && (
+          {/* QR Code PIX (se disponível) - verificar ambas as estruturas possíveis */}
+          {(paymentData?.payment?.pixQrCode || paymentData?.pixQrCode) && paymentStatus === 'PENDING' && (
             <div className="bg-white rounded-xl border-2 border-gray-200 p-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Pague com PIX</h2>
               
               <div className="bg-white p-4 rounded-lg inline-block mb-4">
                 <img 
-                  src={`data:image/png;base64,${paymentData.pixQrCode}`} 
+                  src={`data:image/png;base64,${paymentData?.payment?.pixQrCode || paymentData?.pixQrCode}`} 
                   alt="QR Code PIX" 
                   className="w-64 h-64"
                 />
               </div>
 
-              {paymentData?.pixCopyPaste && (
+              {(paymentData?.payment?.pixCopyPaste || paymentData?.pixCopyPaste) && (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">Ou copie o código PIX:</p>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
-                      value={paymentData.pixCopyPaste} 
+                      value={paymentData?.payment?.pixCopyPaste || paymentData?.pixCopyPaste} 
                       readOnly 
                       className="flex-1 px-4 py-2 border rounded-lg text-sm bg-gray-50"
                     />
                     <Button 
-                      onClick={() => copyToClipboard(paymentData.pixCopyPaste)}
+                      onClick={() => copyToClipboard(paymentData?.payment?.pixCopyPaste || paymentData?.pixCopyPaste)}
                       variant="outline"
                     >
                       <Copy className="h-4 w-4" />

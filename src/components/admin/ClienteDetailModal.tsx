@@ -29,47 +29,77 @@ export function ClienteDetailModal({ open, onClose, cliente }: ClienteDetailModa
       // Buscar consultas através da tabela de junção cliente_consultas
       const { data: clienteConsultas, error: ccError } = await supabase
         .from('cliente_consultas')
-        .select('consulta_id')
+        .select('consulta_id, tipo_referencia')
         .eq('cliente_id', cliente.id);
       
       if (ccError) {
         console.error('Erro ao buscar cliente_consultas:', ccError);
       }
       
-      const consultaIds = clienteConsultas?.map(cc => cc.consulta_id) || [];
+      const consultasMapeadas: any[] = [];
       
-      // Incluir primeira_consulta_id se existir e não estiver na lista
-      if (cliente.primeira_consulta_id && !consultaIds.includes(cliente.primeira_consulta_id)) {
-        consultaIds.push(cliente.primeira_consulta_id);
+      // Processar cada associação
+      for (const cc of clienteConsultas || []) {
+        // Buscar no log de consultas InfoSimples (fonte principal)
+        const { data: logConsulta } = await supabase
+          .from('logs_consultas_infosimples')
+          .select('*')
+          .eq('id', cc.consulta_id)
+          .maybeSingle();
+        
+        if (logConsulta) {
+          const params = logConsulta.parametros as Record<string, any> || {};
+          consultasMapeadas.push({
+            id: logConsulta.id,
+            tipo_consulta: logConsulta.tipo_consulta,
+            valor_consultado: params.chassi || params.placa || params.renavam || '-',
+            marca: logConsulta.marca,
+            modelo: logConsulta.modelo,
+            placa: logConsulta.placa,
+            criado_em: logConsulta.criado_em,
+            chassi: logConsulta.chassi,
+            fromLog: true,
+          });
+          continue;
+        }
+        
+        // Fallback: buscar em consultas_veiculos
+        const { data: consultaVeiculo } = await supabase
+          .from('consultas_veiculos')
+          .select('*')
+          .eq('id', cc.consulta_id)
+          .maybeSingle();
+        
+        if (consultaVeiculo) {
+          consultasMapeadas.push({
+            ...consultaVeiculo,
+            fromLog: false,
+          });
+        }
       }
       
-      // Buscar também via solicitações (para compatibilidade)
-      const { data: solicitacoes, error: solError } = await supabase
-        .from('solicitacoes')
-        .select('consulta_veiculo_id')
-        .eq('cliente_id', cliente.id)
-        .not('consulta_veiculo_id', 'is', null);
-      
-      if (!solError && solicitacoes) {
-        solicitacoes.forEach(s => {
-          if (s.consulta_veiculo_id && !consultaIds.includes(s.consulta_veiculo_id)) {
-            consultaIds.push(s.consulta_veiculo_id);
+      // Incluir primeira_consulta_id se existir
+      if (cliente.primeira_consulta_id) {
+        const jaExiste = consultasMapeadas.some(c => c.id === cliente.primeira_consulta_id);
+        if (!jaExiste) {
+          const { data: primeiraConsulta } = await supabase
+            .from('consultas_veiculos')
+            .select('*')
+            .eq('id', cliente.primeira_consulta_id)
+            .maybeSingle();
+          
+          if (primeiraConsulta) {
+            consultasMapeadas.push({ ...primeiraConsulta, fromLog: false });
           }
-        });
+        }
       }
       
-      if (consultaIds.length === 0) {
-        return [];
-      }
+      // Ordenar por data
+      consultasMapeadas.sort((a, b) => 
+        new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()
+      );
       
-      const { data: consultasData, error: consError } = await supabase
-        .from('consultas_veiculos')
-        .select('*')
-        .in('id', consultaIds)
-        .order('criado_em', { ascending: false });
-      
-      if (consError) throw consError;
-      return consultasData || [];
+      return consultasMapeadas;
     },
     enabled: open && !!cliente?.id
   });
@@ -192,28 +222,47 @@ export function ClienteDetailModal({ open, onClose, cliente }: ClienteDetailModa
                       <TableHead>Valor Consultado</TableHead>
                       <TableHead>Marca/Modelo</TableHead>
                       <TableHead>Placa</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {consultas.map((consulta: any) => (
-                      <TableRow key={consulta.id}>
-                        <TableCell>{formatDate(consulta.criado_em)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {consulta.tipo_consulta}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {consulta.valor_consultado}
-                        </TableCell>
-                        <TableCell>
-                          {consulta.marca && consulta.modelo 
-                            ? `${consulta.marca} ${consulta.modelo}` 
-                            : '-'}
-                        </TableCell>
-                        <TableCell>{consulta.placa || '-'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {consultas.map((consulta: any) => {
+                      // Verificar se esta consulta evoluiu para uma solicitação
+                      const temSolicitacao = solicitacoes.some(
+                        (s: any) => s.consulta_veiculo_id === consulta.id
+                      );
+                      
+                      return (
+                        <TableRow key={consulta.id}>
+                          <TableCell>{formatDate(consulta.criado_em)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {consulta.tipo_consulta}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {consulta.valor_consultado}
+                          </TableCell>
+                          <TableCell>
+                            {consulta.marca && consulta.modelo 
+                              ? `${consulta.marca} ${consulta.modelo}` 
+                              : '-'}
+                          </TableCell>
+                          <TableCell>{consulta.placa || '-'}</TableCell>
+                          <TableCell>
+                            {temSolicitacao ? (
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                Virou Solicitação
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">
+                                Apenas Consulta
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

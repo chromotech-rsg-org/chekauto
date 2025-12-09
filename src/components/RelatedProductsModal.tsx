@@ -279,12 +279,18 @@ export const RelatedProductsModal = ({
     const modelo = extractValue(vehicleData?.modelo) || extractValue(vehicleData?.Modelo);
     const ano = extractValue(vehicleData?.ano_modelo) || extractValue(vehicleData?.AnoModelo) || extractValue(vehicleData?.ano);
     const cor = extractValue(vehicleData?.cor) || extractValue(vehicleData?.Cor);
-    const uf = extractValue(vehicleData?.uf) || extractValue(vehicleData?.UF);
     const municipio = extractValue(vehicleData?.municipio) || extractValue(vehicleData?.Municipio);
     const tipo = extractValue(vehicleData?.tipo) || extractValue(vehicleData?.Tipo);
+    const endpoint = extractValue(vehicleData?.endpoint);
+    
+    // Determinar estado: se endpoint base-sp, usar SP; senão, usar o uf do retorno
+    let uf = extractValue(vehicleData?.uf) || extractValue(vehicleData?.UF);
+    if (endpoint === 'base-sp') {
+      uf = 'SP';
+    }
 
     console.log('handleContratarSolucao - vehicleData:', vehicleData);
-    console.log('Dados extraídos:', { chassi, renavam, placa, marca, modelo, ano, cor, uf, municipio });
+    console.log('Dados extraídos:', { chassi, renavam, placa, marca, modelo, ano, cor, uf, municipio, endpoint });
 
     // Salvar dados do veículo e produto no contexto
     setVehicleData({

@@ -90,7 +90,19 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     const info = getVehicleInfo();
     if (!info) return {};
     
-    console.log('getVehicleDataForProducts - info:', info);
+    // Determinar o estado baseado no endpoint usado ou do retorno da API
+    let estado = info.uf || '';
+    
+    // Se temos logConsulta, usar o endpoint para determinar o estado
+    if (vehicleData?.logConsulta?.endpoint === 'base-sp') {
+      estado = 'SP';
+    } else if (!estado && vehicleData?.logConsulta?.endpoint === 'bin') {
+      // Para BIN, extrair do municipio se disponível (formato: "7075 - SAO BERNARDO DO CAMPO")
+      // ou deixar vazio para o usuário preencher
+      estado = info.uf || '';
+    }
+    
+    console.log('getVehicleDataForProducts - info:', info, 'endpoint:', vehicleData?.logConsulta?.endpoint);
     return {
       chassi: info.chassi,
       renavam: info.renavam,
@@ -100,8 +112,9 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       ano_modelo: info.ano_modelo,
       cor: info.cor,
       tipo: info.tipo,
-      uf: info.uf,
+      uf: estado,
       municipio: info.municipio,
+      endpoint: vehicleData?.logConsulta?.endpoint || '',
     };
   };
 
