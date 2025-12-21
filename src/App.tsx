@@ -30,6 +30,7 @@ import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
 import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
 import Configuracoes from "./pages/admin/Configuracoes";
 import LogsConsultas from "./pages/admin/LogsConsultas";
+import LogsSplitFacil from "./pages/admin/LogsSplitFacil";
 import Personalizacao from "./pages/admin/Personalizacao";
 import IntegracaoMotv from "./pages/admin/IntegracaoMotv";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -81,6 +82,7 @@ const App = () => (
                 <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
                 <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
                 <Route path="/admin/logs-consultas" element={<LogsConsultas />} />
+                <Route path="/admin/logs-split-facil" element={<LogsSplitFacil />} />
                 
                 {/* Configurações */}
                 <Route path="/admin/configuracoes" element={<Configuracoes />} />

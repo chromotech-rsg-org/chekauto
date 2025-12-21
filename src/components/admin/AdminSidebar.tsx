@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, CreditCard, Database, TestTubes, ChevronDown, ChevronsLeft, ChevronsRight, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, CreditCard, Database, TestTubes, ChevronDown, ChevronsLeft, ChevronsRight, AlertCircle, Split, ScrollText } from "lucide-react";
 import logoYellowOnly from "@/assets/logo-chekauto-yellow-only.png";
 import logoYellowBlack from "@/assets/logo-chekauto-yellow-black.png";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,14 @@ const configMenuItems = [{
   title: "Integração Asaas",
   icon: CreditCard,
   path: "/admin/configuracao-asaas"
+}, {
+  title: "Config. Split Fácil",
+  icon: Split,
+  path: "/admin/configuracoes"
+}, {
+  title: "Logs Split Fácil",
+  icon: ScrollText,
+  path: "/admin/logs-split-facil"
 }, {
   title: "Config. InfoSimples",
   icon: Settings,

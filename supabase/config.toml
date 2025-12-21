@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.enviar-email-pedido]
 verify_jwt = false
+
+[functions.split-facil-webhook]
+verify_jwt = false

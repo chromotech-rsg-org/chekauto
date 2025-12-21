@@ -287,33 +287,67 @@ export type Database = {
       }
       historico_splits: {
         Row: {
+          acionado_em: string | null
+          asaas_payment_id: string | null
+          cliente_id: string | null
           criado_em: string | null
+          erro_mensagem: string | null
           id: string
+          origem: string | null
           pagamento_id: string | null
           parceiro_id: string | null
+          percentual: number | null
           produto_id: string | null
+          resposta_api: Json | null
           status: string | null
+          status_pagamento: string | null
           valor: number
+          valor_compra: number | null
         }
         Insert: {
+          acionado_em?: string | null
+          asaas_payment_id?: string | null
+          cliente_id?: string | null
           criado_em?: string | null
+          erro_mensagem?: string | null
           id?: string
+          origem?: string | null
           pagamento_id?: string | null
           parceiro_id?: string | null
+          percentual?: number | null
           produto_id?: string | null
+          resposta_api?: Json | null
           status?: string | null
+          status_pagamento?: string | null
           valor: number
+          valor_compra?: number | null
         }
         Update: {
+          acionado_em?: string | null
+          asaas_payment_id?: string | null
+          cliente_id?: string | null
           criado_em?: string | null
+          erro_mensagem?: string | null
           id?: string
+          origem?: string | null
           pagamento_id?: string | null
           parceiro_id?: string | null
+          percentual?: number | null
           produto_id?: string | null
+          resposta_api?: Json | null
           status?: string | null
+          status_pagamento?: string | null
           valor?: number
+          valor_compra?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "historico_splits_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "historico_splits_pagamento_id_fkey"
             columns: ["pagamento_id"]
@@ -414,6 +448,69 @@ export type Database = {
           tipo_consulta?: string
         }
         Relationships: []
+      }
+      logs_split_facil: {
+        Row: {
+          asaas_payment_id: string | null
+          criado_em: string
+          endpoint: string
+          erro: string | null
+          id: string
+          metodo: string | null
+          pagamento_id: string | null
+          payload: Json | null
+          resposta: Json | null
+          solicitacao_id: string | null
+          status_code: number | null
+          tempo_resposta_ms: number | null
+          tipo: string
+        }
+        Insert: {
+          asaas_payment_id?: string | null
+          criado_em?: string
+          endpoint: string
+          erro?: string | null
+          id?: string
+          metodo?: string | null
+          pagamento_id?: string | null
+          payload?: Json | null
+          resposta?: Json | null
+          solicitacao_id?: string | null
+          status_code?: number | null
+          tempo_resposta_ms?: number | null
+          tipo: string
+        }
+        Update: {
+          asaas_payment_id?: string | null
+          criado_em?: string
+          endpoint?: string
+          erro?: string | null
+          id?: string
+          metodo?: string | null
+          pagamento_id?: string | null
+          payload?: Json | null
+          resposta?: Json | null
+          solicitacao_id?: string | null
+          status_code?: number | null
+          tempo_resposta_ms?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_split_facil_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_split_facil_solicitacao_id_fkey"
+            columns: ["solicitacao_id"]
+            isOneToOne: false
+            referencedRelation: "solicitacoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pagamentos: {
         Row: {
