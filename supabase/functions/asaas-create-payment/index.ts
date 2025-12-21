@@ -266,20 +266,21 @@ serve(async (req) => {
           );
           
           if (splitsValidos.length > 0) {
-            // Montar payload para Split Fácil
+            // Montar payload para Split Fácil (conforme documentação)
             const splitPayload = {
               contaAsaasId: contaAsaasId,
-              cobrancaId: payment.id,
+              paymentId: payment.id,
+              origem: "api",
               splits: splitsValidos.map((s: any) => ({
                 walletId: s.parceiros.wallet_id,
-                percentual: s.percentual
+                percentualValue: s.percentual
               }))
             };
             
             console.log('Enviando para Split Fácil:', JSON.stringify(splitPayload));
             
             try {
-              const splitResponse = await fetch(`${splitFacilUrl}/asaas-split`, {
+              const splitResponse = await fetch(`${splitFacilUrl}/functions/v1/asaas-split`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -287,7 +288,14 @@ serve(async (req) => {
                 body: JSON.stringify(splitPayload),
               });
               
-              const splitResult = await splitResponse.json();
+              const splitResponseText = await splitResponse.text();
+              let splitResult;
+              try {
+                splitResult = JSON.parse(splitResponseText);
+              } catch (parseError) {
+                console.error('Resposta não é JSON válido:', splitResponseText.substring(0, 500));
+                throw new Error('Resposta inválida do Split Fácil');
+              }
               console.log('Resposta Split Fácil:', JSON.stringify(splitResult));
               
               if (splitResult.success) {
