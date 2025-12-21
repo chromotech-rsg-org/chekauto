@@ -827,6 +827,8 @@ export type Database = {
           origem_consulta: string | null
           pagamento_id: string | null
           produto_id: string | null
+          split_erro: string | null
+          split_status: string | null
           status: string | null
         }
         Insert: {
@@ -840,6 +842,8 @@ export type Database = {
           origem_consulta?: string | null
           pagamento_id?: string | null
           produto_id?: string | null
+          split_erro?: string | null
+          split_status?: string | null
           status?: string | null
         }
         Update: {
@@ -853,6 +857,8 @@ export type Database = {
           origem_consulta?: string | null
           pagamento_id?: string | null
           produto_id?: string | null
+          split_erro?: string | null
+          split_status?: string | null
           status?: string | null
         }
         Relationships: [

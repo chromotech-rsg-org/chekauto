@@ -206,6 +206,7 @@ serve(async (req) => {
     }
 
     // Criar solicitação vinculada ao pagamento (usando UUID do banco, não ID do Asaas)
+    let solicitacaoId = null;
     if (clienteId) {
       // Preparar dados completos do veículo incluindo nome do anexo se existir
       const dadosVeiculoCompletos = {
@@ -216,20 +217,27 @@ serve(async (req) => {
       // Remover o File object pois não pode ser serializado
       delete dadosVeiculoCompletos.notaFiscal;
 
-      const { error: solError } = await supabase
+      // Verificar se o produto tem splits configurados
+      const temSplit = productData?.id ? true : false;
+
+      const { data: solicitacaoData, error: solError } = await supabase
         .from('solicitacoes')
         .insert({
           pagamento_id: pagamentoInserido.id,
           cliente_id: clienteId,
           produto_id: productData?.id || null,
           status: 'pendente',
-          dados_veiculo: dadosVeiculoCompletos
-        });
+          dados_veiculo: dadosVeiculoCompletos,
+          split_status: temSplit ? 'pendente' : 'nao_aplicavel'
+        })
+        .select('id')
+        .single();
       
       if (solError) {
         console.error('Erro ao criar solicitação:', solError);
       } else {
-        console.log('Solicitação criada com sucesso para cliente:', clienteId);
+        solicitacaoId = solicitacaoData?.id;
+        console.log('Solicitação criada com sucesso para cliente:', clienteId, 'ID:', solicitacaoId);
       }
     }
 
@@ -301,6 +309,14 @@ serve(async (req) => {
               if (splitResult.success) {
                 console.log('Split configurado com sucesso!');
                 
+                // Atualizar status do split na solicitação
+                if (solicitacaoId) {
+                  await supabase
+                    .from('solicitacoes')
+                    .update({ split_status: 'configurado', split_erro: null })
+                    .eq('id', solicitacaoId);
+                }
+                
                 // Salvar no histórico de splits
                 for (const s of splitsValidos) {
                   const valorSplit = (Number(payment.value) * s.percentual) / 100;
@@ -314,9 +330,32 @@ serve(async (req) => {
                 }
               } else {
                 console.error('Erro ao configurar split:', splitResult.error);
+                
+                // Atualizar status do split na solicitação com erro
+                if (solicitacaoId) {
+                  await supabase
+                    .from('solicitacoes')
+                    .update({ 
+                      split_status: 'erro', 
+                      split_erro: splitResult.error || 'Erro ao configurar split no Split Fácil' 
+                    })
+                    .eq('id', solicitacaoId);
+                }
               }
             } catch (splitError) {
               console.error('Erro ao chamar Split Fácil:', splitError);
+              
+              // Atualizar status do split na solicitação com erro de conexão
+              if (solicitacaoId) {
+                const erroMsg = splitError instanceof Error ? splitError.message : 'Erro de conexão com Split Fácil';
+                await supabase
+                  .from('solicitacoes')
+                  .update({ 
+                    split_status: 'erro', 
+                    split_erro: erroMsg 
+                  })
+                  .eq('id', solicitacaoId);
+              }
             }
           } else {
             console.log('Nenhum parceiro ativo com wallet_id encontrado');
