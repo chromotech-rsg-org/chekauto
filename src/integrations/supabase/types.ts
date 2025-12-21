@@ -477,6 +477,7 @@ export type Database = {
           nome: string
           percentual_split: number | null
           telefone: string | null
+          wallet_id: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -488,6 +489,7 @@ export type Database = {
           nome: string
           percentual_split?: number | null
           telefone?: string | null
+          wallet_id?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -499,6 +501,7 @@ export type Database = {
           nome?: string
           percentual_split?: number | null
           telefone?: string | null
+          wallet_id?: string | null
         }
         Relationships: []
       }
