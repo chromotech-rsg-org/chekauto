@@ -20,6 +20,7 @@ const exportFields = [
   { key: "cpf_cnpj", label: "CPF/CNPJ" },
   { key: "email", label: "Email" },
   { key: "telefone", label: "Telefone" },
+  { key: "wallet_id", label: "Wallet ID Asaas" },
   { key: "percentual_split", label: "Percentual Split" },
   { key: "ativo", label: "Status" },
   { key: "criado_em", label: "Data Cadastro" }
@@ -39,6 +40,7 @@ export default function Parceiros() {
     cpf_cnpj: "",
     email: "",
     telefone: "",
+    wallet_id: "",
     percentual_split: 0,
     ativo: true
   });
@@ -86,6 +88,7 @@ export default function Parceiros() {
         cpf_cnpj: parceiro.cpf_cnpj,
         email: parceiro.email || "",
         telefone: parceiro.telefone || "",
+        wallet_id: parceiro.wallet_id || "",
         percentual_split: parceiro.percentual_split || 0,
         ativo: parceiro.ativo ?? true
       });
@@ -96,6 +99,7 @@ export default function Parceiros() {
         cpf_cnpj: "",
         email: "",
         telefone: "",
+        wallet_id: "",
         percentual_split: 0,
         ativo: true
       });
@@ -204,7 +208,7 @@ export default function Parceiros() {
                   <TableHead>Nome</TableHead>
                   <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
+                  <TableHead>Wallet ID</TableHead>
                   <TableHead>Percentual Split</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -213,7 +217,7 @@ export default function Parceiros() {
               <TableBody>
                 {filteredParceiros.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum parceiro encontrado
                     </TableCell>
                   </TableRow>
@@ -223,7 +227,7 @@ export default function Parceiros() {
                       <TableCell className="font-medium">{parceiro.nome}</TableCell>
                       <TableCell className="font-mono text-sm">{parceiro.cpf_cnpj}</TableCell>
                       <TableCell>{parceiro.email || '-'}</TableCell>
-                      <TableCell>{parceiro.telefone || '-'}</TableCell>
+                      <TableCell className="font-mono text-xs">{parceiro.wallet_id || '-'}</TableCell>
                       <TableCell className="font-semibold">{parceiro.percentual_split}%</TableCell>
                       <TableCell>
                         <Badge variant={parceiro.ativo ? "default" : "secondary"}>
@@ -297,6 +301,19 @@ export default function Parceiros() {
                   >
                     {(inputProps: any) => <Input {...inputProps} placeholder="(00) 00000-0000" />}
                   </InputMask>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wallet_id">Wallet ID Asaas (Split Fácil)</Label>
+                  <Input
+                    id="wallet_id"
+                    value={formData.wallet_id}
+                    onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
+                    placeholder="Ex: abc123def456..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    ID da carteira do parceiro no Asaas para receber splits
+                  </p>
                 </div>
 
                 <div className="space-y-2">
