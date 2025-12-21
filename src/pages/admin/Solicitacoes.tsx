@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
+import { SplitStatusBadge } from "@/components/admin/SplitStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Search, Eye, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +27,8 @@ interface Solicitacao {
   status: string;
   criado_em: string;
   dados_veiculo: any;
+  split_status: string | null;
+  split_erro: string | null;
   clientes: any;
   produtos: any;
   pagamentos: any;
@@ -295,13 +298,14 @@ export default function Solicitacoes() {
                 <TableHead>Chassis</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Status Pagamento</TableHead>
+                <TableHead>Split</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSolicitacoes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground">
                     Nenhuma solicitação encontrada
                   </TableCell>
                 </TableRow>
@@ -318,6 +322,12 @@ export default function Solicitacoes() {
                     </TableCell>
                     <TableCell>
                       <PaymentStatusBadge status={solicitacao.pagamentos?.status || "PENDING"} />
+                    </TableCell>
+                    <TableCell>
+                      <SplitStatusBadge 
+                        status={solicitacao.split_status} 
+                        erro={solicitacao.split_erro} 
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
