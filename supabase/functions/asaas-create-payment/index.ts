@@ -245,6 +245,7 @@ serve(async (req) => {
     // Buscar splits configurados para o produto
     if (productData?.id) {
       const splitFacilUrl = Deno.env.get('SPLIT_FACIL_URL');
+      const splitFacilApiKey = Deno.env.get('SPLIT_FACIL_API_KEY');
       const contaAsaasId = Deno.env.get('SPLIT_FACIL_CONTA_ASAAS_ID');
       
       if (splitFacilUrl && contaAsaasId) {
@@ -287,24 +288,50 @@ serve(async (req) => {
             
             console.log('Enviando para Split Fácil:', JSON.stringify(splitPayload));
             
+            const startTime = Date.now();
+            
             try {
+              // Usar API Key nos headers conforme documentação
+              const splitHeaders: Record<string, string> = {
+                'Content-Type': 'application/json',
+              };
+              
+              if (splitFacilApiKey) {
+                splitHeaders['apikey'] = splitFacilApiKey;
+              }
+              
               const splitResponse = await fetch(`${splitFacilUrl}/functions/v1/asaas-split`, {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
+                headers: splitHeaders,
                 body: JSON.stringify(splitPayload),
               });
               
+              const tempoResposta = Date.now() - startTime;
               const splitResponseText = await splitResponse.text();
               let splitResult;
+              
               try {
                 splitResult = JSON.parse(splitResponseText);
               } catch (parseError) {
                 console.error('Resposta não é JSON válido:', splitResponseText.substring(0, 500));
                 throw new Error('Resposta inválida do Split Fácil');
               }
+              
               console.log('Resposta Split Fácil:', JSON.stringify(splitResult));
+              
+              // Registrar log da chamada
+              await supabase.from('logs_split_facil').insert({
+                solicitacao_id: solicitacaoId,
+                pagamento_id: pagamentoInserido.id,
+                asaas_payment_id: payment.id,
+                tipo: 'request',
+                endpoint: `${splitFacilUrl}/functions/v1/asaas-split`,
+                metodo: 'POST',
+                payload: splitPayload,
+                resposta: splitResult,
+                status_code: splitResponse.status,
+                tempo_resposta_ms: tempoResposta
+              });
               
               if (splitResult.success) {
                 console.log('Split configurado com sucesso!');
@@ -317,19 +344,52 @@ serve(async (req) => {
                     .eq('id', solicitacaoId);
                 }
                 
-                // Salvar no histórico de splits
+                // Extrair dados da resposta do Split Fácil
+                const valorCompra = splitResult.data?.value || Number(payment.value);
+                const statusPagamento = splitResult.data?.status || payment.status;
+                
+                // Salvar no histórico de splits com todos os dados
                 for (const s of splitsValidos) {
-                  const valorSplit = (Number(payment.value) * s.percentual) / 100;
+                  // Buscar valor do split na resposta se disponível
+                  let valorSplit = (valorCompra * s.percentual) / 100;
+                  const splitInfo = splitResult.data?.split?.find((sp: any) => sp.walletId === s.parceiros.wallet_id);
+                  if (splitInfo?.totalValue) {
+                    valorSplit = splitInfo.totalValue;
+                  }
+                  
                   await supabase.from('historico_splits').insert({
                     pagamento_id: pagamentoInserido.id,
                     parceiro_id: s.parceiro_id,
                     produto_id: productData.id,
+                    cliente_id: clienteId,
                     valor: valorSplit,
-                    status: 'configurado'
+                    valor_compra: valorCompra,
+                    percentual: s.percentual,
+                    asaas_payment_id: payment.id,
+                    status: 'configurado',
+                    status_pagamento: statusPagamento,
+                    resposta_api: splitResult,
+                    origem: 'api',
+                    acionado_em: new Date().toISOString()
                   });
                 }
               } else {
                 console.error('Erro ao configurar split:', splitResult.error);
+                
+                // Registrar log de erro
+                await supabase.from('logs_split_facil').insert({
+                  solicitacao_id: solicitacaoId,
+                  pagamento_id: pagamentoInserido.id,
+                  asaas_payment_id: payment.id,
+                  tipo: 'request',
+                  endpoint: `${splitFacilUrl}/functions/v1/asaas-split`,
+                  metodo: 'POST',
+                  payload: splitPayload,
+                  resposta: splitResult,
+                  status_code: splitResponse.status,
+                  erro: splitResult.error || 'Erro desconhecido',
+                  tempo_resposta_ms: tempoResposta
+                });
                 
                 // Atualizar status do split na solicitação com erro
                 if (solicitacaoId) {
@@ -341,13 +401,46 @@ serve(async (req) => {
                     })
                     .eq('id', solicitacaoId);
                 }
+                
+                // Salvar no histórico com erro
+                for (const s of splitsValidos) {
+                  await supabase.from('historico_splits').insert({
+                    pagamento_id: pagamentoInserido.id,
+                    parceiro_id: s.parceiro_id,
+                    produto_id: productData.id,
+                    cliente_id: clienteId,
+                    valor: (Number(payment.value) * s.percentual) / 100,
+                    valor_compra: Number(payment.value),
+                    percentual: s.percentual,
+                    asaas_payment_id: payment.id,
+                    status: 'erro',
+                    status_pagamento: payment.status,
+                    erro_mensagem: splitResult.error || 'Erro ao configurar split',
+                    resposta_api: splitResult,
+                    origem: 'api',
+                    acionado_em: new Date().toISOString()
+                  });
+                }
               }
             } catch (splitError) {
               console.error('Erro ao chamar Split Fácil:', splitError);
               
+              const erroMsg = splitError instanceof Error ? splitError.message : 'Erro de conexão com Split Fácil';
+              
+              // Registrar log de erro de conexão
+              await supabase.from('logs_split_facil').insert({
+                solicitacao_id: solicitacaoId,
+                pagamento_id: pagamentoInserido.id,
+                asaas_payment_id: payment.id,
+                tipo: 'request',
+                endpoint: `${splitFacilUrl}/functions/v1/asaas-split`,
+                metodo: 'POST',
+                payload: splitPayload,
+                erro: erroMsg
+              });
+              
               // Atualizar status do split na solicitação com erro de conexão
               if (solicitacaoId) {
-                const erroMsg = splitError instanceof Error ? splitError.message : 'Erro de conexão com Split Fácil';
                 await supabase
                   .from('solicitacoes')
                   .update({ 
@@ -355,6 +448,25 @@ serve(async (req) => {
                     split_erro: erroMsg 
                   })
                   .eq('id', solicitacaoId);
+              }
+              
+              // Salvar no histórico com erro
+              for (const s of splitsValidos) {
+                await supabase.from('historico_splits').insert({
+                  pagamento_id: pagamentoInserido.id,
+                  parceiro_id: s.parceiro_id,
+                  produto_id: productData.id,
+                  cliente_id: clienteId,
+                  valor: (Number(payment.value) * s.percentual) / 100,
+                  valor_compra: Number(payment.value),
+                  percentual: s.percentual,
+                  asaas_payment_id: payment.id,
+                  status: 'erro',
+                  status_pagamento: payment.status,
+                  erro_mensagem: erroMsg,
+                  origem: 'api',
+                  acionado_em: new Date().toISOString()
+                });
               }
             }
           } else {

@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AsaasCredentials } from '@/components/admin/AsaasCredentials';
 import { InfoSimplesEndpointTest } from '@/components/admin/InfoSimplesEndpointTest';
+import { SplitFacilCredentials } from '@/components/admin/SplitFacilCredentials';
 
 const Configuracoes = () => {
   const [token, setToken] = useState('');
@@ -183,6 +184,15 @@ const Configuracoes = () => {
           </AccordionTrigger>
           <AccordionContent className="space-y-6 px-4 pt-4">
             <AsaasCredentials />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="splitfacil">
+          <AccordionTrigger className="text-lg font-semibold px-4">
+            Split Fácil
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 px-4 pt-4">
+            <SplitFacilCredentials />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
