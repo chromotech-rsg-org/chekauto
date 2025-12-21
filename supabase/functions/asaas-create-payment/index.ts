@@ -233,6 +233,95 @@ serve(async (req) => {
       }
     }
 
+    // ===== SPLIT FÁCIL INTEGRATION =====
+    // Buscar splits configurados para o produto
+    if (productData?.id) {
+      const splitFacilUrl = Deno.env.get('SPLIT_FACIL_URL');
+      const contaAsaasId = Deno.env.get('SPLIT_FACIL_CONTA_ASAAS_ID');
+      
+      if (splitFacilUrl && contaAsaasId) {
+        console.log('Buscando splits configurados para produto:', productData.id);
+        
+        const { data: splitsConfig } = await supabase
+          .from('splits')
+          .select(`
+            id,
+            percentual,
+            parceiro_id,
+            parceiros!inner (
+              id,
+              nome,
+              wallet_id,
+              ativo
+            )
+          `)
+          .eq('produto_id', productData.id);
+        
+        if (splitsConfig && splitsConfig.length > 0) {
+          console.log('Splits encontrados:', splitsConfig.length);
+          
+          // Filtrar apenas parceiros ativos com wallet_id configurado
+          const splitsValidos = splitsConfig.filter((s: any) => 
+            s.parceiros?.ativo && s.parceiros?.wallet_id
+          );
+          
+          if (splitsValidos.length > 0) {
+            // Montar payload para Split Fácil
+            const splitPayload = {
+              contaAsaasId: contaAsaasId,
+              cobrancaId: payment.id,
+              splits: splitsValidos.map((s: any) => ({
+                walletId: s.parceiros.wallet_id,
+                percentual: s.percentual
+              }))
+            };
+            
+            console.log('Enviando para Split Fácil:', JSON.stringify(splitPayload));
+            
+            try {
+              const splitResponse = await fetch(`${splitFacilUrl}/asaas-split`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(splitPayload),
+              });
+              
+              const splitResult = await splitResponse.json();
+              console.log('Resposta Split Fácil:', JSON.stringify(splitResult));
+              
+              if (splitResult.success) {
+                console.log('Split configurado com sucesso!');
+                
+                // Salvar no histórico de splits
+                for (const s of splitsValidos) {
+                  const valorSplit = (Number(payment.value) * s.percentual) / 100;
+                  await supabase.from('historico_splits').insert({
+                    pagamento_id: pagamentoInserido.id,
+                    parceiro_id: s.parceiro_id,
+                    produto_id: productData.id,
+                    valor: valorSplit,
+                    status: 'configurado'
+                  });
+                }
+              } else {
+                console.error('Erro ao configurar split:', splitResult.error);
+              }
+            } catch (splitError) {
+              console.error('Erro ao chamar Split Fácil:', splitError);
+            }
+          } else {
+            console.log('Nenhum parceiro ativo com wallet_id encontrado');
+          }
+        } else {
+          console.log('Nenhum split configurado para este produto');
+        }
+      } else {
+        console.log('Split Fácil não configurado (URL ou contaAsaasId ausente)');
+      }
+    }
+    // ===== FIM SPLIT FÁCIL =====
+
     // Enviar email de confirmação de pedido
     try {
       await supabase.functions.invoke('enviar-email-pedido', {
