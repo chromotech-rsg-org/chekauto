@@ -235,9 +235,20 @@ export default function ClientData() {
               }))} placeholder="Telefone:" className="bg-gray-100 border-0" required />
               </div>
 
-              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-semibold rounded-full">
-                Próximo
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate('/solicitacao/veiculo')}
+                  className="flex-1 h-12 text-base font-semibold rounded-full"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar
+                </Button>
+                <Button type="submit" className="flex-1 bg-black text-white hover:bg-gray-800 h-12 text-base font-semibold rounded-full">
+                  Próximo
+                </Button>
+              </div>
             </form>
           </div>
 

@@ -28,6 +28,12 @@ export default function VehicleData() {
     notaFiscal: vehicle.notaFiscal || null
   });
 
+  // Função para limpar RENAVAM - remover caracteres não numéricos
+  const cleanRenavam = (value: string) => {
+    if (!value) return '';
+    return value.replace(/\D/g, '').slice(0, 11);
+  };
+
   // Pré-preencher dados do contexto de checkout (vindos da consulta)
   useEffect(() => {
     // Se há dados no contexto, usar eles
@@ -35,7 +41,7 @@ export default function VehicleData() {
       setFormData(prev => ({
         ...prev,
         chassi: vehicle.chassi || prev.chassi,
-        renavam: vehicle.renavam || prev.renavam,
+        renavam: cleanRenavam(vehicle.renavam) || prev.renavam,
         placa: vehicle.placa || prev.placa,
         ano: vehicle.ano || prev.ano,
         estado: vehicle.estado || prev.estado,
