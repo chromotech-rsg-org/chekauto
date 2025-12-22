@@ -79,7 +79,7 @@ export default function SplitFacilTestes() {
     <ApiIntegrationLayout
       title="Split Fácil"
       description="Teste as funcionalidades de split de pagamento"
-      basePath="/admin/api/split-facil"
+      basePath="/admin/api/splitfacil"
       activeTab="testes"
     >
       <div className="space-y-6">

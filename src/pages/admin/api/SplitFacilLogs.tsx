@@ -70,7 +70,7 @@ export default function SplitFacilLogs() {
     <ApiIntegrationLayout
       title="Split Fácil"
       description="Histórico de chamadas à API Split Fácil"
-      basePath="/admin/api/split-facil"
+      basePath="/admin/api/splitfacil"
       activeTab="logs"
     >
       <div className="space-y-4">

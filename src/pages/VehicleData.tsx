@@ -131,24 +131,22 @@ export default function VehicleData() {
                   )}
                 </InputMask>
                 
-                <InputMask
-                  mask="99999999999"
+                <Input
+                  id="renavam"
                   value={formData.renavam}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
-                    ...prev,
-                    renavam: e.target.value
-                  }))}
-                >
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      id="renavam"
-                      placeholder="Renavam:"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  )}
-                </InputMask>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    // Remover caracteres não numéricos
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    setFormData(prev => ({
+                      ...prev,
+                      renavam: value
+                    }));
+                  }}
+                  placeholder="Renavam:"
+                  className="bg-gray-100 border-0"
+                  maxLength={11}
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
