@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { ExportButton } from "@/components/admin/ExportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 export default function SplitPagamento() {
   const [splits, setSplits] = useState<any[]>([]);
@@ -24,7 +26,9 @@ export default function SplitPagamento() {
   const [editingSplit, setEditingSplit] = useState<any>(null);
   const [parceiroId, setParceiroId] = useState("");
   const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
+  const [tipoComissao, setTipoComissao] = useState<"percentual" | "valor_fixo">("percentual");
   const [percentual, setPercentual] = useState("");
+  const [valorFixo, setValorFixo] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -32,12 +36,19 @@ export default function SplitPagamento() {
     loadData();
   }, []);
 
-  // Quando selecionar parceiro, preencher percentual automaticamente
+  // Quando selecionar parceiro, preencher valores automaticamente
   useEffect(() => {
     if (parceiroId && !editingSplit) {
       const parceiro = parceiros.find(p => p.id === parceiroId);
-      if (parceiro?.percentual_split) {
-        setPercentual(parceiro.percentual_split.toString());
+      if (parceiro) {
+        setTipoComissao(parceiro.tipo_comissao || "percentual");
+        if (parceiro.tipo_comissao === "valor_fixo" && parceiro.valor_comissao) {
+          setValorFixo(parceiro.valor_comissao.toString());
+          setPercentual("");
+        } else if (parceiro.percentual_split) {
+          setPercentual(parceiro.percentual_split.toString());
+          setValorFixo("");
+        }
       }
     }
   }, [parceiroId, parceiros, editingSplit]);
@@ -89,18 +100,21 @@ export default function SplitPagamento() {
       setEditingSplit(split);
       setParceiroId(split.parceiro_id);
       setProdutosSelecionados([split.produto_id]);
+      setTipoComissao(split.tipo_comissao || "percentual");
       setPercentual(split.percentual?.toString() || "");
+      setValorFixo(split.valor_fixo?.toString() || "");
     } else {
       setEditingSplit(null);
       setParceiroId("");
       setProdutosSelecionados([]);
+      setTipoComissao("percentual");
       setPercentual("");
+      setValorFixo("");
     }
     setIsModalOpen(true);
   };
 
   const checkDuplicates = async (parceiroId: string, produtoIds: string[]) => {
-    // Busca splits existentes para este parceiro
     const { data: existingSplits } = await supabase
       .from('splits')
       .select('produto_id')
@@ -115,33 +129,50 @@ export default function SplitPagamento() {
   };
 
   const handleSave = async () => {
-    if (!parceiroId || produtosSelecionados.length === 0 || !percentual) {
+    if (!parceiroId || produtosSelecionados.length === 0) {
       toast.error('Preencha todos os campos obrigatórios e selecione pelo menos um produto');
       return;
     }
 
-    const percentualNum = Number(percentual);
-    if (percentualNum < 0 || percentualNum > 100) {
+    if (tipoComissao === "percentual" && !percentual) {
+      toast.error('Informe o percentual da comissão');
+      return;
+    }
+
+    if (tipoComissao === "valor_fixo" && !valorFixo) {
+      toast.error('Informe o valor fixo da comissão');
+      return;
+    }
+
+    const percentualNum = tipoComissao === "percentual" ? Number(percentual) : 0;
+    const valorFixoNum = tipoComissao === "valor_fixo" ? Number(valorFixo) : null;
+
+    if (tipoComissao === "percentual" && (percentualNum < 0 || percentualNum > 100)) {
       toast.error('Percentual deve estar entre 0 e 100');
+      return;
+    }
+
+    if (tipoComissao === "valor_fixo" && valorFixoNum !== null && valorFixoNum < 0) {
+      toast.error('Valor fixo não pode ser negativo');
       return;
     }
 
     try {
       if (editingSplit) {
-        // Modo edição: apenas atualiza o split existente
         const { error } = await supabase
           .from('splits')
           .update({ 
             parceiro_id: parceiroId,
             produto_id: produtosSelecionados[0],
-            percentual: percentualNum 
+            tipo_comissao: tipoComissao,
+            percentual: tipoComissao === "percentual" ? percentualNum : 0,
+            valor_fixo: valorFixoNum
           })
           .eq('id', editingSplit.id);
 
         if (error) throw error;
         toast.success('Split atualizado com sucesso!');
       } else {
-        // Modo criação: verifica duplicatas antes de inserir
         const duplicates = await checkDuplicates(parceiroId, produtosSelecionados);
         
         if (duplicates.length > 0) {
@@ -152,11 +183,12 @@ export default function SplitPagamento() {
           return;
         }
 
-        // Cria um split para cada produto selecionado
         const splitsToInsert = produtosSelecionados.map(produtoId => ({
           parceiro_id: parceiroId,
           produto_id: produtoId,
-          percentual: percentualNum
+          tipo_comissao: tipoComissao,
+          percentual: tipoComissao === "percentual" ? percentualNum : 0,
+          valor_fixo: valorFixoNum
         }));
 
         const { error } = await supabase
@@ -200,10 +232,19 @@ export default function SplitPagamento() {
     return matchesDateRange;
   });
 
+  const formatComissao = (split: any) => {
+    if (split.tipo_comissao === "valor_fixo" && split.valor_fixo) {
+      return `R$ ${Number(split.valor_fixo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+    return `${split.percentual || 0}%`;
+  };
+
   const exportFields = [
     { key: "parceiros.nome", label: "Parceiro" },
     { key: "produtos.nome", label: "Produto" },
+    { key: "tipo_comissao", label: "Tipo Comissão" },
     { key: "percentual", label: "Percentual Parceiro" },
+    { key: "valor_fixo", label: "Valor Fixo" },
     { key: "criado_em", label: "Data Criação" }
   ];
 
@@ -257,7 +298,9 @@ export default function SplitPagamento() {
                           <SelectContent>
                             {parceiros.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                {p.nome} {p.percentual_split ? `(${p.percentual_split}% padrão)` : ''}
+                                {p.nome} {p.tipo_comissao === "valor_fixo" 
+                                  ? `(R$ ${p.valor_comissao} fixo)` 
+                                  : p.percentual_split ? `(${p.percentual_split}% padrão)` : ''}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -342,31 +385,75 @@ export default function SplitPagamento() {
                         )}
                       </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="percentual">Percentual do Parceiro (%) *</Label>
-                          {parceiroSelecionado?.percentual_split && (
-                            <span className="text-xs text-muted-foreground">
-                              Padrão: {parceiroSelecionado.percentual_split}%
-                            </span>
-                          )}
-                        </div>
-                        <Input
-                          id="percentual"
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          placeholder="Ex: 15"
-                          value={percentual}
-                          onChange={(e) => setPercentual(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Você pode ajustar o percentual padrão do parceiro
-                        </p>
+                      {/* Tipo de Comissão */}
+                      <div className="space-y-3">
+                        <Label>Tipo de Comissão *</Label>
+                        <RadioGroup
+                          value={tipoComissao}
+                          onValueChange={(value: "percentual" | "valor_fixo") => setTipoComissao(value)}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="percentual" id="split_percentual" />
+                            <Label htmlFor="split_percentual" className="cursor-pointer">Percentual (%)</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="valor_fixo" id="split_valor" />
+                            <Label htmlFor="split_valor" className="cursor-pointer">Valor Fixo (R$)</Label>
+                          </div>
+                        </RadioGroup>
                       </div>
 
-                      {percentual && (
+                      {tipoComissao === "percentual" ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="percentual">Percentual do Parceiro (%) *</Label>
+                            {parceiroSelecionado?.percentual_split && (
+                              <span className="text-xs text-muted-foreground">
+                                Padrão: {parceiroSelecionado.percentual_split}%
+                              </span>
+                            )}
+                          </div>
+                          <Input
+                            id="percentual"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="Ex: 15"
+                            value={percentual}
+                            onChange={(e) => setPercentual(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Você pode ajustar o percentual padrão do parceiro
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="valorFixo">Valor Fixo (R$) *</Label>
+                            {parceiroSelecionado?.valor_comissao && (
+                              <span className="text-xs text-muted-foreground">
+                                Padrão: R$ {parceiroSelecionado.valor_comissao}
+                              </span>
+                            )}
+                          </div>
+                          <Input
+                            id="valorFixo"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Ex: 50.00"
+                            value={valorFixo}
+                            onChange={(e) => setValorFixo(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Valor fixo em reais por venda
+                          </p>
+                        </div>
+                      )}
+
+                      {tipoComissao === "percentual" && percentual && (
                         <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                           <div>
                             <p className="text-sm text-muted-foreground">Percentual Parceiro</p>
@@ -376,6 +463,15 @@ export default function SplitPagamento() {
                             <p className="text-sm text-muted-foreground">Percentual ChekAuto</p>
                             <p className="text-2xl font-bold text-primary">{percentualChekAuto}%</p>
                           </div>
+                        </div>
+                      )}
+
+                      {tipoComissao === "valor_fixo" && valorFixo && (
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">Valor por venda para o Parceiro</p>
+                          <p className="text-2xl font-bold text-primary">
+                            R$ {Number(valorFixo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -423,8 +519,9 @@ export default function SplitPagamento() {
                 <TableRow>
                   <TableHead>Parceiro</TableHead>
                   <TableHead>Produto</TableHead>
-                  <TableHead>Percentual Parceiro</TableHead>
-                  <TableHead>Percentual ChekAuto</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Comissão</TableHead>
+                  <TableHead>ChekAuto</TableHead>
                   <TableHead>Data Criação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -432,41 +529,40 @@ export default function SplitPagamento() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       Carregando...
                     </TableCell>
                   </TableRow>
                 ) : filteredSplits.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Nenhum split cadastrado
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Nenhum split configurado
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredSplits.map((split) => (
                     <TableRow key={split.id}>
-                      <TableCell className="font-medium">
-                        {split.parceiros?.nome || "N/A"}
+                      <TableCell className="font-medium">{split.parceiros?.nome || '-'}</TableCell>
+                      <TableCell>{split.produtos?.nome || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {split.tipo_comissao === "valor_fixo" ? "Valor Fixo" : "Percentual"}
+                        </Badge>
                       </TableCell>
-                      <TableCell>{split.produtos?.nome || "N/A"}</TableCell>
-                      <TableCell>{split.percentual}%</TableCell>
-                      <TableCell>{100 - split.percentual}%</TableCell>
-                      <TableCell>{new Date(split.criado_em).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="font-semibold">{formatComissao(split)}</TableCell>
+                      <TableCell>
+                        {split.tipo_comissao === "percentual" ? `${100 - (split.percentual || 0)}%` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {split.criado_em ? new Date(split.criado_em).toLocaleDateString('pt-BR') : '-'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => openModal(split)}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openModal(split)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDelete(split.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(split.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </TableCell>

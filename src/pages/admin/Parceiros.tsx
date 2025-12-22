@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import InputMask from "react-input-mask";
 import { toast } from "sonner";
 
@@ -21,7 +22,9 @@ const exportFields = [
   { key: "email", label: "Email" },
   { key: "telefone", label: "Telefone" },
   { key: "wallet_id", label: "Wallet ID Asaas" },
+  { key: "tipo_comissao", label: "Tipo Comissão" },
   { key: "percentual_split", label: "Percentual Split" },
+  { key: "valor_comissao", label: "Valor Comissão" },
   { key: "ativo", label: "Status" },
   { key: "criado_em", label: "Data Cadastro" }
 ];
@@ -41,7 +44,9 @@ export default function Parceiros() {
     email: "",
     telefone: "",
     wallet_id: "",
+    tipo_comissao: "percentual" as "percentual" | "valor_fixo",
     percentual_split: 0,
+    valor_comissao: 0,
     ativo: true
   });
 
@@ -89,7 +94,9 @@ export default function Parceiros() {
         email: parceiro.email || "",
         telefone: parceiro.telefone || "",
         wallet_id: parceiro.wallet_id || "",
+        tipo_comissao: parceiro.tipo_comissao || "percentual",
         percentual_split: parceiro.percentual_split || 0,
+        valor_comissao: parceiro.valor_comissao || 0,
         ativo: parceiro.ativo ?? true
       });
     } else {
@@ -100,7 +107,9 @@ export default function Parceiros() {
         email: "",
         telefone: "",
         wallet_id: "",
+        tipo_comissao: "percentual",
         percentual_split: 0,
+        valor_comissao: 0,
         ativo: true
       });
     }
@@ -113,11 +122,28 @@ export default function Parceiros() {
       return;
     }
 
+    // Validate commission values
+    if (formData.tipo_comissao === "percentual" && (formData.percentual_split < 0 || formData.percentual_split > 100)) {
+      toast.error("Percentual deve estar entre 0 e 100");
+      return;
+    }
+
+    if (formData.tipo_comissao === "valor_fixo" && formData.valor_comissao < 0) {
+      toast.error("Valor da comissão não pode ser negativo");
+      return;
+    }
+
     try {
+      const dataToSave = {
+        ...formData,
+        percentual_split: formData.tipo_comissao === "percentual" ? formData.percentual_split : null,
+        valor_comissao: formData.tipo_comissao === "valor_fixo" ? formData.valor_comissao : null
+      };
+
       if (editingParceiro) {
         const { error } = await supabase
           .from('parceiros')
-          .update(formData)
+          .update(dataToSave)
           .eq('id', editingParceiro.id);
 
         if (error) throw error;
@@ -125,7 +151,7 @@ export default function Parceiros() {
       } else {
         const { error } = await supabase
           .from('parceiros')
-          .insert(formData);
+          .insert(dataToSave);
 
         if (error) throw error;
         toast.success("Parceiro cadastrado com sucesso!");
@@ -155,6 +181,13 @@ export default function Parceiros() {
       console.error('Erro ao excluir parceiro:', error);
       toast.error('Erro ao excluir parceiro');
     }
+  };
+
+  const formatComissao = (parceiro: any) => {
+    if (parceiro.tipo_comissao === "valor_fixo" && parceiro.valor_comissao) {
+      return `R$ ${Number(parceiro.valor_comissao).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+    return `${parceiro.percentual_split || 0}%`;
   };
 
   return (
@@ -201,7 +234,7 @@ export default function Parceiros() {
             <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
           </div>
         ) : (
-          <div className="bg-white rounded-lg border">
+          <div className="bg-card rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -209,7 +242,8 @@ export default function Parceiros() {
                   <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Wallet ID</TableHead>
-                  <TableHead>Percentual Split</TableHead>
+                  <TableHead>Tipo Comissão</TableHead>
+                  <TableHead>Comissão</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -228,7 +262,12 @@ export default function Parceiros() {
                       <TableCell className="font-mono text-sm">{parceiro.cpf_cnpj}</TableCell>
                       <TableCell>{parceiro.email || '-'}</TableCell>
                       <TableCell className="font-mono text-xs">{parceiro.wallet_id || '-'}</TableCell>
-                      <TableCell className="font-semibold">{parceiro.percentual_split}%</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {parceiro.tipo_comissao === "valor_fixo" ? "Valor Fixo" : "Percentual"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-semibold">{formatComissao(parceiro)}</TableCell>
                       <TableCell>
                         <Badge variant={parceiro.ativo ? "default" : "secondary"}>
                           {parceiro.ativo ? "Ativo" : "Inativo"}
@@ -316,19 +355,62 @@ export default function Parceiros() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="percentual_split">Percentual Split (%)</Label>
-                  <Input
-                    id="percentual_split"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={formData.percentual_split}
-                    onChange={(e) => setFormData({ ...formData, percentual_split: parseFloat(e.target.value) || 0 })}
-                    placeholder="0.00"
-                  />
+                {/* Tipo de Comissão */}
+                <div className="col-span-2 space-y-3">
+                  <Label>Tipo de Comissão</Label>
+                  <RadioGroup
+                    value={formData.tipo_comissao}
+                    onValueChange={(value: "percentual" | "valor_fixo") => 
+                      setFormData({ ...formData, tipo_comissao: value })
+                    }
+                    className="flex gap-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="percentual" id="tipo_percentual" />
+                      <Label htmlFor="tipo_percentual" className="cursor-pointer">Percentual (%)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="valor_fixo" id="tipo_valor" />
+                      <Label htmlFor="tipo_valor" className="cursor-pointer">Valor Fixo (R$)</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
+
+                {/* Campo condicional baseado no tipo */}
+                {formData.tipo_comissao === "percentual" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="percentual_split">Percentual Split (%)</Label>
+                    <Input
+                      id="percentual_split"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={formData.percentual_split}
+                      onChange={(e) => setFormData({ ...formData, percentual_split: parseFloat(e.target.value) || 0 })}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Percentual da venda que vai para o parceiro
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="valor_comissao">Valor da Comissão (R$)</Label>
+                    <Input
+                      id="valor_comissao"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.valor_comissao}
+                      onChange={(e) => setFormData({ ...formData, valor_comissao: parseFloat(e.target.value) || 0 })}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Valor fixo em reais por venda
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2">
                   <Switch

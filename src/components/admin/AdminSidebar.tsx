@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, CreditCard, Database, TestTubes, ChevronDown, ChevronsLeft, ChevronsRight, AlertCircle, Split, ScrollText } from "lucide-react";
+import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, ChevronDown, ChevronsLeft, ChevronsRight, Database, Mail, CreditCard, Split, Webhook } from "lucide-react";
 import logoYellowOnly from "@/assets/logo-chekauto-yellow-only.png";
 import logoYellowBlack from "@/assets/logo-chekauto-yellow-black.png";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 const menuItems = [{
   title: "Dashboard",
   icon: LayoutDashboard,
@@ -63,51 +64,65 @@ const menuItems = [{
   icon: Table2,
   path: "/admin/tabela-cat-mmv",
   devOnly: false
-}, {
-  title: "Logs InfoSimples",
-  icon: Database,
-  path: "/admin/logs-consultas",
-  devOnly: false
 }];
-const configMenuItems = [{
-  title: "Integração Asaas",
-  icon: CreditCard,
-  path: "/admin/configuracao-asaas"
-}, {
-  title: "Config. Split Fácil",
-  icon: Split,
-  path: "/admin/configuracoes"
-}, {
-  title: "Logs Split Fácil",
-  icon: ScrollText,
-  path: "/admin/logs-split-facil"
-}, {
-  title: "Config. InfoSimples",
-  icon: Settings,
-  path: "/admin/configuracoes-infosimples"
-}, {
-  title: "Testes API InfoSimples",
-  icon: TestTubes,
-  path: "/admin/testes-api-infosimples"
-}, {
-  title: "Códigos de Erro",
-  icon: AlertCircle,
-  path: "/admin/codigos-erro-api"
-}];
+
+// API submenus structure
+const apiMenuItems = [
+  {
+    title: "API InfoSimples",
+    icon: Database,
+    basePath: "/admin/api/infosimples",
+    subItems: [
+      { title: "Integração", path: "/admin/api/infosimples/integracao" },
+      { title: "Testes", path: "/admin/api/infosimples/testes" },
+      { title: "Logs", path: "/admin/api/infosimples/logs" },
+      { title: "Erros", path: "/admin/api/infosimples/erros" }
+    ]
+  },
+  {
+    title: "Gateway Asaas",
+    icon: CreditCard,
+    basePath: "/admin/api/asaas",
+    subItems: [
+      { title: "Integração", path: "/admin/api/asaas/integracao" },
+      { title: "Testes", path: "/admin/api/asaas/testes" },
+      { title: "Logs", path: "/admin/api/asaas/logs" },
+      { title: "Erros", path: "/admin/api/asaas/erros" }
+    ]
+  },
+  {
+    title: "Split Fácil",
+    icon: Split,
+    basePath: "/admin/api/splitfacil",
+    subItems: [
+      { title: "Integração", path: "/admin/api/splitfacil/integracao" },
+      { title: "Testes", path: "/admin/api/splitfacil/testes" },
+      { title: "Logs", path: "/admin/api/splitfacil/logs" },
+      { title: "Erros", path: "/admin/api/splitfacil/erros" }
+    ]
+  }
+];
+
+const configMenuItems = [
+  {
+    title: "Configurações de Email",
+    icon: Mail,
+    path: "/admin/configuracoes-email"
+  }
+];
+
 export const AdminSidebar = () => {
   const navigate = useNavigate();
-  const {
-    theme
-  } = useTheme();
+  const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const {
-    isDesenvolvedor
-  } = usePermissions();
+  const [openApiMenus, setOpenApiMenus] = useState<string[]>([]);
+  const { isDesenvolvedor } = usePermissions();
 
   // Logo amarelo para padrão e dark, amarelo/preto para light
   const currentLogo = theme === 'light' ? logoYellowBlack : logoYellowOnly;
+  
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -117,95 +132,155 @@ export const AdminSidebar = () => {
       navigate("/login");
     }
   };
+  
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+  
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
+
+  const toggleApiMenu = (basePath: string) => {
+    setOpenApiMenus(prev => 
+      prev.includes(basePath) 
+        ? prev.filter(p => p !== basePath)
+        : [...prev, basePath]
+    );
+  };
+
+  const isApiMenuOpen = (basePath: string) => openApiMenus.includes(basePath);
+
   return <>
-      {/* Mobile Menu Button */}
-      <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 lg:hidden bg-white shadow-md" onClick={toggleSidebar}>
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </Button>
+    {/* Mobile Menu Button */}
+    <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 lg:hidden bg-white shadow-md" onClick={toggleSidebar}>
+      {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+    </Button>
 
-      {/* Overlay for mobile */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} />}
+    {/* Overlay for mobile */}
+    {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} />}
 
-      {/* Sidebar */}
-      <aside className={`
-          fixed lg:sticky top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50
-          transition-all duration-300 ease-in-out border-r border-sidebar-border
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
-          w-64 flex flex-col
-        `}>
-        {/* Logo & Collapse Button */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
-          {!isCollapsed && <img src={currentLogo} alt="ChekAuto" className="h-7" />}
-          <Button variant="ghost" size="icon" onClick={toggleCollapse} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent ml-auto">
-            {isCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
-          </Button>
-        </div>
+    {/* Sidebar */}
+    <aside className={`
+        fixed lg:sticky top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50
+        transition-all duration-300 ease-in-out border-r border-sidebar-border
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
+        w-64 flex flex-col
+      `}>
+      {/* Logo & Collapse Button */}
+      <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+        {!isCollapsed && <img src={currentLogo} alt="ChekAuto" className="h-7" />}
+        <Button variant="ghost" size="icon" onClick={toggleCollapse} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent ml-auto">
+          {isCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+        </Button>
+      </div>
 
-        {/* Navigation with custom scrollbar */}
-        <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll">
-          <ul className="space-y-1 px-2">
-            {menuItems.filter(item => !item.devOnly || isDesenvolvedor).map(item => <li key={item.path}>
-                  <NavLink to={item.path} onClick={() => setIsOpen(false)} className={({
-              isActive
-            }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent"} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? item.title : undefined}>
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
-                    {!isCollapsed && <span className="text-sm">{item.title}</span>}
-                  </NavLink>
-                </li>)}
+      {/* Navigation with custom scrollbar */}
+      <nav className="flex-1 overflow-y-auto py-4 sidebar-scroll">
+        <ul className="space-y-1 px-2">
+          {menuItems.filter(item => !item.devOnly || isDesenvolvedor).map(item => (
+            <li key={item.path}>
+              <NavLink 
+                to={item.path} 
+                onClick={() => setIsOpen(false)} 
+                className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent"} ${isCollapsed ? 'justify-center' : ''}`} 
+                title={isCollapsed ? item.title : undefined}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {!isCollapsed && <span className="text-sm">{item.title}</span>}
+              </NavLink>
+            </li>
+          ))}
 
-            {/* Menu Configurações Expansível - Apenas para Desenvolvedores */}
-            {isDesenvolvedor && <li>
-                {isCollapsed ? <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground hover:bg-sidebar-accent" title="Configurações">
-                    <Settings className="h-5 w-5" />
-                  </Button> : <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full">
-                      <Settings className="h-5 w-5 flex-shrink-0" />
-                      <span className="flex-1 text-left text-sm">Configurações</span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <ul className="mt-1 space-y-1">
-                        {configMenuItems.map(item => <li key={item.path}>
-                            <NavLink to={item.path} className={({
-                      isActive
-                    }) => `flex items-center gap-3 px-3 py-2 pl-10 rounded-lg transition-colors ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}>
-                              <item.icon className="h-4 w-4" />
-                              <span className="text-sm">{item.title}</span>
-                            </NavLink>
-                          </li>)}
-                      </ul>
-                    </CollapsibleContent>
-                  </Collapsible>}
-              </li>}
-          </ul>
-        </nav>
-      </aside>
+          {/* Menu Configurações - Apenas para Desenvolvedores */}
+          {isDesenvolvedor && (
+            <li>
+              {isCollapsed ? (
+                <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground hover:bg-sidebar-accent" title="Configurações">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full">
+                    <Settings className="h-5 w-5 flex-shrink-0" />
+                    <span className="flex-1 text-left text-sm">Configurações</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <ul className="mt-1 space-y-1">
+                      {/* API Submenus */}
+                      {apiMenuItems.map(apiMenu => (
+                        <li key={apiMenu.basePath}>
+                          <Collapsible 
+                            open={isApiMenuOpen(apiMenu.basePath)} 
+                            onOpenChange={() => toggleApiMenu(apiMenu.basePath)}
+                          >
+                            <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full">
+                              <apiMenu.icon className="h-4 w-4 flex-shrink-0" />
+                              <span className="flex-1 text-left text-sm">{apiMenu.title}</span>
+                              <ChevronDown className={`h-3 w-3 transition-transform ${isApiMenuOpen(apiMenu.basePath) ? 'rotate-180' : ''}`} />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <ul className="mt-1 space-y-1">
+                                {apiMenu.subItems.map(subItem => (
+                                  <li key={subItem.path}>
+                                    <NavLink
+                                      to={subItem.path}
+                                      onClick={() => setIsOpen(false)}
+                                      className={({ isActive }) => `flex items-center gap-3 px-3 py-2 pl-14 rounded-lg transition-colors ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}
+                                    >
+                                      <span className="text-sm">{subItem.title}</span>
+                                    </NavLink>
+                                  </li>
+                                ))}
+                              </ul>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </li>
+                      ))}
 
-      {/* Custom Scrollbar Styles */}
-      <style>{`
-        .sidebar-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-          background: hsl(var(--sidebar-border));
-          border-radius: 3px;
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: hsl(var(--sidebar-accent));
-        }
-      `}</style>
-    </>;
+                      {/* Other config items */}
+                      {configMenuItems.map(item => (
+                        <li key={item.path}>
+                          <NavLink 
+                            to={item.path} 
+                            onClick={() => setIsOpen(false)}
+                            className={({ isActive }) => `flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span className="text-sm">{item.title}</span>
+                          </NavLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </li>
+          )}
+        </ul>
+      </nav>
+    </aside>
+
+    {/* Custom Scrollbar Styles */}
+    <style>{`
+      .sidebar-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .sidebar-scroll::-webkit-scrollbar-thumb {
+        background: hsl(var(--sidebar-border));
+        border-radius: 3px;
+      }
+      
+      .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--sidebar-accent));
+      }
+    `}</style>
+  </>;
 };

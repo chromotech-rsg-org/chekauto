@@ -25,19 +25,25 @@ import SplitPagamento from "./pages/admin/SplitPagamento";
 import Parceiros from "./pages/admin/Parceiros";
 import TabelaCatMmv from "./pages/admin/TabelaCatMmv";
 import HistoricoSplits from "./pages/admin/HistoricoSplits";
-import TestesApiInfoSimples from "./pages/admin/TestesApiInfoSimples";
-import ConfiguracaoAsaas from "./pages/admin/ConfiguracaoAsaas";
-import ConfiguracoesInfoSimples from "./pages/admin/ConfiguracoesInfoSimples";
-import Configuracoes from "./pages/admin/Configuracoes";
-import LogsConsultas from "./pages/admin/LogsConsultas";
-import LogsSplitFacil from "./pages/admin/LogsSplitFacil";
-import Personalizacao from "./pages/admin/Personalizacao";
-import IntegracaoMotv from "./pages/admin/IntegracaoMotv";
+import ConfiguracoesEmail from "./pages/admin/ConfiguracoesEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
 import AuthGuard from "./components/admin/AuthGuard";
-import CodigosErroApi from "./pages/admin/CodigosErroApi";
+
+// API Integration Pages
+import InfoSimplesIntegracao from "./pages/admin/api/InfoSimplesIntegracao";
+import InfoSimplesTestes from "./pages/admin/api/InfoSimplesTestes";
+import InfoSimplesLogs from "./pages/admin/api/InfoSimplesLogs";
+import InfoSimplesErros from "./pages/admin/api/InfoSimplesErros";
+import AsaasIntegracao from "./pages/admin/api/AsaasIntegracao";
+import AsaasTestes from "./pages/admin/api/AsaasTestes";
+import AsaasLogs from "./pages/admin/api/AsaasLogs";
+import AsaasErros from "./pages/admin/api/AsaasErros";
+import SplitFacilIntegracao from "./pages/admin/api/SplitFacilIntegracao";
+import SplitFacilTestes from "./pages/admin/api/SplitFacilTestes";
+import SplitFacilLogs from "./pages/admin/api/SplitFacilLogs";
+import SplitFacilErros from "./pages/admin/api/SplitFacilErros";
 
 const queryClient = new QueryClient();
 
@@ -81,17 +87,25 @@ const App = () => (
                 <Route path="/admin/parceiros" element={<Parceiros />} />
                 <Route path="/admin/tabela-cat-mmv" element={<TabelaCatMmv />} />
                 <Route path="/admin/historico-splits" element={<HistoricoSplits />} />
-                <Route path="/admin/logs-consultas" element={<LogsConsultas />} />
-                <Route path="/admin/logs-split-facil" element={<LogsSplitFacil />} />
+                <Route path="/admin/configuracoes-email" element={<ConfiguracoesEmail />} />
                 
-                {/* Configurações */}
-                <Route path="/admin/configuracoes" element={<Configuracoes />} />
-                <Route path="/admin/personalizacao" element={<Personalizacao />} />
-                <Route path="/admin/integracao-motv" element={<IntegracaoMotv />} />
-                <Route path="/admin/configuracao-asaas" element={<ConfiguracaoAsaas />} />
-                <Route path="/admin/configuracoes-infosimples" element={<ConfiguracoesInfoSimples />} />
-                <Route path="/admin/testes-api-infosimples" element={<TestesApiInfoSimples />} />
-                <Route path="/admin/codigos-erro-api" element={<CodigosErroApi />} />
+                {/* API InfoSimples Routes */}
+                <Route path="/admin/api/infosimples/integracao" element={<InfoSimplesIntegracao />} />
+                <Route path="/admin/api/infosimples/testes" element={<InfoSimplesTestes />} />
+                <Route path="/admin/api/infosimples/logs" element={<InfoSimplesLogs />} />
+                <Route path="/admin/api/infosimples/erros" element={<InfoSimplesErros />} />
+                
+                {/* API Asaas Routes */}
+                <Route path="/admin/api/asaas/integracao" element={<AsaasIntegracao />} />
+                <Route path="/admin/api/asaas/testes" element={<AsaasTestes />} />
+                <Route path="/admin/api/asaas/logs" element={<AsaasLogs />} />
+                <Route path="/admin/api/asaas/erros" element={<AsaasErros />} />
+                
+                {/* API Split Fácil Routes */}
+                <Route path="/admin/api/splitfacil/integracao" element={<SplitFacilIntegracao />} />
+                <Route path="/admin/api/splitfacil/testes" element={<SplitFacilTestes />} />
+                <Route path="/admin/api/splitfacil/logs" element={<SplitFacilLogs />} />
+                <Route path="/admin/api/splitfacil/erros" element={<SplitFacilErros />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
