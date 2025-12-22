@@ -4,19 +4,21 @@ import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
+import { ArrowLeft, CreditCard, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import { createFullPayment } from '@/services/asaasService';
+import { ProductSelectModal } from '@/components/ProductSelectModal';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckProduct from '@/assets/truck-yellow-close.png';
 
 export default function PaymentData() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { vehicle, customer, product } = useCheckout();
+  const { vehicle, customer, product, setProductData } = useCheckout();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'PIX'>('PIX');
+  const [productModalOpen, setProductModalOpen] = useState(false);
   
   const [cardData, setCardData] = useState({
     number: '',
@@ -139,9 +141,10 @@ export default function PaymentData() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate('/')}
+                  onClick={() => setProductModalOpen(true)}
                   className="text-sm"
                 >
+                  <RefreshCw className="h-4 w-4 mr-1" />
                   Trocar Produto
                 </Button>
               </div>
@@ -278,6 +281,24 @@ export default function PaymentData() {
           </div>
         </div>
       </div>
+
+      <ProductSelectModal
+        open={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
+        onSelect={(selectedProduct) => {
+          setProductData({
+            id: selectedProduct.id,
+            name: selectedProduct.name,
+            price: selectedProduct.price,
+            description: selectedProduct.description,
+            image: selectedProduct.image
+          });
+          toast({
+            title: 'Produto alterado',
+            description: `Agora você está comprando: ${selectedProduct.name}`,
+          });
+        }}
+      />
     </div>
   );
 }
