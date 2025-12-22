@@ -213,6 +213,51 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes_email: {
+        Row: {
+          ativo_admin: boolean | null
+          ativo_cliente: boolean | null
+          ativo_parceiro: boolean | null
+          atualizado_em: string | null
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          minutos_abandono: number | null
+          nome_exibicao: string
+          template_assunto: string | null
+          template_corpo: string | null
+          tipo_email: string
+        }
+        Insert: {
+          ativo_admin?: boolean | null
+          ativo_cliente?: boolean | null
+          ativo_parceiro?: boolean | null
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          minutos_abandono?: number | null
+          nome_exibicao: string
+          template_assunto?: string | null
+          template_corpo?: string | null
+          tipo_email: string
+        }
+        Update: {
+          ativo_admin?: boolean | null
+          ativo_cliente?: boolean | null
+          ativo_parceiro?: boolean | null
+          atualizado_em?: string | null
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          minutos_abandono?: number | null
+          nome_exibicao?: string
+          template_assunto?: string | null
+          template_corpo?: string | null
+          tipo_email?: string
+        }
+        Relationships: []
+      }
       configuracoes_sistema: {
         Row: {
           atualizado_em: string | null
@@ -574,6 +619,8 @@ export type Database = {
           nome: string
           percentual_split: number | null
           telefone: string | null
+          tipo_comissao: string | null
+          valor_comissao: number | null
           wallet_id: string | null
         }
         Insert: {
@@ -586,6 +633,8 @@ export type Database = {
           nome: string
           percentual_split?: number | null
           telefone?: string | null
+          tipo_comissao?: string | null
+          valor_comissao?: number | null
           wallet_id?: string | null
         }
         Update: {
@@ -598,6 +647,8 @@ export type Database = {
           nome?: string
           percentual_split?: number | null
           telefone?: string | null
+          tipo_comissao?: string | null
+          valor_comissao?: number | null
           wallet_id?: string | null
         }
         Relationships: []
@@ -879,6 +930,60 @@ export type Database = {
         }
         Relationships: []
       }
+      rastreamento_consultas: {
+        Row: {
+          atualizado_em: string | null
+          cliente_id: string | null
+          consulta_id: string | null
+          criado_em: string | null
+          dados_veiculo: Json | null
+          email_abandono_enviado: boolean | null
+          email_cliente: string | null
+          finalizado: boolean | null
+          id: string
+          produto_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          cliente_id?: string | null
+          consulta_id?: string | null
+          criado_em?: string | null
+          dados_veiculo?: Json | null
+          email_abandono_enviado?: boolean | null
+          email_cliente?: string | null
+          finalizado?: boolean | null
+          id?: string
+          produto_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          cliente_id?: string | null
+          consulta_id?: string | null
+          criado_em?: string | null
+          dados_veiculo?: Json | null
+          email_abandono_enviado?: boolean | null
+          email_cliente?: string | null
+          finalizado?: boolean | null
+          id?: string
+          produto_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rastreamento_consultas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rastreamento_consultas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistemas: {
         Row: {
           atualizado_em: string
@@ -996,6 +1101,8 @@ export type Database = {
           parceiro_id: string
           percentual: number
           produto_id: string
+          tipo_comissao: string | null
+          valor_fixo: number | null
         }
         Insert: {
           criado_em?: string | null
@@ -1003,6 +1110,8 @@ export type Database = {
           parceiro_id: string
           percentual: number
           produto_id: string
+          tipo_comissao?: string | null
+          valor_fixo?: number | null
         }
         Update: {
           criado_em?: string | null
@@ -1010,6 +1119,8 @@ export type Database = {
           parceiro_id?: string
           percentual?: number
           produto_id?: string
+          tipo_comissao?: string | null
+          valor_fixo?: number | null
         }
         Relationships: [
           {
