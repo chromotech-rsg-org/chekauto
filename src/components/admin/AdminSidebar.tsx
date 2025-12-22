@@ -1,14 +1,13 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Shield, Package, UserCircle, FileText, DollarSign, Menu, X, FolderTree, Handshake, Table2, Receipt, Settings, ChevronDown, ChevronsLeft, ChevronsRight, Database, Mail, CreditCard, Split, Webhook } from "lucide-react";
 import logoYellowOnly from "@/assets/logo-chekauto-yellow-only.png";
 import logoYellowBlack from "@/assets/logo-chekauto-yellow-black.png";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 const menuItems = [{
   title: "Dashboard",
   icon: LayoutDashboard,
@@ -113,12 +112,33 @@ const configMenuItems = [
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [openApiMenus, setOpenApiMenus] = useState<string[]>([]);
   const { isDesenvolvedor } = usePermissions();
+
+  // Manter menus abertos baseado na rota atual
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    // Verificar se estamos em alguma rota de configuração
+    const isInConfig = currentPath.includes('/admin/api/') || currentPath.includes('/admin/configuracoes');
+    if (isInConfig) {
+      setIsConfigOpen(true);
+    }
+    
+    // Verificar qual submenu de API deve estar aberto
+    apiMenuItems.forEach(apiMenu => {
+      if (currentPath.startsWith(apiMenu.basePath)) {
+        setOpenApiMenus(prev => 
+          prev.includes(apiMenu.basePath) ? prev : [...prev, apiMenu.basePath]
+        );
+      }
+    });
+  }, [location.pathname]);
 
   // Logo amarelo para padrão e dark, amarelo/preto para light
   const currentLogo = theme === 'light' ? logoYellowBlack : logoYellowOnly;

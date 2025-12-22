@@ -43,10 +43,86 @@ export default function SplitFacilErros() {
     <ApiIntegrationLayout
       title="Split Fácil"
       description="Erros e falhas nas chamadas à API"
-      basePath="/admin/api/split-facil"
+      basePath="/admin/api/splitfacil"
       activeTab="erros"
     >
       <div className="space-y-6">
+        {/* Tabela de Códigos de Erro */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Códigos de Erro HTTP</CardTitle>
+            <CardDescription>Referência dos códigos de status HTTP e seus significados</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-24">Código</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Significado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell><Badge className="bg-green-600">200</Badge></TableCell>
+                  <TableCell>Sucesso</TableCell>
+                  <TableCell>Requisição processada com sucesso</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge className="bg-green-600">201</Badge></TableCell>
+                  <TableCell>Sucesso</TableCell>
+                  <TableCell>Recurso criado com sucesso</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">400</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Parâmetros inválidos ou requisição mal formada</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">401</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Não autenticado - API Key inválida ou ausente</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">403</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Sem permissão para acessar este recurso</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">404</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Recurso não encontrado (pagamento, wallet, etc)</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">409</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Conflito - Split já existe ou pagamento já processado</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">422</Badge></TableCell>
+                  <TableCell>Erro Cliente</TableCell>
+                  <TableCell>Entidade não processável - dados válidos mas não aceitos</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">500</Badge></TableCell>
+                  <TableCell>Erro Servidor</TableCell>
+                  <TableCell>Erro interno do servidor - contate o suporte</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">502</Badge></TableCell>
+                  <TableCell>Erro Servidor</TableCell>
+                  <TableCell>Bad Gateway - Erro de comunicação entre servidores</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Badge variant="destructive">503</Badge></TableCell>
+                  <TableCell>Erro Servidor</TableCell>
+                  <TableCell>Serviço temporariamente indisponível</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -298,9 +298,7 @@ export default function SplitPagamento() {
                           <SelectContent>
                             {parceiros.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                {p.nome} {p.tipo_comissao === "valor_fixo" 
-                                  ? `(R$ ${p.valor_comissao} fixo)` 
-                                  : p.percentual_split ? `(${p.percentual_split}% padrão)` : ''}
+                                {p.nome}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -404,74 +402,130 @@ export default function SplitPagamento() {
                         </RadioGroup>
                       </div>
 
-                      {tipoComissao === "percentual" ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="percentual">Percentual do Parceiro (%) *</Label>
-                            {parceiroSelecionado?.percentual_split && (
-                              <span className="text-xs text-muted-foreground">
-                                Padrão: {parceiroSelecionado.percentual_split}%
-                              </span>
-                            )}
+                      {/* Campos de valor na mesma linha */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {tipoComissao === "percentual" ? (
+                          <div className="space-y-2">
+                            <Label htmlFor="percentual">% Parceiro *</Label>
+                            <Input
+                              id="percentual"
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              placeholder="Ex: 15"
+                              value={percentual}
+                              onChange={(e) => setPercentual(e.target.value)}
+                            />
                           </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Label htmlFor="valorFixo">Valor (R$) *</Label>
+                            <Input
+                              id="valorFixo"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="Ex: 50.00"
+                              value={valorFixo}
+                              onChange={(e) => setValorFixo(e.target.value)}
+                            />
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <Label className="text-muted-foreground">
+                            {tipoComissao === "percentual" ? "% ChekAuto" : "Restante"}
+                          </Label>
                           <Input
-                            id="percentual"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="Ex: 15"
-                            value={percentual}
-                            onChange={(e) => setPercentual(e.target.value)}
+                            disabled
+                            value={tipoComissao === "percentual" && percentual ? `${percentualChekAuto}%` : "-"}
+                            className="bg-muted"
                           />
-                          <p className="text-xs text-muted-foreground">
-                            Você pode ajustar o percentual padrão do parceiro
-                          </p>
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="valorFixo">Valor Fixo (R$) *</Label>
-                            {parceiroSelecionado?.valor_comissao && (
-                              <span className="text-xs text-muted-foreground">
-                                Padrão: R$ {parceiroSelecionado.valor_comissao}
-                              </span>
-                            )}
+                      </div>
+
+                      {/* Simulação de valores */}
+                      {tipoComissao === "percentual" && percentual && produtosSelecionados.length > 0 && (
+                        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Parceiro</p>
+                              <p className="text-xl font-bold text-primary">{percentual}%</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">ChekAuto</p>
+                              <p className="text-xl font-bold text-primary">{percentualChekAuto}%</p>
+                            </div>
                           </div>
-                          <Input
-                            id="valorFixo"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Ex: 50.00"
-                            value={valorFixo}
-                            onChange={(e) => setValorFixo(e.target.value)}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Valor fixo em reais por venda
-                          </p>
+                          {/* Simulação em R$ */}
+                          {(() => {
+                            const produtosSel = produtos.filter(p => produtosSelecionados.includes(p.id));
+                            if (produtosSel.length === 0) return null;
+                            const valorMedio = produtosSel.reduce((acc, p) => acc + Number(p.preco), 0) / produtosSel.length;
+                            const valorParceiro = (valorMedio * Number(percentual)) / 100;
+                            const valorChekAuto = valorMedio - valorParceiro;
+                            return (
+                              <div className="border-t pt-3 mt-2">
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Simulação (valor médio: R$ {valorMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}):
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Parceiro recebe</p>
+                                    <p className="text-lg font-semibold text-green-600">
+                                      R$ {valorParceiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">ChekAuto recebe</p>
+                                    <p className="text-lg font-semibold text-blue-600">
+                                      R$ {valorChekAuto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
 
-                      {tipoComissao === "percentual" && percentual && (
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                      {tipoComissao === "valor_fixo" && valorFixo && produtosSelecionados.length > 0 && (
+                        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                           <div>
-                            <p className="text-sm text-muted-foreground">Percentual Parceiro</p>
-                            <p className="text-2xl font-bold text-primary">{percentual}%</p>
+                            <p className="text-sm text-muted-foreground">Valor por venda para o Parceiro</p>
+                            <p className="text-xl font-bold text-primary">
+                              R$ {Number(valorFixo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
                           </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Percentual ChekAuto</p>
-                            <p className="text-2xl font-bold text-primary">{percentualChekAuto}%</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {tipoComissao === "valor_fixo" && valorFixo && (
-                        <div className="p-4 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Valor por venda para o Parceiro</p>
-                          <p className="text-2xl font-bold text-primary">
-                            R$ {Number(valorFixo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
+                          {/* Simulação em R$ */}
+                          {(() => {
+                            const produtosSel = produtos.filter(p => produtosSelecionados.includes(p.id));
+                            if (produtosSel.length === 0) return null;
+                            const valorMedio = produtosSel.reduce((acc, p) => acc + Number(p.preco), 0) / produtosSel.length;
+                            const valorParceiro = Number(valorFixo);
+                            const valorChekAuto = valorMedio - valorParceiro;
+                            return (
+                              <div className="border-t pt-3 mt-2">
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Simulação (valor médio: R$ {valorMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}):
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Parceiro recebe</p>
+                                    <p className="text-lg font-semibold text-green-600">
+                                      R$ {valorParceiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">ChekAuto recebe</p>
+                                    <p className="text-lg font-semibold text-blue-600">
+                                      R$ {valorChekAuto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
