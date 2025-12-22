@@ -342,12 +342,32 @@ export const buscarOuConsultarVeiculo = async (
       };
     }
     
-    // Tratar erro 612 especificamente
-    if (resultado.status === 612) {
+    // Tratar erros específicos da API InfoSimples
+    const status = resultado.status;
+    
+    if (status === 612) {
       throw new Error('Erro, reveja os dados fornecidos e consulte novamente.');
     }
     
-    throw new Error(resultado.error || 'Erro ao consultar veículo');
+    if (status === 600) {
+      throw new Error('Erro inesperado na API. Por favor, tente novamente em alguns instantes.');
+    }
+    
+    if (status === 601) {
+      throw new Error('Erro de autenticação na API. Por favor, contate o suporte.');
+    }
+    
+    if (status === 602 || status === 603) {
+      throw new Error('Nenhum dado encontrado para esta consulta. Verifique as informações digitadas.');
+    }
+    
+    // Usar code_message da resposta se disponível
+    const codeMessage = resultado.data?.code_message;
+    if (codeMessage && codeMessage !== 'Sucesso.') {
+      throw new Error(codeMessage);
+    }
+    
+    throw new Error(resultado.error || 'Erro ao consultar veículo. Por favor, tente novamente.');
   } catch (error) {
     console.error('[buscarOuConsultarVeiculo] Erro:', error);
     throw error;

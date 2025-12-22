@@ -16,6 +16,10 @@ export const Hero: React.FC = () => {
   const navigate = useNavigate();
   const { consultar, loading, error, showErrorDialog, closeErrorDialog } = useVehicleConsultation();
   
+  // 0KM sempre usa BIN e outros estados (bloqueado)
+  const is0KM = vehicleType === 'novo';
+  const effectiveState = is0KM ? 'outros' : originState;
+  
   // Determinar título do erro baseado na mensagem
   const getErrorTitle = () => {
     if (!error) return 'Erro na Consulta';
@@ -24,6 +28,8 @@ export const Hero: React.FC = () => {
     if (error.includes('Chassi inválido') || error.includes('dígito verificador')) return 'Chassi Inválido';
     if (error.includes('não foi encontrado')) return 'Veículo Não Encontrado';
     if (error.includes('API errada') || error.includes('outro estado')) return 'Estado Incorreto';
+    if (error.includes('Erro inesperado')) return 'Erro na API';
+    if (error.includes('autenticação')) return 'Erro de Autenticação';
     return 'Atenção';
   };
   
@@ -50,16 +56,22 @@ export const Hero: React.FC = () => {
     }
 
     // Determinar endpoint baseado nas regras:
-    // - 0KM (novo) → sempre BIN
+    // - 0KM (novo) → sempre BIN com UF vazio
     // - Usado de SP → base-sp
     // - Usado de outros estados → BIN
     let endpoint: 'base-sp' | 'bin' = 'bin';
-    let uf = originState === 'SP' ? 'SP' : '';
+    let uf = '';
     
-    if (vehicleType === 'usado' && originState === 'SP') {
+    if (is0KM) {
+      // 0KM sempre usa BIN sem UF específico
+      endpoint = 'bin';
+      uf = '';
+    } else if (effectiveState === 'SP') {
       endpoint = 'base-sp';
+      uf = 'SP';
     } else {
       endpoint = 'bin';
+      uf = '';
     }
 
     const resultado = await consultar(tipo, valorLimpo, endpoint, uf);
@@ -134,11 +146,12 @@ export const Hero: React.FC = () => {
                 <span className="text-sm font-medium">Automóvel usado</span>
               </label>
               
-              {/* Dropdown SP ou Outros */}
+              {/* Dropdown SP ou Outros - bloqueado para 0KM */}
               <select 
-                value={originState} 
+                value={effectiveState} 
                 onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
-                className="bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium"
+                disabled={is0KM}
+                className={`bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium ${is0KM ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <option value="SP">SP</option>
                 <option value="outros">Outros Estados</option>
