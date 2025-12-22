@@ -105,25 +105,51 @@ export const RelatedProductsModal = ({
       // Extrair todos os códigos do tipo (ex: "14 - CAMINHÃO - 2 - ALUGUEL" -> ["14", "2"])
       const tipoCodes = extractTypeCodes(vehicleType);
       
-      console.log('Buscando produtos para tipos:', tipoCodes, 'vehicleType:', vehicleType);
+      // Também extrair nomes para busca alternativa (ex: "SEMIRREBOQUE")
+      const tipoNomes = vehicleType.split(' - ').map(p => p.trim().toUpperCase()).filter(p => !/^\d+$/.test(p));
+      
+      console.log('Buscando produtos para tipos:', tipoCodes, 'nomes:', tipoNomes, 'vehicleType:', vehicleType);
 
-      if (tipoCodes.length === 0) {
+      if (tipoCodes.length === 0 && tipoNomes.length === 0) {
         await loadAllProducts();
         return;
       }
 
-      // Buscar categorias que correspondem a qualquer um dos códigos de tipo
-      const { data: categorias, error: catError } = await supabase
-        .from('categorias')
-        .select('id, codigo, nome')
-        .in('codigo', tipoCodes);
+      // Buscar categorias por código OU por nome (case insensitive)
+      let categorias: Categoria[] = [];
+      
+      // Primeiro buscar por código
+      if (tipoCodes.length > 0) {
+        const { data: catPorCodigo, error: catError } = await supabase
+          .from('categorias')
+          .select('id, codigo, nome')
+          .in('codigo', tipoCodes);
+        
+        if (!catError && catPorCodigo) {
+          categorias = [...catPorCodigo];
+        }
+      }
+      
+      // Se não encontrou por código, buscar por nome
+      if (categorias.length === 0 && tipoNomes.length > 0) {
+        for (const nome of tipoNomes) {
+          const { data: catPorNome, error } = await supabase
+            .from('categorias')
+            .select('id, codigo, nome')
+            .ilike('nome', `%${nome}%`);
+          
+          if (!error && catPorNome) {
+            categorias = [...categorias, ...catPorNome];
+          }
+        }
+        // Remover duplicatas
+        categorias = categorias.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i);
+      }
 
       console.log('Categorias encontradas:', categorias);
 
-      if (catError) throw catError;
-
       if (!categorias || categorias.length === 0) {
-        console.log('Nenhuma categoria encontrada para tipos:', tipoCodes);
+        console.log('Nenhuma categoria encontrada para tipos:', tipoCodes, 'ou nomes:', tipoNomes);
         await loadAllProducts();
         return;
       }
@@ -270,10 +296,16 @@ export const RelatedProductsModal = ({
       if (value && value !== 'N/A') return value;
       return '';
     };
+    
+    // Limpar RENAVAM - remover caracteres não numéricos
+    const cleanRenavam = (value: string) => {
+      if (!value) return '';
+      return value.replace(/\D/g, '').slice(0, 11);
+    };
 
     // Tentar extrair de múltiplas fontes - vehicleData vem do ConsultationModal
     const chassi = extractValue(vehicleData?.chassi) || extractValue(vehicleData?.Chassi);
-    const renavam = extractValue(vehicleData?.renavam) || extractValue(vehicleData?.Renavam);
+    const renavam = cleanRenavam(extractValue(vehicleData?.renavam) || extractValue(vehicleData?.Renavam));
     const placa = extractValue(vehicleData?.placa) || extractValue(vehicleData?.Placa);
     const marca = extractValue(vehicleData?.marca) || extractValue(vehicleData?.Marca);
     const modelo = extractValue(vehicleData?.modelo) || extractValue(vehicleData?.Modelo);

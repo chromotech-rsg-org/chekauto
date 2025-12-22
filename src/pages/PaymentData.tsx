@@ -134,7 +134,17 @@ export default function PaymentData() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <Card className="p-6 border-2">
-              <h2 className="text-xl font-bold mb-4">Resumo da Compra</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Resumo da Compra</h2>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="text-sm"
+                >
+                  Trocar Produto
+                </Button>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Produto:</span>
