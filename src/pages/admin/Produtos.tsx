@@ -451,9 +451,26 @@ export default function Produtos() {
       }
 
       toast.success(editingProduto ? "Produto atualizado com sucesso!" : "Produto criado com sucesso!");
-      setIsModalOpen(false);
+      
+      // Reset completo do formulário
+      setFormData({
+        nome: "",
+        apelido: "",
+        descricao: "",
+        tiposSelecionados: [],
+        preco: "",
+        foto_url: "",
+        galeria: [],
+        ativo: true,
+      });
+      setCaracteristicas([]);
+      setAplicacoes([]);
+      setFaqs([]);
       setCapaFile(null);
       setGaleriaFiles([]);
+      setEditingProduto(null);
+      setIsModalOpen(false);
+      
       loadProdutos();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
