@@ -103,15 +103,18 @@ export default function VehicleData() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-3">
                 <FloatingLabelWrapper label="Chassi" htmlFor="chassi">
-                  <InputMask
-                    mask="99999999999999999"
+                  <Input
+                    id="chassi"
                     value={formData.chassi}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, chassi: e.target.value }))}
-                  >
-                    {(inputProps: any) => (
-                      <Input {...inputProps} id="chassi" placeholder="" className="bg-gray-50 border-2 border-gray-200" required />
-                    )}
-                  </InputMask>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17);
+                      setFormData(prev => ({ ...prev, chassi: value }));
+                    }}
+                    placeholder=""
+                    className="bg-gray-50 border-2 border-gray-200"
+                    maxLength={17}
+                    required
+                  />
                 </FloatingLabelWrapper>
 
                 <FloatingLabelWrapper label="RENAVAM" htmlFor="renavam">
