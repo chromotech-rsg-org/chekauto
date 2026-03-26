@@ -4,13 +4,13 @@ import { Stepper } from '@/components/ui/stepper';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckVehicleData from '@/assets/truck-vehicle-data.png';
 import InputMask from 'react-input-mask';
+import { FloatingLabelInput, FloatingLabelWrapper } from '@/components/ui/floating-label-input';
 
 export default function VehicleData() {
   const navigate = useNavigate();
@@ -28,15 +28,12 @@ export default function VehicleData() {
     notaFiscal: vehicle.notaFiscal || null
   });
 
-  // Função para limpar RENAVAM - remover caracteres não numéricos
   const cleanRenavam = (value: string) => {
     if (!value) return '';
     return value.replace(/\D/g, '').slice(0, 11);
   };
 
-  // Pré-preencher dados do contexto de checkout (vindos da consulta)
   useEffect(() => {
-    // Se há dados no contexto, usar eles
     if (vehicle.chassi || vehicle.renavam || vehicle.placa) {
       setFormData(prev => ({
         ...prev,
@@ -50,38 +47,28 @@ export default function VehicleData() {
       setDadosImportados(true);
     }
   }, [vehicle]);
-  const steps = [{
-    label: 'Dados do Veículo',
-    completed: false,
-    active: true
-  }, {
-    label: 'Dados do Cliente',
-    completed: false,
-    active: false
-  }, {
-    label: 'Pagamento',
-    completed: false,
-    active: false
-  }, {
-    label: 'Finalizado',
-    completed: false,
-    active: false
-  }];
+
+  const steps = [
+    { label: 'Dados do Veículo', completed: false, active: true },
+    { label: 'Dados do Cliente', completed: false, active: false },
+    { label: 'Pagamento', completed: false, active: false },
+    { label: 'Finalizado', completed: false, active: false }
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setVehicleData(formData);
     navigate('/solicitacao/cliente');
   };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({
-        ...prev,
-        notaFiscal: e.target.files![0]
-      }));
+      setFormData(prev => ({ ...prev, notaFiscal: e.target.files![0] }));
     }
   };
-  return <div className="min-h-screen bg-white">
-      {/* Header */}
+
+  return (
+    <div className="min-h-screen bg-white">
       <header className="bg-black py-6 px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
@@ -95,15 +82,12 @@ export default function VehicleData() {
         </div>
       </header>
 
-      {/* Stepper */}
       <div className="py-8 bg-white">
         <Stepper steps={steps} />
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          {/* Form */}
           <div className="bg-white rounded-lg p-8">
             <div className="flex items-center justify-between mb-1">
               <h1 className="text-2xl font-bold text-black">Dados do Veículo</h1>
@@ -116,102 +100,100 @@ export default function VehicleData() {
             </div>
             <p className="text-gray-600 mb-6 text-sm">Preencha todas as informações corretamente</p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <InputMask
-                  mask="99999999999999999"
-                  value={formData.chassi}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
-                    ...prev,
-                    chassi: e.target.value
-                  }))}
-                >
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      id="chassi"
-                      placeholder="Número do Chassi:"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  )}
-                </InputMask>
-                
-                <Input
-                  id="renavam"
-                  value={formData.renavam}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    // Remover caracteres não numéricos
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
-                    setFormData(prev => ({
-                      ...prev,
-                      renavam: value
-                    }));
-                  }}
-                  placeholder="Renavam:"
-                  className="bg-gray-100 border-0"
-                  maxLength={11}
-                  required
+                <FloatingLabelWrapper label="Chassi" htmlFor="chassi">
+                  <InputMask
+                    mask="99999999999999999"
+                    value={formData.chassi}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, chassi: e.target.value }))}
+                  >
+                    {(inputProps: any) => (
+                      <Input {...inputProps} id="chassi" placeholder="" className="bg-gray-50 border-2 border-gray-200" required />
+                    )}
+                  </InputMask>
+                </FloatingLabelWrapper>
+
+                <FloatingLabelWrapper label="RENAVAM" htmlFor="renavam">
+                  <Input
+                    id="renavam"
+                    value={formData.renavam}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      setFormData(prev => ({ ...prev, renavam: value }));
+                    }}
+                    placeholder=""
+                    className="bg-gray-50 border-2 border-gray-200"
+                    maxLength={11}
+                    required
+                  />
+                </FloatingLabelWrapper>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FloatingLabelWrapper label="Ano do Veículo" htmlFor="ano">
+                  <Input
+                    id="ano"
+                    value={formData.ano}
+                    onChange={e => setFormData(prev => ({ ...prev, ano: e.target.value }))}
+                    placeholder=""
+                    className="bg-gray-50 border-2 border-gray-200"
+                    required
+                  />
+                </FloatingLabelWrapper>
+
+                <FloatingLabelWrapper label="Placa" htmlFor="placa">
+                  <InputMask
+                    mask="aaa-9*99"
+                    formatChars={{ '9': '[0-9]', 'a': '[A-Za-z]', '*': '[0-9A-Ja-j]' }}
+                    value={formData.placa}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, placa: e.target.value.toUpperCase() }))}
+                  >
+                    {(inputProps: any) => (
+                      <Input {...inputProps} id="placa" placeholder="" className="bg-gray-50 border-2 border-gray-200" required />
+                    )}
+                  </InputMask>
+                </FloatingLabelWrapper>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FloatingLabelWrapper label="Estado" htmlFor="estado">
+                  <Input
+                    id="estado"
+                    value={formData.estado}
+                    onChange={e => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                    placeholder=""
+                    className="bg-gray-50 border-2 border-gray-200"
+                    required
+                  />
+                </FloatingLabelWrapper>
+
+                <FloatingLabelWrapper label="Cidade" htmlFor="cidade">
+                  <Input
+                    id="cidade"
+                    value={formData.cidade}
+                    onChange={e => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+                    placeholder=""
+                    className="bg-gray-50 border-2 border-gray-200"
+                    required
+                  />
+                </FloatingLabelWrapper>
+              </div>
+
+              <FloatingLabelWrapper label="Informação Adicional" htmlFor="informacaoAdicional">
+                <Textarea
+                  id="informacaoAdicional"
+                  value={formData.informacaoAdicional}
+                  onChange={e => setFormData(prev => ({ ...prev, informacaoAdicional: e.target.value }))}
+                  placeholder=""
+                  className="bg-gray-50 border-2 border-gray-200 min-h-[80px]"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Input id="ano" value={formData.ano} onChange={e => setFormData(prev => ({
-                ...prev,
-                ano: e.target.value
-              }))} placeholder="Ano do Veículo:" className="bg-gray-100 border-0" required />
-                
-                <InputMask
-                  mask="aaa-9*99"
-                  formatChars={{
-                    '9': '[0-9]',
-                    'a': '[A-Za-z]',
-                    '*': '[0-9A-Ja-j]'
-                  }}
-                  value={formData.placa}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
-                    ...prev,
-                    placa: e.target.value.toUpperCase()
-                  }))}
-                >
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      id="placa"
-                      placeholder="Placa do Veículo:"
-                      className="bg-gray-100 border-0"
-                      required
-                    />
-                  )}
-                </InputMask>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Input id="estado" value={formData.estado} onChange={e => setFormData(prev => ({
-                ...prev,
-                estado: e.target.value
-              }))} placeholder="Estado:" className="bg-gray-100 border-0" required />
-                <Input id="cidade" value={formData.cidade} onChange={e => setFormData(prev => ({
-                ...prev,
-                cidade: e.target.value
-              }))} placeholder="Cidade:" className="bg-gray-100 border-0" required />
-              </div>
-
-              <Textarea id="informacaoAdicional" value={formData.informacaoAdicional} onChange={e => setFormData(prev => ({
-              ...prev,
-              informacaoAdicional: e.target.value
-            }))} placeholder="Informação adicional:" className="bg-gray-100 border-0 min-h-[80px]" />
+              </FloatingLabelWrapper>
 
               <div className="bg-gray-100 rounded-lg p-6 text-center">
                 <p className="text-sm text-gray-600 mb-2">Faça o Upload da Nota Fiscal do seu Veículo:</p>
                 <p className="text-xs text-gray-500 mb-3">Imagem em PNG, JPG ou PDF. Máximo de 2MB</p>
-                <input 
-                  id="notaFiscal" 
-                  type="file" 
-                  accept=".pdf,.jpg,.jpeg,.png" 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                />
+                <input id="notaFiscal" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
                 <label htmlFor="notaFiscal" className="cursor-pointer inline-block">
                   {formData.notaFiscal ? (
                     <div className="flex flex-col items-center gap-2">
@@ -221,12 +203,9 @@ export default function VehicleData() {
                       <span className="text-xs text-green-600 font-medium max-w-[200px] truncate">
                         {formData.notaFiscal.name}
                       </span>
-                      <button 
+                      <button
                         type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setFormData(prev => ({ ...prev, notaFiscal: null }));
-                        }}
+                        onClick={(e) => { e.preventDefault(); setFormData(prev => ({ ...prev, notaFiscal: null })); }}
                         className="text-xs text-red-500 hover:text-red-700 underline"
                       >
                         Remover arquivo
@@ -246,15 +225,14 @@ export default function VehicleData() {
             </form>
           </div>
 
-          {/* Image */}
           <div className="hidden md:block relative rounded-lg overflow-hidden h-[700px]">
             <img src={truckVehicleData} alt="Caminhão Amarelo" className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-yellow/90 to-transparent p-8">
-              
               <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

@@ -173,7 +173,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         const data = vehicleData.data;
         setVehicleData({
           chassi: data.identificacao?.chassi || '',
-          renavam: data.identificacao?.renavam || '',
+          renavam: (data.identificacao?.renavam || '').replace(/\D/g, '').slice(0, 11),
           ano: data.especificacoes?.anoModelo || '',
           placa: data.identificacao?.placa || '',
           estado: '',

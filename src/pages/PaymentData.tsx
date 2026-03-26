@@ -11,6 +11,7 @@ import { createFullPayment } from '@/services/asaasService';
 import { ProductSelectModal } from '@/components/ProductSelectModal';
 import logoYellow from '@/assets/logo-chekauto-yellow.png';
 import truckProduct from '@/assets/truck-yellow-close.png';
+import { FloatingLabelWrapper } from '@/components/ui/floating-label-input';
 
 export default function PaymentData() {
   const navigate = useNavigate();
@@ -34,22 +35,15 @@ export default function PaymentData() {
     { label: 'Finalizado', completed: false, active: false }
   ];
 
-  // Verificar se há dados do cliente e veículo
   useEffect(() => {
     if (!customer.nomeCompleto || !vehicle.chassi) {
-      toast({
-        title: "Dados incompletos",
-        description: "Por favor, preencha os dados anteriores primeiro.",
-        variant: "destructive",
-      });
+      toast({ title: "Dados incompletos", description: "Por favor, preencha os dados anteriores primeiro.", variant: "destructive" });
       navigate('/solicitacao/veiculo');
     }
   }, [customer, vehicle, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validação rápida de CPF/CNPJ antes de chamar a API
     const digits = (customer.cpfCnpj || '').replace(/\D/g, '');
     const isCpf = digits.length === 11;
     const isCnpj = digits.length === 14;
@@ -67,44 +61,21 @@ export default function PaymentData() {
     };
 
     if (!(isCpf || isCnpj) || (isCpf && !isValidCpf(digits))) {
-      toast({
-        title: 'CPF/CNPJ inválido',
-        description: 'Verifique o documento informado para continuar.',
-        variant: 'destructive',
-      });
-      return; 
+      toast({ title: 'CPF/CNPJ inválido', description: 'Verifique o documento informado para continuar.', variant: 'destructive' });
+      return;
     }
 
     setLoading(true);
-
     try {
-      const result = await createFullPayment(
-        vehicle,
-        customer,
-        product,
-        paymentMethod,
-        paymentMethod === 'CREDIT_CARD' ? cardData : undefined
-      );
-      
+      const result = await createFullPayment(vehicle, customer, product, paymentMethod, paymentMethod === 'CREDIT_CARD' ? cardData : undefined);
       sessionStorage.setItem('paymentResult', JSON.stringify(result));
-
-      toast({
-        title: 'Pagamento iniciado',
-        description: paymentMethod === 'PIX' 
-          ? 'QR Code gerado com sucesso!' 
-          : 'Processando pagamento...',
-      });
-
+      toast({ title: 'Pagamento iniciado', description: paymentMethod === 'PIX' ? 'QR Code gerado com sucesso!' : 'Processando pagamento...' });
       navigate('/solicitacao/confirmacao');
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
       const message = error instanceof Error ? error.message : 'Tente novamente';
       const friendly = /cpf|cnpj/i.test(message) ? 'CPF/CNPJ inválido. Verifique os dados.' : message;
-      toast({
-        title: 'Erro ao processar pagamento',
-        description: friendly,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao processar pagamento', description: friendly, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -112,7 +83,6 @@ export default function PaymentData() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="bg-black py-6 px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <img src={logoYellow} alt="CHEKAUTO" className="h-8" />
@@ -126,26 +96,19 @@ export default function PaymentData() {
         </div>
       </header>
 
-      {/* Stepper */}
       <div className="py-8 bg-white">
         <Stepper steps={steps} />
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <Card className="p-6 border-2">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Resumo da Compra</h2>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setProductModalOpen(true)}
-                  className="text-sm"
-                >
+                <Button variant="outline" size="sm" onClick={() => setProductModalOpen(true)} className="text-sm">
                   <RefreshCw className="h-4 w-4 mr-1" />
-                  Trocar Produto
+                  Trocar Solução
                 </Button>
               </div>
               <div className="space-y-3">
@@ -177,64 +140,71 @@ export default function PaymentData() {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('PIX')}
-                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${
-                    paymentMethod === 'PIX' 
-                      ? 'border-brand-yellow bg-brand-yellow/10' 
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
+                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${paymentMethod === 'PIX' ? 'border-brand-yellow bg-brand-yellow/10' : 'border-gray-300 hover:border-gray-400'}`}
                 >
                   PIX
                 </button>
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('CREDIT_CARD')}
-                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${
-                    paymentMethod === 'CREDIT_CARD' 
-                      ? 'border-brand-yellow bg-brand-yellow/10' 
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
+                  className={`p-4 border-2 rounded-lg font-semibold transition-all ${paymentMethod === 'CREDIT_CARD' ? 'border-brand-yellow bg-brand-yellow/10' : 'border-gray-300 hover:border-gray-400'}`}
                 >
                   <CreditCard className="inline mr-2 h-5 w-5" />
                   Cartão
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {paymentMethod === 'CREDIT_CARD' && (
                   <>
-                    <Input
-                      placeholder="Número do Cartão"
-                      value={cardData.number}
-                      onChange={e => setCardData(prev => ({ ...prev, number: e.target.value }))}
-                      className="bg-gray-100 border-0"
-                      maxLength={16}
-                      required
-                    />
-                    <Input
-                      placeholder="Nome no Cartão"
-                      value={cardData.name}
-                      onChange={e => setCardData(prev => ({ ...prev, name: e.target.value }))}
-                      className="bg-gray-100 border-0"
-                      required
-                    />
+                    <FloatingLabelWrapper label="Número do Cartão" htmlFor="cardNumber">
+                      <Input
+                        id="cardNumber"
+                        placeholder=""
+                        value={cardData.number}
+                        onChange={e => setCardData(prev => ({ ...prev, number: e.target.value }))}
+                        className="bg-gray-50 border-2 border-gray-200"
+                        maxLength={16}
+                        required
+                      />
+                    </FloatingLabelWrapper>
+
+                    <FloatingLabelWrapper label="Nome no Cartão" htmlFor="cardName">
+                      <Input
+                        id="cardName"
+                        placeholder=""
+                        value={cardData.name}
+                        onChange={e => setCardData(prev => ({ ...prev, name: e.target.value }))}
+                        className="bg-gray-50 border-2 border-gray-200"
+                        required
+                      />
+                    </FloatingLabelWrapper>
+
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        placeholder="MM/AA"
-                        value={cardData.expiry}
-                        onChange={e => setCardData(prev => ({ ...prev, expiry: e.target.value }))}
-                        className="bg-gray-100 border-0"
-                        maxLength={5}
-                        required
-                      />
-                      <Input
-                        placeholder="CVV"
-                        value={cardData.cvv}
-                        onChange={e => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
-                        className="bg-gray-100 border-0"
-                        maxLength={4}
-                        type="password"
-                        required
-                      />
+                      <FloatingLabelWrapper label="Validade (MM/AA)" htmlFor="cardExpiry">
+                        <Input
+                          id="cardExpiry"
+                          placeholder=""
+                          value={cardData.expiry}
+                          onChange={e => setCardData(prev => ({ ...prev, expiry: e.target.value }))}
+                          className="bg-gray-50 border-2 border-gray-200"
+                          maxLength={5}
+                          required
+                        />
+                      </FloatingLabelWrapper>
+
+                      <FloatingLabelWrapper label="CVV" htmlFor="cardCvv">
+                        <Input
+                          id="cardCvv"
+                          placeholder=""
+                          value={cardData.cvv}
+                          onChange={e => setCardData(prev => ({ ...prev, cvv: e.target.value }))}
+                          className="bg-gray-50 border-2 border-gray-200"
+                          maxLength={4}
+                          type="password"
+                          required
+                        />
+                      </FloatingLabelWrapper>
                     </div>
                   </>
                 )}
@@ -247,29 +217,12 @@ export default function PaymentData() {
                 )}
 
                 <div className="flex gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => navigate('/solicitacao/cliente')}
-                    className="flex-1"
-                    disabled={loading}
-                  >
+                  <Button type="button" variant="outline" onClick={() => navigate('/solicitacao/cliente')} className="flex-1" disabled={loading}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Voltar
                   </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-brand-yellow hover:bg-brand-yellow/90 text-black font-semibold"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      'Finalizar Compra'
-                    )}
+                  <Button type="submit" className="flex-1 bg-brand-yellow hover:bg-brand-yellow/90 text-black font-semibold" disabled={loading}>
+                    {loading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>) : 'Finalizar Compra'}
                   </Button>
                 </div>
               </form>
@@ -293,10 +246,7 @@ export default function PaymentData() {
             description: selectedProduct.description,
             image: selectedProduct.image
           });
-          toast({
-            title: 'Produto alterado',
-            description: `Agora você está comprando: ${selectedProduct.name}`,
-          });
+          toast({ title: 'Solução alterada', description: `Agora você está comprando: ${selectedProduct.name}` });
         }}
       />
     </div>
