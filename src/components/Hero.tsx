@@ -125,13 +125,12 @@ export const Hero: React.FC = () => {
           
           <div className="mt-6 w-full max-w-[700px]">
             <div className="flex flex-wrap items-center gap-4 mb-4 justify-center">
-              {/* Radio buttons para novo/usado */}
               <label className="flex items-center gap-2 text-white cursor-pointer">
                 <input 
                   type="radio" 
                   name="vehicleType"
                   checked={vehicleType === 'novo'} 
-                  onChange={() => setVehicleType('novo')} 
+                  onChange={() => { setVehicleType('novo'); setConsultType('chassi'); }} 
                   className="w-4 h-4 accent-brand-yellow" 
                 />
                 <span className="text-sm font-medium">Automóvel novo (0KM)</span>
@@ -148,7 +147,6 @@ export const Hero: React.FC = () => {
                 <span className="text-sm font-medium">Automóvel usado</span>
               </label>
               
-              {/* Dropdown SP ou Outros - bloqueado para 0KM */}
               <select 
                 value={effectiveState} 
                 onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
@@ -160,12 +158,63 @@ export const Hero: React.FC = () => {
               </select>
             </div>
             
+            {/* Toggle chassi / placa+renavam - só para usado */}
+            {!is0KM && (
+              <div className="flex items-center gap-4 mb-4 justify-center">
+                <label className="flex items-center gap-2 text-white cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="consultType"
+                    checked={consultType === 'chassi'} 
+                    onChange={() => setConsultType('chassi')} 
+                    className="w-4 h-4 accent-brand-yellow" 
+                  />
+                  <span className="text-sm font-medium">Consultar por Chassi</span>
+                </label>
+                <label className="flex items-center gap-2 text-white cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="consultType"
+                    checked={consultType === 'placa-renavam'} 
+                    onChange={() => setConsultType('placa-renavam')} 
+                    className="w-4 h-4 accent-brand-yellow" 
+                  />
+                  <span className="text-sm font-medium">Consultar por Placa e Renavam</span>
+                </label>
+              </div>
+            )}
+            
             <div className="flex gap-3 items-center">
-              <input type="text" placeholder="Digite chassi, placa ou renavam" value={chassisNumber} onChange={e => setChassisNumber(e.target.value)} className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" />
+              {(is0KM || consultType === 'chassi') ? (
+                <input 
+                  type="text" 
+                  placeholder="Digite o chassi do veículo" 
+                  value={chassisNumber} 
+                  onChange={e => setChassisNumber(e.target.value)} 
+                  className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
+                />
+              ) : (
+                <>
+                  <input 
+                    type="text" 
+                    placeholder="Placa" 
+                    value={placaInput} 
+                    onChange={e => setPlacaInput(e.target.value)} 
+                    className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Renavam" 
+                    value={renavamInput} 
+                    onChange={e => setRenavamInput(e.target.value)} 
+                    className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
+                  />
+                </>
+              )}
               <button 
                 onClick={handleConsult} 
                 disabled={loading}
-                className="bg-brand-yellow text-black font-bold px-10 py-3 rounded-full hover:bg-brand-yellow-dark transition-colors whitespace-nowrap uppercase bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-3 rounded-full transition-colors whitespace-nowrap uppercase disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'CONSULTANDO...' : 'CONSULTAR'}
               </button>
