@@ -37,36 +37,35 @@ export const Hero: React.FC = () => {
   };
   
   const handleConsult = async () => {
-    if (!chassisNumber || chassisNumber.trim().length < 3) {
-      toast({
-        title: 'Erro',
-        description: 'Por favor, informe um chassi, placa ou renavam válido',
-        variant: 'destructive',
-      });
-      return;
-    }
+    let tipo: 'chassi' | 'placa' | 'renavam';
+    let valorLimpo: string;
 
-    // Detectar tipo de consulta
-    const valorLimpo = chassisNumber.trim().toUpperCase();
-    let tipo: 'chassi' | 'placa' | 'renavam' = 'chassi';
-    
-    if (valorLimpo.length === 17) {
+    if (is0KM || consultType === 'chassi') {
+      if (!chassisNumber || chassisNumber.trim().length < 3) {
+        toast({ title: 'Erro', description: 'Por favor, informe um chassi válido', variant: 'destructive' });
+        return;
+      }
+      valorLimpo = chassisNumber.trim().toUpperCase();
       tipo = 'chassi';
-    } else if (valorLimpo.length >= 9 && valorLimpo.length <= 11 && /^\d+$/.test(valorLimpo)) {
-      tipo = 'renavam';
-    } else if (valorLimpo.length === 7) {
-      tipo = 'placa';
+    } else {
+      // placa-renavam mode
+      if (!placaInput.trim() && !renavamInput.trim()) {
+        toast({ title: 'Erro', description: 'Informe a placa ou o renavam do veículo', variant: 'destructive' });
+        return;
+      }
+      if (placaInput.trim()) {
+        valorLimpo = placaInput.trim().toUpperCase();
+        tipo = 'placa';
+      } else {
+        valorLimpo = renavamInput.trim().toUpperCase();
+        tipo = 'renavam';
+      }
     }
 
-    // Determinar endpoint baseado nas regras:
-    // - 0KM (novo) → sempre BIN com UF vazio
-    // - Usado de SP → base-sp
-    // - Usado de outros estados → BIN
     let endpoint: 'base-sp' | 'bin' = 'bin';
     let uf = '';
     
     if (is0KM) {
-      // 0KM sempre usa BIN sem UF específico
       endpoint = 'bin';
       uf = '';
     } else if (effectiveState === 'SP') {
