@@ -11,6 +11,9 @@ export const Hero: React.FC = () => {
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
   const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [chassisNumber, setChassisNumber] = useState('');
+  const [consultType, setConsultType] = useState<'chassi' | 'placa-renavam'>('chassi');
+  const [placaInput, setPlacaInput] = useState('');
+  const [renavamInput, setRenavamInput] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [vehicleData, setVehicleData] = useState<any>(null);
   const navigate = useNavigate();
