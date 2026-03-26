@@ -110,12 +110,12 @@ export const Hero: React.FC = () => {
             Resolva seu RENAVE/BIN com tranquilidade.
           </h1>
           <p className="text-white text-2xl font-normal leading-tight text-center max-md:max-w-full">
-            Consultoria especializada em Implementos.
+            Solução para implementos em caminhões, caminhonetes e veículos transformados.
           </p>
           
           <p className="text-white text-xl font-normal leading-[25px] text-center mt-2 max-md:max-w-full">
             Nós vamos assegurar que seu{" "}
-            <span className="font-semibold">caminhão</span> esteja totalmente{" "}
+            <span className="font-semibold">veículo</span> esteja totalmente{" "}
             <span className="underline text-brand-yellow">
               regular, validado e pronto para seguir em frente.
             </span>
