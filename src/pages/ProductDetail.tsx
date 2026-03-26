@@ -151,29 +151,36 @@ export default function ProductDetail() {
     }
   };
 
-  const handleConsultaRapida = async () => {
-    if (!chassiInput || chassiInput.trim().length < 3) {
-      return;
-    }
+  const is0KM = vehicleType === 'novo';
+  const effectiveState = is0KM ? 'outros' : originState;
 
-    const valorLimpo = chassiInput.trim().toUpperCase();
-    let tipo: 'chassi' | 'placa' | 'renavam' = 'chassi';
-    
-    if (valorLimpo.length === 17) {
+  const handleConsultaRapida = async () => {
+    let tipo: 'chassi' | 'placa' | 'renavam';
+    let valorLimpo: string;
+
+    if (is0KM || consultType === 'chassi') {
+      if (!chassiInput || chassiInput.trim().length < 3) return;
+      valorLimpo = chassiInput.trim().toUpperCase();
       tipo = 'chassi';
-    } else if (valorLimpo.length >= 9 && valorLimpo.length <= 11 && /^\d+$/.test(valorLimpo)) {
-      tipo = 'renavam';
-    } else if (valorLimpo.length === 7) {
-      tipo = 'placa';
+    } else {
+      if (!placaInput.trim() && !renavamInput.trim()) return;
+      if (placaInput.trim()) {
+        valorLimpo = placaInput.trim().toUpperCase();
+        tipo = 'placa';
+      } else {
+        valorLimpo = renavamInput.trim().toUpperCase();
+        tipo = 'renavam';
+      }
     }
 
     let endpoint: 'base-sp' | 'bin' = 'bin';
-    let uf = originState === 'SP' ? 'SP' : '';
+    let uf = '';
     
-    if (vehicleType === 'usado' && originState === 'SP') {
-      endpoint = 'base-sp';
-    } else {
+    if (is0KM) {
       endpoint = 'bin';
+    } else if (effectiveState === 'SP') {
+      endpoint = 'base-sp';
+      uf = 'SP';
     }
 
     const result = await consultar(tipo, valorLimpo, endpoint, uf);
