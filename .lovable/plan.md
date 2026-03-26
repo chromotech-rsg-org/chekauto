@@ -1,50 +1,54 @@
 
 
-## Plano de Implementação
+## Plano: Campos separados de consulta + renomear modal
 
-### 1. Floating Labels nos Formulários de Checkout
-**Arquivos**: `VehicleData.tsx`, `ClientData.tsx`, `PaymentData.tsx`
+### Resumo
 
-Criar um componente wrapper `FloatingLabelInput` que posiciona o label no canto superior esquerdo do campo, sobreposto à borda, com fundo branco para "cortar" a borda. Estilo similar ao Material Design outlined input. O label fica visível mesmo com dados preenchidos.
+Separar o campo único "chassi, placa ou renavam" em campos individuais, com lógica condicional: 0KM mostra apenas chassi; usado mostra opção de consultar por chassi OU por placa+renavam. Renomear modal "Selecionar Produto" para "Selecionar Solução".
+
+### 1. Hero (home) - `src/components/Hero.tsx`
+
+**Estado atual**: Um único input "Digite chassi, placa ou renavam" com detecção automática por tamanho.
+
+**Mudança**:
+- Adicionar estado `consultType: 'chassi' | 'placa-renavam'` (default: 'chassi')
+- Para 0KM: mostrar apenas campo de chassi, sem opção de placa/renavam
+- Para usado: mostrar radio/toggle para escolher entre "Chassi" ou "Placa e Renavam"
+  - Se "Chassi": um campo para chassi
+  - Se "Placa e Renavam": dois campos lado a lado (placa e renavam)
+- Ajustar `handleConsult` para usar o tipo correto baseado na seleção
+- Estado dropdown bloqueado para 0KM (já funciona)
 
 ```text
-┌─ Chassi ─────────────┐
-│ 928225533012          │
-└───────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ ○ 0KM  ● Usado   [SP ▾]                            │
+│                                                      │
+│ ○ Chassi  ● Placa e Renavam   (só para usado)       │
+│                                                      │
+│ [  Placa  ] [  Renavam  ] [CONSULTAR]               │
+└─────────────────────────────────────────────────────┘
 ```
 
-Implementação via CSS: label com `position: absolute`, `top: -8px`, `left: 12px`, `background: white`, `padding: 0 4px`, `font-size: 11px`, `color: gray-500`. Wrapper com `position: relative`.
+### 2. Página do Produto - `src/pages/ProductDetail.tsx`
 
-Aplicar em todos os campos: Chassi, RENAVAM, Ano, Placa, Estado, Cidade, Nome, CPF/CNPJ, CEP, Rua, Número, Bairro, Complemento, E-mail, Telefone, e campos do cartão.
+**Estado atual**: Mesmo campo único na seção "Consulta rápida de veículo".
 
-### 2. RENAVAM - Corrigir dados vindos da consulta
-**Arquivo**: `src/components/ConsultationModal.tsx` (linha 176)
+**Mudança** (mesma lógica):
+- Adicionar estado `consultType`
+- Para 0KM: apenas campo chassi
+- Para usado: toggle chassi / placa+renavam com campos separados
+- Ajustar `handleConsultaRapida` para usar campos corretos
+- Adicionar estados `placaInput` e `renavamInput`
 
-O RENAVAM vem com caracteres extras da API. Aplicar `.replace(/\D/g, '').slice(0, 11)` ao salvar no CheckoutContext:
-```
-renavam: (data.identificacao?.renavam || '').replace(/\D/g, '').slice(0, 11),
-```
+### 3. Modal "Selecionar Solução" - `src/components/ProductSelectModal.tsx`
 
-### 3. "Trocar Produto" → "Trocar Solução"
-**Arquivo**: `src/pages/PaymentData.tsx` (linha 148)
+**Mudança**: Alterar o título do `DialogTitle` de "Selecionar Produto" para "Selecionar Solução".
 
-Alterar texto do botão de "Trocar Produto" para "Trocar Solução". Alterar também o toast de confirmação.
-
-### 4. Texto da Hero
-**Arquivo**: `src/components/Hero.tsx` (linhas 109-122)
-
-Alterar textos conforme imagem 2:
-- Manter: "Resolva seu RENAVE/BIN com tranquilidade."
-- Alterar para: "Solução para implementos em caminhões, caminhonetes e veículos transformados."
-- Alterar: "caminhão" → "veículo" no terceiro parágrafo
-
-### Resumo de Arquivos
+### Arquivos afetados
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `VehicleData.tsx` | Floating labels em todos os campos |
-| `ClientData.tsx` | Floating labels em todos os campos |
-| `PaymentData.tsx` | Floating labels nos campos de cartão + "Trocar Solução" |
-| `ConsultationModal.tsx` | Limpar RENAVAM ao salvar no contexto |
-| `Hero.tsx` | Atualizar textos da hero |
+| `Hero.tsx` | Campos separados chassi / placa+renavam com toggle |
+| `ProductDetail.tsx` | Mesma lógica de campos separados |
+| `ProductSelectModal.tsx` | Título "Selecionar Solução" |
 
