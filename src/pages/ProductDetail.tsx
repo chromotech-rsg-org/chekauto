@@ -30,6 +30,9 @@ import { mapearDadosVeiculo } from '@/lib/infoSimplesDataMapper';
 
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
+  const [placaInput, setPlacaInput] = useState('');
+  const [renavamInput, setRenavamInput] = useState('');
+  const [consultType, setConsultType] = useState<'chassi' | 'placa-renavam'>('chassi');
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
   const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [showResults, setShowResults] = useState(false);
