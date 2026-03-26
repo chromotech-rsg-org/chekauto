@@ -30,6 +30,9 @@ import { mapearDadosVeiculo } from '@/lib/infoSimplesDataMapper';
 
 export default function ProductDetail() {
   const [chassiInput, setChassiInput] = useState('');
+  const [placaInput, setPlacaInput] = useState('');
+  const [renavamInput, setRenavamInput] = useState('');
+  const [consultType, setConsultType] = useState<'chassi' | 'placa-renavam'>('chassi');
   const [vehicleType, setVehicleType] = useState<'novo' | 'usado'>('usado');
   const [originState, setOriginState] = useState<'SP' | 'outros'>('SP');
   const [showResults, setShowResults] = useState(false);
@@ -148,29 +151,36 @@ export default function ProductDetail() {
     }
   };
 
-  const handleConsultaRapida = async () => {
-    if (!chassiInput || chassiInput.trim().length < 3) {
-      return;
-    }
+  const is0KM = vehicleType === 'novo';
+  const effectiveState = is0KM ? 'outros' : originState;
 
-    const valorLimpo = chassiInput.trim().toUpperCase();
-    let tipo: 'chassi' | 'placa' | 'renavam' = 'chassi';
-    
-    if (valorLimpo.length === 17) {
+  const handleConsultaRapida = async () => {
+    let tipo: 'chassi' | 'placa' | 'renavam';
+    let valorLimpo: string;
+
+    if (is0KM || consultType === 'chassi') {
+      if (!chassiInput || chassiInput.trim().length < 3) return;
+      valorLimpo = chassiInput.trim().toUpperCase();
       tipo = 'chassi';
-    } else if (valorLimpo.length >= 9 && valorLimpo.length <= 11 && /^\d+$/.test(valorLimpo)) {
-      tipo = 'renavam';
-    } else if (valorLimpo.length === 7) {
-      tipo = 'placa';
+    } else {
+      if (!placaInput.trim() && !renavamInput.trim()) return;
+      if (placaInput.trim()) {
+        valorLimpo = placaInput.trim().toUpperCase();
+        tipo = 'placa';
+      } else {
+        valorLimpo = renavamInput.trim().toUpperCase();
+        tipo = 'renavam';
+      }
     }
 
     let endpoint: 'base-sp' | 'bin' = 'bin';
-    let uf = originState === 'SP' ? 'SP' : '';
+    let uf = '';
     
-    if (vehicleType === 'usado' && originState === 'SP') {
-      endpoint = 'base-sp';
-    } else {
+    if (is0KM) {
       endpoint = 'bin';
+    } else if (effectiveState === 'SP') {
+      endpoint = 'base-sp';
+      uf = 'SP';
     }
 
     const result = await consultar(tipo, valorLimpo, endpoint, uf);
@@ -392,7 +402,7 @@ export default function ProductDetail() {
                     type="radio" 
                     name="productVehicleType"
                     checked={vehicleType === 'novo'} 
-                    onChange={() => setVehicleType('novo')} 
+                    onChange={() => { setVehicleType('novo'); setConsultType('chassi'); }} 
                     className="w-4 h-4 accent-chekauto-yellow" 
                   />
                   <span className="text-sm font-medium">Novo (0KM)</span>
@@ -410,24 +420,70 @@ export default function ProductDetail() {
                 </label>
                 
                 <select 
-                  value={originState} 
+                  value={effectiveState} 
                   onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
-                  className="bg-white border border-gray-300 text-black px-3 py-1.5 rounded text-sm"
+                  disabled={is0KM}
+                  className={`bg-white border border-gray-300 text-black px-3 py-1.5 rounded text-sm ${is0KM ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <option value="SP">SP</option>
                   <option value="outros">Outros Estados</option>
                 </select>
               </div>
+
+              {/* Toggle chassi / placa+renavam - só para usado */}
+              {!is0KM && (
+                <div className="flex items-center gap-3 mb-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="productConsultType"
+                      checked={consultType === 'chassi'} 
+                      onChange={() => setConsultType('chassi')} 
+                      className="w-4 h-4 accent-chekauto-yellow" 
+                    />
+                    <span className="text-sm font-medium">Chassi</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="productConsultType"
+                      checked={consultType === 'placa-renavam'} 
+                      onChange={() => setConsultType('placa-renavam')} 
+                      className="w-4 h-4 accent-chekauto-yellow" 
+                    />
+                    <span className="text-sm font-medium">Placa e Renavam</span>
+                  </label>
+                </div>
+              )}
               
               {/* Input e botão de consulta */}
               <div className="flex gap-3">
-                <Input 
-                  placeholder="Digite chassi, placa ou renavam" 
-                  className="flex-1"
-                  value={chassiInput}
-                  onChange={(e) => setChassiInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleConsultaRapida()}
-                />
+                {(is0KM || consultType === 'chassi') ? (
+                  <Input 
+                    placeholder="Digite o chassi do veículo" 
+                    className="flex-1"
+                    value={chassiInput}
+                    onChange={(e) => setChassiInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleConsultaRapida()}
+                  />
+                ) : (
+                  <>
+                    <Input 
+                      placeholder="Placa" 
+                      className="flex-1"
+                      value={placaInput}
+                      onChange={(e) => setPlacaInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleConsultaRapida()}
+                    />
+                    <Input 
+                      placeholder="Renavam" 
+                      className="flex-1"
+                      value={renavamInput}
+                      onChange={(e) => setRenavamInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleConsultaRapida()}
+                    />
+                  </>
+                )}
                 <Button 
                   onClick={handleConsultaRapida}
                   disabled={consultaLoading}

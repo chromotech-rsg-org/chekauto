@@ -83,7 +83,7 @@ export function ProductSelectModal({ open, onClose, onSelect }: ProductSelectMod
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Selecionar Produto</DialogTitle>
+          <DialogTitle>Selecionar Solução</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col sm:flex-row gap-3 py-4">
