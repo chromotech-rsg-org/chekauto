@@ -150,8 +150,8 @@ export const Hero: React.FC = () => {
               <select 
                 value={effectiveState} 
                 onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
-                disabled={is0KM}
-                className={`bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium ${is0KM ? 'opacity-60 cursor-not-allowed' : ''}`}
+                disabled={is0KM || consultType === 'placa-renavam'}
+                className={`bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium ${(is0KM || consultType === 'placa-renavam') ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <option value="SP">SP</option>
                 <option value="outros">Outros Estados</option>
