@@ -146,16 +146,18 @@ export default function VehicleData() {
                 </FloatingLabelWrapper>
 
                 <FloatingLabelWrapper label="Placa" htmlFor="placa">
-                  <InputMask
-                    mask="aaa-9*99"
-                    formatChars={{ '9': '[0-9]', 'a': '[A-Za-z]', '*': '[0-9A-Ja-j]' }}
+                  <Input
+                    id="placa"
                     value={formData.placa}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, placa: e.target.value.toUpperCase() }))}
-                  >
-                    {(inputProps: any) => (
-                      <Input {...inputProps} id="placa" placeholder="" className="bg-gray-50 border-2 border-gray-200" required />
-                    )}
-                  </InputMask>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+                      setFormData(prev => ({ ...prev, placa: value }));
+                    }}
+                    placeholder="ABC1D23 ou ABC1234"
+                    className="bg-gray-50 border-2 border-gray-200 uppercase"
+                    maxLength={7}
+                    required
+                  />
                 </FloatingLabelWrapper>
               </div>
 
