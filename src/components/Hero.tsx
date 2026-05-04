@@ -125,11 +125,12 @@ export const Hero: React.FC = () => {
           
           <div className="mt-6 w-full max-w-[700px]">
             <div className="flex flex-wrap items-center gap-4 mb-4 justify-center">
-              <label className="flex items-center gap-2 text-white cursor-pointer">
+              <label className={`flex items-center gap-2 text-white ${consultType === 'placa-renavam' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input 
                   type="radio" 
                   name="vehicleType"
                   checked={vehicleType === 'novo'} 
+                  disabled={consultType === 'placa-renavam'}
                   onChange={() => { setVehicleType('novo'); setConsultType('chassi'); }} 
                   className="w-4 h-4 accent-brand-yellow" 
                 />
@@ -150,8 +151,8 @@ export const Hero: React.FC = () => {
               <select 
                 value={effectiveState} 
                 onChange={(e) => setOriginState(e.target.value as 'SP' | 'outros')} 
-                disabled={is0KM}
-                className={`bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium ${is0KM ? 'opacity-60 cursor-not-allowed' : ''}`}
+                disabled={is0KM || consultType === 'placa-renavam'}
+                className={`bg-white text-black px-4 py-2 rounded text-sm min-w-[150px] h-[42px] font-medium ${(is0KM || consultType === 'placa-renavam') ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <option value="SP">SP</option>
                 <option value="outros">Outros Estados</option>
@@ -176,7 +177,11 @@ export const Hero: React.FC = () => {
                     type="radio" 
                     name="consultType"
                     checked={consultType === 'placa-renavam'} 
-                    onChange={() => setConsultType('placa-renavam')} 
+                    onChange={() => { 
+                      setConsultType('placa-renavam'); 
+                      setVehicleType('usado'); 
+                      setOriginState('SP'); 
+                    }} 
                     className="w-4 h-4 accent-brand-yellow" 
                   />
                   <span className="text-sm font-medium">Consultar por Placa e Renavam</span>
@@ -190,23 +195,27 @@ export const Hero: React.FC = () => {
                   type="text" 
                   placeholder="Digite o chassi do veículo" 
                   value={chassisNumber} 
-                  onChange={e => setChassisNumber(e.target.value)} 
-                  className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
+                  maxLength={17}
+                  onChange={e => setChassisNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17))} 
+                  className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500 uppercase" 
                 />
               ) : (
                 <>
                   <input 
                     type="text" 
-                    placeholder="Placa" 
+                    placeholder="Placa (ABC1D23 ou ABC1234)" 
                     value={placaInput} 
-                    onChange={e => setPlacaInput(e.target.value)} 
-                    className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
+                    maxLength={7}
+                    onChange={e => setPlacaInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))} 
+                    className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500 uppercase" 
                   />
                   <input 
                     type="text" 
                     placeholder="Renavam" 
                     value={renavamInput} 
-                    onChange={e => setRenavamInput(e.target.value)} 
+                    maxLength={11}
+                    inputMode="numeric"
+                    onChange={e => setRenavamInput(e.target.value.replace(/\D/g, '').slice(0, 11))} 
                     className="flex-1 px-6 py-3 rounded-full text-black placeholder:text-gray-500" 
                   />
                 </>
