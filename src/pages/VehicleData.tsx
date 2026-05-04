@@ -111,7 +111,7 @@ export default function VehicleData() {
                       setFormData(prev => ({ ...prev, chassi: value }));
                     }}
                     placeholder=""
-                    className="bg-gray-50 border-2 border-gray-200"
+                    className="bg-gray-50 border-2 border-gray-200 uppercase"
                     maxLength={17}
                     required
                   />
